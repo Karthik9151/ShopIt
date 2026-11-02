@@ -95,8 +95,10 @@ public class ProductService {
 
     public ProductView view(Product product) {
         Category category = product.getCategory();
+        int stock = product.getStock();
         return new ProductView(product.getId(), product.getName(), product.getDescription(), product.getPrice(),
-            product.getStock(), product.getImageUrl(), category == null ? null : category.getId(),
+            stock > 0, stock > 0 && stock <= 5, product.getImageUrl(),
+            category == null ? null : category.getId(),
             category == null ? null : category.getName(), product.isActive(), product.getCreatedAt());
     }
 }
