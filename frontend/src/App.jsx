@@ -453,11 +453,13 @@ function Offers(){
 }
 function AdminCoupons(){
  const blank=()=>({id:null,code:'',description:'',discountType:'PERCENT',discountValue:'10',minimumOrderAmount:'0',maximumDiscount:'',startsAt:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16),endsAt:new Date(Date.now()+7*86400000-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16),usageLimit:''});
- const [form,setForm]=useState(blank),[couponResult,setCouponResult]=useState(null),[tab,setTab]=useState('Active'),[couponPage,setCouponPage]=useState(0),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[previewSubtotal,setPreviewSubtotal]=useState('1500');
+ const [form,setForm]=useState(blank),[couponResult,setCouponResult]=useState(null),[tab,setTab]=useState('Active'),[couponPage,setCouponPage]=useState(0),[couponLoading,setCouponLoading]=useState(true),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[previewSubtotal,setPreviewSubtotal]=useState('1500');
  const coupons=couponResult?.content||[];
  const refresh=async()=>{
+  setCouponLoading(true);
   try{const response=await api.get('/admin/coupons/paged',{params:{bucket:tab.toUpperCase(),page:couponPage,size:20}});setCouponResult(response.data);}
   catch(e){setError(e.response?.data?.message||'Could not load coupon management.');}
+  finally{setCouponLoading(false);}
  };
  useEffect(()=>{refresh();},[tab,couponPage]);
  const tabs=['Active','Scheduled','Expired','Paused'];
@@ -519,8 +521,8 @@ function AdminCoupons(){
     </div>
    </form>
    <div className="summary"><h2>Coupon register</h2>
-    <div className="coupon-tabs" role="tablist" aria-label="Coupon status">{tabs.map(value=><button type="button" role="tab" aria-selected={tab===value} className={tab===value?'active':''} key={value} onClick={()=>{setTab(value);setCouponPage(0);}}>{value}{tab===value&&couponResult?` <span>{couponResult.totalElements}</span>`:''}</button>)}</div>
-    {visible.length?visible.map(o=>{
+    <div className="coupon-tabs" role="tablist" aria-label="Coupon status">{tabs.map(value=><button type="button" role="tab" aria-selected={tab===value} className={tab===value?'active':''} key={value} onClick={()=>{setTab(value);setCouponPage(0);}}>{value}{tab===value&&couponResult&&<span>{couponResult.totalElements}</span>}</button>)}</div>
+    {couponLoading?<div className="loading" role="status">Loading coupons…</div>:visible.length?visible.map(o=>{
      const percent=o.usageLimit?Math.min(100,o.usageCount/o.usageLimit*100):null;
      return <article className="coupon-row" key={o.id}>
       <div><b>{o.code}</b><small>{o.discountType==='PERCENT'?o.discountValue+'% off':formatCurrency(o.discountValue)+' off'} · {formatDate(o.startsAt)} – {formatDate(o.endsAt)}</small>
