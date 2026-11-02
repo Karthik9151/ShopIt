@@ -123,12 +123,21 @@ class CouponAndInventoryIntegrationTest {
                 .content(mapper.createObjectNode().put("productId", productId).put("quantity", 1).toString()))
             .andExpect(status().isOk());
 
-        mvc.perform(post("/api/coupons/validate")
+        mvc.perform(get("/api/cart")
+                .header("Authorization", "Bearer " + first.token()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.shipping").value(49.0))
+            .andExpect(jsonPath("$.tax").value(18.0))
+            .andExpect(jsonPath("$.total").value(167.0));
+
+        MvcResult previewResult = mvc.perform(post("/api/coupons/validate")
                 .header("Authorization", "Bearer " + first.token())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.createObjectNode().put("code", code).toString()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.discountAmount").value(10.0));
+            .andExpect(jsonPath("$.discountAmount").value(10.0))
+            .andReturn();
+        JsonNode preview = mapper.readTree(previewResult.getResponse().getContentAsString());
 
         String orderRequest = mapper.createObjectNode()
             .put("shippingAddress", "12 Test Street, Hyderabad, Telangana, 500001")
@@ -145,6 +154,9 @@ class CouponAndInventoryIntegrationTest {
         assertThat(order.get("subtotal").decimalValue()).isEqualByComparingTo("100.00");
         assertThat(order.get("discountAmount").decimalValue()).isEqualByComparingTo("10.00");
         assertThat(order.get("total").decimalValue()).isEqualByComparingTo("155.20");
+        assertThat(order.get("shipping").decimalValue()).isEqualByComparingTo(preview.get("shipping").decimalValue());
+        assertThat(order.get("tax").decimalValue()).isEqualByComparingTo(preview.get("tax").decimalValue());
+        assertThat(order.get("total").decimalValue()).isEqualByComparingTo(preview.get("total").decimalValue());
 
         Customer second = registerCustomer();
         mvc.perform(post("/api/cart/items")
