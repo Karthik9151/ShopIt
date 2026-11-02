@@ -23,8 +23,8 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-08 | F3 | BLOCKED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
 | WP-08 | F3 | PR OPEN — DRAFT | `wp08-payment-switch` | https://github.com/Karthik9151/ShopIt/pull/14 | CI run 41437483366: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging only if demo payments are required; never in production |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
-| WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | CI pending; run not yet surfaced. Local Maven/npm commands unavailable. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
-| WP-10 | F12 | BLOCKED | `wp10-public-hardening` | — | — | Verify report-only CSP on live site before enforcement |
+| WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First CI run 41438195716 failed at compile (static decision factory call); corrected in b94284c and validation run 41438476868 queued. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
+| WP-10 | F12 | PR OPEN — DRAFT | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | CI pending; first run awaits result after WP09 compile fix. Local Maven/npm commands unavailable. | Owner to inspect live report-only CSP violations; no HSTS or enforced CSP |
 | WP-11 | F11 | BLOCKED | `wp11-registration-hardening` | — | — | Accept documented email-enumeration trade-off until email verification exists |
 | WP-12 | F13 | BLOCKED | `wp12-stock-exposure` | — | — | Review public ProductView API contract change |
 | WP-13 | F10, F15 | BLOCKED | `wp13-cold-start-jvm` | — | — | Optional uptime monitor intentionally not enabled; no Render settings changes |
@@ -178,6 +178,17 @@ The owner explicitly authorized WP-00 through WP-22 without waiting for GATE app
 - CI for WP-09 not yet surfaced at the time this update was made; local Maven/npm commands unavailable.
 - Adversarial gaps: no multi-instance/shared-distributed quota, no dedicated authenticated order/password filter integration test, and no proxy-header integration test. In-memory limiter is a single-process mitigation, not a distributed abuse-control system.
 - Rollback: revert WP-09. No DB migration.
+
+
+### WP-10 package evidence — 2026-11-02
+
+- Branch: `wp10-public-hardening`, stacked on open WP-09 to preserve ledger and package ancestry; PR #16 targets main and is draft/unmerged.
+- API surface filter adds `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and a restrictive Permissions-Policy. Docs endpoints return generic 404 by default, while existing `permitAll` rules remain unchanged.
+- API docs are disabled by default in main and enabled in CI/local test profiles.
+- Render Blueprint adds static-site security headers and a report-only CSP. No enforced CSP/HSTS and no live Render changes.
+- Unit tests cover blocked docs route, pass-through route, and response headers.
+- WP-10 CI run pending when recorded; WP-09 CI compile failure was fixed before the rerun. Local Maven/npm commands unavailable.
+- Owner action: inspect real browser CSP reports on the frontend deployment before considering enforcement. Rollback by reverting WP-10; no migration.
 
 ## Per-package completion evidence
 
