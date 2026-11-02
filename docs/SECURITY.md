@@ -12,6 +12,9 @@
 - Unpaid cancellations restore stock; paid orders cannot be cancelled through the unpaid-cancellation path.
 - Simulated payment stores no card number, CVV, or banking credentials; its value is excluded from real verified sales.
 - Customer accounts can be disabled by an administrator.
+- Product purchase cost is returned only by the ADMIN-only inventory API; the public ProductView omits this field.
+- Coupon creation and management require ADMIN. Customers can only read currently published offers and validate a coupon against their own cart.
+- Checkout revalidates coupons server-side and takes a pessimistic coupon-row lock while applying usage limits, within the order transaction.
 - Database credentials and secrets are environment-configured; `.env` is ignored by Git.
 
 ## Authentication notes
@@ -26,6 +29,7 @@ The initial browser client stores its short-lived bearer access token in `sessio
 - Implement verified email delivery and single-use, expiring password-reset tokens.
 - Integrate a real payment provider with server-verified signatures, replay protection, idempotent webhook processing, refunds, and reconciliation.
 - Add audit events, monitoring, alerting, backups, and dependency/security scanning.
+- Review coupon abuse controls and test race conditions/usage limits against the actual TiDB deployment before public promotion campaigns.
 - Review external image URLs or implement controlled object storage and content validation.
 - Perform a security review and end-to-end tests before accepting real customer data or payments.
 
