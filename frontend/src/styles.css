@@ -126,3 +126,52 @@
  .admin-filter-form{grid-template-columns:1fr}
  .admin-mobile-tabs{padding-inline:3%}
 }
+
+
+/* Shared component primitives and their focus/contrast states. */
+.ui-button{display:inline-flex;justify-content:center;align-items:center;gap:7px;min-height:38px;padding:10px 14px;border:1px solid transparent;border-radius:999px;font:600 11px system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.ui-button:disabled{opacity:.55;cursor:not-allowed}
+.ui-button.primary{background:var(--green);color:#fff}
+.ui-button.secondary{background:transparent;border-color:var(--line);color:var(--ink)}
+.ui-button.danger{background:#9b332c;color:#fff}
+.ui-card{padding:20px;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+.ui-badge{display:inline-flex;align-items:center;width:max-content;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:700;line-height:1.2}
+.ui-badge.tone-success{background:#e2eee5;color:#205d3a}
+.ui-badge.tone-danger{background:#f5e3df;color:#862c27}
+.ui-badge.tone-info{background:#e2ecea;color:#245b58}
+.ui-badge.tone-neutral{background:#efede6;color:#51564f}
+.ui-table-scroll{max-width:100%;overflow:auto}
+.ui-data-table{width:100%;border-collapse:collapse;font-size:12px}
+.ui-data-table th,.ui-data-table td{padding:12px;text-align:left;border-bottom:1px solid var(--line)}
+.ui-data-table th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.ui-modal-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px;background:rgba(16,31,29,.58)}
+.ui-modal{width:min(100%,520px);max-height:85vh;overflow:auto;padding:22px;background:var(--paper);border-radius:12px;box-shadow:0 18px 70px rgba(0,0,0,.25)}
+.ui-modal header,.ui-modal footer{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ui-modal header{margin-bottom:16px}
+.ui-modal header h2{margin:0;font:24px Georgia,serif}
+.ui-modal footer{justify-content:flex-end;margin-top:20px}
+.ui-toast{position:fixed;right:18px;bottom:18px;z-index:900;display:flex;gap:18px;align-items:center;max-width:min(440px,calc(100vw - 36px));padding:13px 16px;border:1px solid var(--line);border-radius:9px;background:var(--paper);box-shadow:0 5px 24px rgba(0,0,0,.12);font-size:12px}
+.ui-toast.tone-success{border-color:#87aa91}.ui-toast.tone-error{border-color:#c7837b}
+.ui-toast button{border:0;background:transparent;font-size:20px;cursor:pointer}
+.ui-form-field{display:grid;gap:6px}.ui-form-field>label{font-size:11px;font-weight:700}.ui-form-field small{font-size:10px;color:var(--muted)}.ui-form-field .ui-field-error{color:#9b332c}
+.ui-skeleton-list{display:grid;gap:10px;padding:10px 0}.ui-skeleton-list span{display:block;height:44px;border-radius:7px;background:linear-gradient(90deg,#eee9de,#f7f4ec,#eee9de);background-size:200% 100%;animation:ui-skeleton-wave 1.4s ease-in-out infinite}
+@keyframes ui-skeleton-wave{to{background-position:-200% 0}}
+.admin-inventory-filters{display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin:18px 0}
+.admin-inventory-filters label{display:grid;gap:6px;min-width:130px;font-size:10px;font-weight:700;color:var(--muted)}
+.admin-inventory-filters input,.admin-inventory-filters select,.stock-quick-edit{min-width:0;border:1px solid var(--line);background:var(--paper);padding:9px;color:var(--ink);font:12px system-ui,sans-serif}
+.stock-quick-edit{width:100px}
+.inventory-stock-action{display:grid;gap:5px}
+.coupon-tabs{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);margin:8px 0 10px}
+.coupon-tabs button{border:0;border-bottom:3px solid transparent;background:transparent;padding:10px 9px;color:var(--muted);font-size:10px;white-space:nowrap;cursor:pointer}
+.coupon-tabs button.active{border-bottom-color:#287d79;color:var(--ink);font-weight:700}
+.coupon-tabs button span{margin-left:4px;color:#287d79}
+.coupon-usage{display:grid;gap:5px;min-width:170px;margin-top:8px;font-size:9px;color:var(--muted)}
+.coupon-usage>div:first-child{display:flex;justify-content:space-between;gap:8px}
+.coupon-usage-track{height:6px;overflow:hidden;border-radius:999px;background:#e9e4d7}
+.coupon-usage-track span{display:block;height:100%;border-radius:999px;background:#287d79}
+.coupon-live-preview{margin-top:12px;padding:15px;border:1px solid var(--line);border-radius:8px;background:#faf8f0}
+.coupon-live-preview h3{margin:0 0 12px;font:19px Georgia,serif}
+.coupon-live-preview label{display:grid;gap:6px;font-size:10px;font-weight:700}
+.coupon-live-preview input{border:1px solid var(--line);padding:10px;background:white}
+.admin-kpis .stat:nth-child(2){border-left-color:#287d79}
+@media(max-width:600px){.admin-inventory-filters{align-items:stretch}.admin-inventory-filters label{flex:1 1 100%}.admin-inventory-filters .row-actions{width:100%}.coupon-usage{min-width:140px}}
