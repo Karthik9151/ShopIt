@@ -58,5 +58,6 @@ Use isolated staging data and test identities; never use production customer rec
 These tests are added but have not been executed locally in the authoring environment. Check CI on the exact pull-request head SHA before treating them as passing.
 
 - `AdminCsvExportIntegrationTest`: verifies 401/403/ADMIN access boundaries, UTF-8 export headers, stock-threshold filtering, and neutralization of a formula-shaped product name.
+- Frontend route guard/Vitest tests verify an authenticated customer sees “Admin access required”, customers are redirected away from requested admin paths after sign-in, and existing routes receive descriptive document titles.
 - `CsvExportSupportTest`: verifies CSV quoting, quote escaping, CRLF row termination, empty cells, and formula-prefix neutralization.
 - Admin order-list integration tests also exercise order ID, email, ISO date-range filters, and invalid date-range rejection.
