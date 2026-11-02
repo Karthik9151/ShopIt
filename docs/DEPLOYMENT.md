@@ -155,6 +155,13 @@ The current payment integration is simulated only. Do not accept real payments u
 
 Before public production, also complete the security work in `docs/SECURITY.md`: safer token handling (HttpOnly/Secure cookies with CSRF protection or a backend-for-frontend), strict CSP/security headers, rate limits, email verification and password reset, audit/monitoring, database backups and restore tests, and end-to-end testing. Confirm a durable paid database plan and operational recovery process before storing real customer/order data.
 
+## Operations and recovery
+
+See [docs/OPERATIONS.md](OPERATIONS.md) for owner-operated backup/PITR, restore rehearsal, incident response and recovery procedures. The runbook does not imply that a live backup or restore has been tested.
+
+## TiDB staging verification
+
+See [docs/TIDB_VERIFICATION.md](TIDB_VERIFICATION.md) for the isolated staging verification matrix. MySQL CI alone does not establish compatibility with the TiDB distribution.
 ## TiDB staging verification
 
 See [docs/TIDB_VERIFICATION.md](TIDB_VERIFICATION.md) for the MySQL 8.4 vs TiDB compatibility checks that must be completed in an isolated staging database. The repository baseline reviewed for this package does not contain `scripts/verify-tidb.sh`; no TiDB connection or verification was performed.
