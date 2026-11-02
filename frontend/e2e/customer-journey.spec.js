@@ -57,8 +57,9 @@ test('customer can register, add a product, place an order and review order hist
     total: 1229,
     couponCode: null,
     timeline: [],
-    simulatedPaymentEnabled: false,
+    simulatedPaymentEnabled: true,
   };
+  let currentOrder = order;
   let paymentSimulationRequests = 0;
   let registered = false;
 
@@ -92,14 +93,20 @@ test('customer can register, add a product, place an order and review order hist
       return route.fulfill({ status: 201, json: order });
     }
     if (method === 'GET' && path === '/orders/501') {
-      return route.fulfill({ json: order });
+      return route.fulfill({ json: currentOrder });
     }
     if (method === 'GET' && path === '/orders/my') {
       return route.fulfill({ json: [order] });
     }
-    if (path === '/payments/simulate/501') {
+    if (method === 'POST' && path === '/payments/simulate/501') {
       paymentSimulationRequests += 1;
-      return route.fulfill({ status: 409, json: { message: 'Simulation is disabled.' } });
+      currentOrder = {
+        ...currentOrder,
+        status: 'CONFIRMED',
+        timeline: [{ newStatus: 'CONFIRMED', actor: 'PAYMENT', changedAt: '2026-11-02T10:05:00Z' }],
+        allowedNextStatuses: ['PROCESSING', 'SHIPPED', 'DELIVERED'],
+      };
+      return route.fulfill({ json: { status: 'SUCCESS' } });
     }
 
     return route.fulfill({
@@ -130,12 +137,15 @@ test('customer can register, add a product, place an order and review order hist
   await page.getByRole('button', { name: 'Place order' }).click();
 
   await expect(page.getByRole('heading', { name: 'Order details' })).toBeVisible();
-  await expect(page.getByText(/Simulated payment is disabled in this environment/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Complete simulated payment' })).toBeVisible();
   await expect(page.getByText(order.shippingAddress)).toBeVisible();
-  expect(paymentSimulationRequests).toBe(0);
+  await page.getByRole('button', { name: 'Complete simulated payment' }).click();
+  await expect(page.getByText('Simulated payment success. No real money was charged.')).toBeVisible();
+  await expect(page.getByText('CONFIRMED', { exact: true })).toBeVisible();
+  expect(paymentSimulationRequests).toBe(1);
 
   await page.locator('a.back[href="/orders"]').click();
   await expect(page.getByRole('heading', { name: 'Your orders' })).toBeVisible();
   await expect(page.getByText('ORDER #501')).toBeVisible();
-  expect(paymentSimulationRequests).toBe(0);
+  expect(paymentSimulationRequests).toBe(1);
 });
