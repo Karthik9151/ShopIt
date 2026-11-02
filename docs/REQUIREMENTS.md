@@ -8,7 +8,7 @@
 - Product catalogue, search, category and price filtering, sorting and pagination.
 - Admin product/category create, update and deactivate operations.
 - Admin customer listing and enable/disable controls.
-- Customer-owned cart and wishlist, persisted in MySQL.
+- Customer-owned cart and wishlist, persisted in MySQL; wishlist items can be moved into the cart.
 - Checkout and order creation, price snapshots, request ID deduplication, server-side totals, stock validation under row locks.
 - Order history, order ownership checks, unpaid cancellation and inventory restoration.
 - Simulated payment record, explicitly labelled and without card data.
