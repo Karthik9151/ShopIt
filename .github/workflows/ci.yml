@@ -32,6 +32,12 @@ jobs:
       - name: Production build
         working-directory: frontend
         run: npm run build
+      - name: Install Chromium for browser tests
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Administrator browser smoke tests
+        working-directory: frontend
+        run: npm run test:e2e
 
   backend:
     name: Maven tests with MySQL 8 integration
