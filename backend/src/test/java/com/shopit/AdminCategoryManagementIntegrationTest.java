@@ -75,9 +75,12 @@ class AdminCategoryManagementIntegrationTest {
         mvc.perform(delete("/api/admin/categories/" + categoryId)
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNoContent());
-        mvc.perform(get("/api/categories"))
+        MvcResult publicCategoriesAfterDeactivation = mvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id == " + categoryId + ")]").doesNotExist());
+                .andReturn();
+        assertThat(containsCategory(
+                mapper.readTree(publicCategoriesAfterDeactivation.getResponse().getContentAsString()), categoryId))
+                .isFalse();
         mvc.perform(get("/api/products")
                         .param("q", suffix))
                 .andExpect(status().isOk())
@@ -91,12 +94,24 @@ class AdminCategoryManagementIntegrationTest {
                 .andExpect(jsonPath("$.active").value(true))
                 .andExpect(jsonPath("$.productCount").value(1));
 
-        mvc.perform(get("/api/categories"))
+        MvcResult publicCategoriesAfterReactivation = mvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id == " + categoryId + ")]").exists());
+                .andReturn();
+        assertThat(containsCategory(
+                mapper.readTree(publicCategoriesAfterReactivation.getResponse().getContentAsString()), categoryId))
+                .isTrue();
         mvc.perform(get("/api/products").param("q", suffix))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1));
+    }
+
+    private boolean containsCategory(JsonNode categories, long id) {
+        for (JsonNode category : categories) {
+            if (category.get("id").asLong() == id) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private JsonNode findCategory(JsonNode categories, long id) {
