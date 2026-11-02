@@ -24,8 +24,8 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-10 | F12 | PR OPEN — DRAFT | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | Corrected CI run 41438484902 and latest ledger run 41438550884 passed Maven/MySQL, frontend tests/build and backend Docker build. | Owner to inspect live report-only CSP violations; no HSTS or enforced CSP |
 | WP-11 | F11 | PR OPEN — DRAFT | `wp11-registration-hardening` | https://github.com/Karthik9151/ShopIt/pull/17 | First CI 41438913897 failed only Mockito verify count; corrected in ff7a8de. Retry 41439144995 passed Maven/MySQL verify, backend Docker build, frontend tests and production build. | Accept documented email-enumeration trade-off until email verification exists |
 | WP-12 | F13 | PR OPEN — DRAFT | `wp12-public-stock` | https://github.com/Karthik9151/ShopIt/pull/18 | CI 41439282251: Maven/MySQL verification and frontend tests/build passed; backend container build was still in progress at last check. | Low-stock threshold defined as 1–5 units |
-| WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | TBD | GET 60-second timeout, safe single GET retry and five-second slow-request banner implemented; JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
-| WP-14 | F16 | BLOCKED | `wp14-admin-pagination` | — | — | Review paginated admin API contract |
+| WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | https://github.com/Karthik9151/ShopIt/pull/19 | CI run 41439602610: Maven/MySQL verification and frontend tests/build passed. JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
+| WP-14 | F16 | PR OPEN — DRAFT | `wp14-admin-pagination` | https://github.com/Karthik9151/ShopIt/pull/20 | CI pending; no local checkout. Admin orders/products paginated, filtered; inventory and dashboard aggregates stay full-table. | Ensure dashboard valuation remains full inventory; not page-limited |
 | WP-15 | Operations | BLOCKED | `wp15-operations` | — | — | Provide/verify operational recovery and database backup procedures |
 | WP-16 | Test coverage, N5 | BLOCKED | `wp16-e2e-testing` | — | — | — |
 | WP-17 | CI security, N6 | BLOCKED | `wp17-ci-security` | — | — | Enable secret scanning/push protection, Dependabot alerts and main branch protection in GitHub settings |
@@ -220,6 +220,19 @@ The owner explicitly authorized WP-00 through WP-22 without waiting for GATE app
 - JVM tuning is not applied without measured startup-to-health time, first business endpoint latency, heap and peak RSS on the actual 512 MB runtime. No Render setting or uptime monitor changed.
 - CI pending at this ledger revision; local Maven/npm commands unavailable.
 - Rollback: revert WP-13 frontend client, banner, CSS, test and docs. No DB migration. Residual gap: real-browser retry scheduling is not covered by an end-to-end test.
+
+
+### WP-14 package evidence — 2026-11-02
+
+- Branch: `wp14-admin-pagination`, stacked on WP-13 branch to preserve the package history; PR #20 will remain draft/unmerged.
+- GET `/api/admin/orders?page=0&size=20&status=` now returns a Spring Page; order status filter is normalized to uppercase.
+- GET `/api/admin/products?page=0&size=20&q=&active=` now returns a Spring Page and supports name search and active-state filter.
+- Page is zero-based; default size 20; maximum size 100; negative page or invalid/oversized size yields 400.
+- Product catalogue in Admin has query/active filters and page controls. Recent orders has status filtering and page controls. AdminInventory shows paged inventory rows, while dashboard KPIs and valuation remain aggregate/full-table.
+- Integration test covers response shape, page boundaries, search/active filter, status filter and invalid bounds.
+- WP-13 CI run 41439602610 passed Maven/MySQL verification and frontend tests/build. WP-14 CI pending. Local commands unavailable.
+- Security: endpoints remain within the existing admin authorization boundary; no schema change.
+- Rollback: revert WP-14 controller/repository/service/frontend/test changes. Gap: integration test disables security filters to focus on pagination and separate pre-existing security tests cover admin authorization.
 
 ## Per-package completion evidence
 
