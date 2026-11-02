@@ -2,27 +2,32 @@ package com.shopit.config;
 
 import java.net.URI;
 import java.util.Locale;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.stereotype.Component;
 
 /**
  * Prevents the explicitly local demo profile from connecting to shared or remote databases.
+ * Runs during bean-factory initialization, before datasource/Flyway initialization.
  * Production/staging profiles are not affected by this local-development guard.
  */
 @Component
 @Profile("demo")
-public class DemoProfileDatabaseGuard implements ApplicationRunner {
-    private final String datasourceUrl;
+public class DemoProfileDatabaseGuard implements BeanFactoryPostProcessor, EnvironmentAware {
+    private Environment environment;
 
-    public DemoProfileDatabaseGuard(@Value("${spring.datasource.url}") String datasourceUrl) {
-        this.datasourceUrl = datasourceUrl;
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
     }
 
     @Override
-    public void run(ApplicationArguments args) {
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        String datasourceUrl = environment.getProperty("spring.datasource.url");
         if (!isLocalOnlyDatasource(datasourceUrl)) {
             throw new IllegalStateException(
                     "The demo profile may connect only to a loopback MySQL database. "
