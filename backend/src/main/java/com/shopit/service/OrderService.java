@@ -56,12 +56,23 @@ public class OrderService {
         order.setShippingAddress(request.shippingAddress().trim());
         BigDecimal subtotal = BigDecimal.ZERO;
 
+        List<String> unavailableProducts = new ArrayList<>();
         for (CartItem line : lines) {
-            Product product = products.findByIdForUpdate(line.getProduct().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Product unavailable"));
-            if (!product.isActive() || line.getQuantity() > product.getStock()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Stock changed for " + product.getName());
+            String productName = line.getProduct().getName();
+            Product product = products.findByIdForUpdate(line.getProduct().getId()).orElse(null);
+            if (product == null) {
+                unavailableProducts.add(productName + " (removed)");
+                continue;
             }
+            if (!product.isActive()) {
+                unavailableProducts.add(product.getName() + " (unavailable)");
+                continue;
+            }
+            if (line.getQuantity() > product.getStock()) {
+                unavailableProducts.add(product.getName() + " (only " + product.getStock() + " in stock)");
+                continue;
+            }
+
             product.setStock(product.getStock() - line.getQuantity());
             subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(line.getQuantity())));
 
@@ -71,6 +82,12 @@ public class OrderService {
             item.setUnitPrice(product.getPrice());
             item.setQuantity(line.getQuantity());
             order.addItem(item);
+        }
+
+        if (!unavailableProducts.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Unavailable cart products: " + String.join(", ", unavailableProducts));
         }
 
         BigDecimal discount = BigDecimal.ZERO;
