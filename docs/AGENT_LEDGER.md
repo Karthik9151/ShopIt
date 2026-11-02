@@ -36,7 +36,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-19 | Readability | BLOCKED | `wp19-readability` | — | — | — |
 | WP-20 | Documentation | BLOCKED | `wp20-docs-accuracy` | — | — | Confirm logout route documentation choice; default is document current public behavior |
 | WP-21 | Accessibility and SEO | BLOCKED | `wp21-accessibility` | — | — | — |
-| WP-22 | Demo profile | BLOCKED | `wp22-demo-profile` | — | — | Keep demo profile local-only; no Render configuration changes |
+| WP-22 | Demo profile | PR OPEN — CHECKS PENDING | `wp22-demo-profile` | https://github.com/Karthik9151/ShopIt/pull/28 | CI pending: Maven/MySQL verify and frontend tests/build. | Local-only profile; owner must keep SPRING_PROFILES_ACTIVE=demo off Render; no hosted settings changed |
 | WP-23 | Optional features (23a-23h) | BLOCKED | — | — | — | Owner must select one feature and approve its separate plan |
 
 ## Project goals
@@ -191,3 +191,11 @@ Each package must record:
 - Risks, rollback and pending owner actions.
 
 Never mark a package MERGED until the owner confirms GitHub merged it. Never mark checks passed without command or CI evidence.
+
+
+### WP-22 package evidence — 2026-11-02
+
+- Added backend/src/main/resources/application-demo.yml and docs/LOCAL_DEMO.md. The profile defaults to local MySQL database shopit_demo, localhost frontend CORS, local OpenAPI enablement, and simulated payments disabled.
+- No default/demo admin account or password is seeded. JWT/admin/database secrets must be supplied locally through environment/secret manager.
+- Decision D8 is preserved: simulated payments stay disabled in local demo and remain an owner-managed Render staging-only setting. No Render Blueprint/environment changes made.
+- No Flyway files or schema changed; V1–V4 untouched. No hosted service, DB or GitHub setting changed. CI pending.
