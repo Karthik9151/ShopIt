@@ -28,20 +28,20 @@ The Maven verify lifecycle runs unit, context and integration tests. CI provisio
 
 ## Verified GitHub Actions run
 
-Verified PR head: `9fe2c58594502f96feea580b9041a808934e8346`.
+Verified PR head: `32c4b233902028634d923107acffa8b4646cb4a1`.
 
 | Workflow | Result |
 |---|---|
-| ShopIt CI `41480588542` | Passed |
-| CodeQL `41480588575` | Java/Kotlin and JavaScript/TypeScript passed |
-| Dependency review `41480588654` | Passed |
+| ShopIt CI `41483344271` | Passed |
+| CodeQL `41483344120` | Java/Kotlin and JavaScript/TypeScript passed |
+| Dependency review `41483344287` | Passed |
 
 ShopIt CI results:
 - Frontend ESLint passed.
 - `npm audit --audit-level=high` passed.
 - Vitest: 39 tests passed across 11 files.
 - Vite production build passed.
-- Playwright Chromium: 3 browser smoke tests passed.
+- Playwright Chromium: 4 browser tests passed.
 - Backend Maven/H2/MySQL 8.4 verification: 73 tests passed, 0 failures/errors.
 - Backend container build passed.
 
@@ -49,7 +49,7 @@ Always inspect workflow runs attached to the latest PR head SHA. A successful wo
 
 ## Automated coverage
 
-Frontend Vitest includes route guard, sign-in navigation, shared UI component, formatter and API-client regressions. Playwright covers non-admin access blocking and administrator navigation through the owner workspaces. It does not yet automate the full storefront registration/cart/checkout/simulated-payment/order-history lifecycle.
+Frontend Vitest includes route guard, sign-in navigation, shared UI component, formatter and API-client regressions. Playwright covers non-admin access blocking, administrator navigation, and a mocked customer journey through registration, product add, cart, checkout, order details and order history. The customer flow asserts that disabled simulated payments do not trigger the payment endpoint. These Playwright tests stub API responses; backend API behavior is verified separately by Maven integration tests against MySQL 8.4. A full browser-to-live-backend staging journey is still an owner-operated check.
 
 Backend tests cover:
 - pricing boundaries, tax/shipping/discount calculation and rounding;

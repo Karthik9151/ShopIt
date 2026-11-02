@@ -1,6 +1,6 @@
 # ShopIt Agent Work Ledger
 
-Last updated: 2026-11-02 11:25 UTC
+Last updated: 2026-11-02 16:40 UTC
 Repository: https://github.com/Karthik9151/ShopIt
 Baseline branch: `main`
 Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
@@ -411,5 +411,16 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 - ShopIt CI run `41480588542` passed: 73 backend Maven/H2/MySQL 8.4 tests with 0 failures/errors; backend container build; frontend ESLint; npm audit; 39 Vitest tests across 11 files; production build; and 3 Playwright Chromium smoke tests.
 - CodeQL run `41480588575` passed both Java/Kotlin and JavaScript/TypeScript analyses. Dependency review run `41480588654` passed.
 - No local Maven/npm command was claimed; verification evidence is the GitHub Actions result attached to the exact PR head. No Render, TiDB, production site, live database, real payment processor, or customer data was accessed.
-- Remaining owner/runtime tasks are the committed frontend lockfile plus `npm ci`, full storefront-lifecycle E2E coverage, full App.jsx architecture modularization, target-equivalent 512 MB JVM measurement, isolated TiDB verification and Render staging smoke test.
+- Remaining owner/runtime tasks are a reviewed frontend lockfile plus `npm ci`, browser-to-live-backend staging smoke test, target-equivalent 512 MB JVM measurement, isolated TiDB verification and Render staging smoke test.
 - PR #47 remains open, ready for review, and unmerged. Owner merge decision remains separate from this implementation/verification work.
+
+### PR #47 continuation — frontend modularization and customer journey — 2026-11-02
+
+- Continued on existing `shopit-improvements` / PR #47; no branch or PR was recreated and no merge was performed.
+- Extracted the former large `frontend/src/App.jsx` into a router/layout shell plus `frontend/src/auth/AuthContext.jsx`, `frontend/src/routing.js`, `frontend/src/pages/StorefrontPages.jsx`, `frontend/src/admin/AdminDashboardPages.jsx` and `frontend/src/admin/AdminOperationsPages.jsx`. Existing route paths and the `getPageTitle` / `getPostLoginPath` named exports remain compatible with their tests.
+- Added `frontend/e2e/customer-journey.spec.js`: customer registration → products → add to cart → cart → checkout → order details → order history. API responses are mocked at the browser boundary; the flow verifies that disabled simulated payments do not call the payment endpoint. This complements, but does not replace, the backend Maven/MySQL API integration tests.
+- Expanded ESLint to cover the entire `frontend/src` tree. Fixed Playwright assertions to target unique confirmation text and the explicit order-detail back link.
+- Verified exact PR head `32c4b233902028634d923107acffa8b4646cb4a1`. ShopIt CI run `41483344271` passed: backend Maven/H2/MySQL 8.4 verification (73 tests, 0 failures/errors), backend container build, frontend ESLint, dependency audit, Vitest (39 tests across 11 files), Vite production build, and Playwright Chromium (4 tests).
+- CodeQL run `41483344120` passed Java/Kotlin and JavaScript/TypeScript analyses. Dependency review run `41483344287` passed.
+- Branch comparison at verification: 142 commits ahead of `main`, 0 behind; no Flyway migration files changed. PR #47 is open, ready for review, and unmerged.
+- Remaining owner/runtime work: a reviewed frontend lockfile and `npm ci`; browser-to-live-backend staging smoke test; measured 512 MB JVM startup/heap/RSS; isolated TiDB verification; and Render staging/readiness verification. No production service, payment processor or live database was accessed.

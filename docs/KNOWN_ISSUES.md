@@ -26,8 +26,8 @@ The audit and remediation were performed against repository source, tests, docum
 
 ### Frontend architecture and end-to-end coverage
 
-- Admin workspaces are modularized, but `frontend/src/App.jsx` still contains parts of storefront/authentication route composition. A complete application-wide split into feature routes, contexts and hooks remains.
-- Current Playwright coverage is an admin access/navigation smoke suite (3 browser tests). Full customer registration, cart, checkout, simulated-payment and order-history journeys are not yet automated.
+- The frontend is now separated into a small router/layout shell (`App.jsx`), an authentication context, shared route helpers, storefront/customer pages, admin dashboard/detail pages and admin operations pages. Feature components are no longer concentrated in the router file.
+- Playwright covers 4 Chromium tests: 3 administrator/customer access-navigation tests and 1 mocked customer lifecycle journey (registration, product add, cart, checkout, order detail and order history). The customer test asserts no payment endpoint is called when simulated payments are disabled. It mocks API responses; full browser-to-live-backend execution remains an isolated-staging owner check.
 - No comprehensive cross-browser, visual-regression or full accessibility audit has been performed. Complete keyboard/mobile checks in isolated staging.
 
 ### Dependency reproducibility
@@ -42,22 +42,22 @@ The audit and remediation were performed against repository source, tests, docum
 
 ## Verified CI results
 
-Verified on PR head `9fe2c58594502f96feea580b9041a808934e8346`:
+Verified on PR head `32c4b233902028634d923107acffa8b4646cb4a1`:
 
 | Check | Result | Evidence |
 |---|---|---|
-| Frontend ESLint | Passed | ShopIt CI run `41480588542` |
-| Dependency audit (`npm audit --audit-level=high`) | Passed | ShopIt CI run `41480588542` |
-| Vitest | 39 passed across 11 files | ShopIt CI run `41480588542` |
-| Vite production build | Passed | ShopIt CI run `41480588542` |
-| Playwright Chromium smoke tests | 3 passed | ShopIt CI run `41480588542` |
-| Backend Maven/H2/MySQL 8.4 verification | 73 passed, 0 failures/errors | ShopIt CI run `41480588542` |
-| Backend container build | Passed | ShopIt CI run `41480588542` |
-| CodeQL Java/Kotlin and JavaScript/TypeScript | Both passed | CodeQL run `41480588575` |
-| Dependency review | Passed | Dependency review run `41480588654` |
+| Frontend ESLint | Passed | ShopIt CI run `41483344271` |
+| Dependency audit (`npm audit --audit-level=high`) | Passed | ShopIt CI run `41483344271` |
+| Vitest | 39 passed across 11 files | ShopIt CI run `41483344271` |
+| Vite production build | Passed | ShopIt CI run `41483344271` |
+| Playwright Chromium tests | 4 passed | ShopIt CI run `41483344271` |
+| Backend Maven/H2/MySQL 8.4 verification | 73 passed, 0 failures/errors | ShopIt CI run `41483344271` |
+| Backend container build | Passed | ShopIt CI run `41483344271` |
+| CodeQL Java/Kotlin and JavaScript/TypeScript | Both passed | CodeQL run `41483344120` |
+| Dependency review | Passed | Dependency review run `41483344287` |
 
-The tested PR head was 137 commits ahead of `main` and 0 commits behind at the time of verification. No migration files were changed. PR #47 is open, ready for review (not draft), and has not been merged.
+The tested PR head was 142 commits ahead of `main` and 0 commits behind at the time of verification. No migration files were changed. PR #47 is open, ready for review (not draft), and has not been merged.
 
 ## Owner/runtime actions still required
 
-Complete the lockfile/reproducible install, broader storefront browser coverage, target-sized JVM measurement, isolated TiDB verification and Render staging smoke test before treating those runtime/operational areas as complete. A successful CI run does not prove production deployment, TiDB compatibility or 512 MB instance performance.
+Complete the reviewed frontend lockfile/reproducible install, full browser-to-live-backend staging journey, target-sized JVM measurement, isolated TiDB verification and Render staging smoke test before treating those runtime/operational areas as complete. A successful CI run does not prove production deployment, TiDB compatibility or 512 MB instance performance.
