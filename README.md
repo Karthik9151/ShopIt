@@ -1,88 +1,59 @@
 # ShopIt
 
-A full-stack e-commerce application built with React/Vite, Java 21, Spring Boot 3.5, Spring Security/JWT, Spring Data JPA, Flyway, and MySQL 8.
+**ShopIt** is a modern full-stack e-commerce shopping platform that brings customers and store administrators together in one convenient online store. Customers can discover products, manage their shopping experience, and place orders, while administrators can manage the store catalogue and day-to-day operations.
 
-## Local setup
+## Project Overview
 
-Requirements: JDK 21, Maven 3.9+, Node.js 22.12+, npm, and MySQL 8.
+ShopIt is designed to provide a smooth, accessible, and user-friendly online shopping experience. The platform includes customer-facing shopping features alongside dedicated store-management capabilities.
 
-1. Create a MySQL database named `shopit` and a database user with privileges on it.
-2. Copy `.env.example` to `.env`. Generate a JWT key and fill in local values:
-   ```bash
-   openssl rand -base64 32
-   ```
-   Set the output as `JWT_SECRET_BASE64`. The backend intentionally refuses to start with a missing/weak JWT key.
-3. Export the environment values in your shell (or use your IDE's environment configuration).
-4. Start the API: `cd backend && mvn spring-boot:run`.
-5. Start the UI in another terminal: `cd frontend && npm install && npm run dev`.
-6. Open `http://localhost:5173`. API: `http://localhost:8080`. OpenAPI UI: `http://localhost:8080/swagger-ui/index.html`.
+## Core Features
 
-Flyway creates the schema and seeds a small sample catalogue. Set `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD` (minimum 12 characters) before first startup to provision an administrator. Bootstrap does not overwrite existing accounts by default.
+### Customer Experience
+- Browse products and explore product categories.
+- View product details, prices, and availability.
+- Create an account and securely sign in.
+- Add products to a shopping cart and manage cart items.
+- Save products to a wishlist.
+- Review order details and track order history.
+- Discover available offers and apply eligible coupons during checkout.
+- Use a responsive shopping interface across desktop and mobile devices.
 
-## Admin setup and troubleshooting
+### Store Administration
+- Access a dedicated administrator dashboard.
+- Manage products and product categories.
+- Monitor inventory and update stock availability.
+- View and manage customer information.
+- Review orders and their status.
+- Create and manage promotional coupons.
+- View store and inventory summaries.
 
-Configure the administrator through `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD`. The email is trimmed and normalized to lowercase. The password must contain at least 12 characters. Customer registration cannot reserve or claim the configured administrator email.
+## Technology Stack
 
-| Symptom | Likely cause | Action |
-|---|---|---|
-| No administrator is created | `APP_ADMIN_EMAIL` is blank | Set the administrator email and restart the API. |
-| Bootstrap reports a short password | `APP_ADMIN_PASSWORD` has fewer than 12 characters | Set a password of at least 12 characters and restart. |
-| Existing account remains a CUSTOMER | The email already belongs to an account and takeover is disabled | Verify ownership of the account, then use the controlled takeover procedure below or correct the account through an authorized database operation. |
-| Administrator login fails | Environment values do not match the provisioned account or the password was changed | Check the configured email and reset the account password through a controlled owner procedure. Never share the password in logs or support messages. |
+| Area | Technologies |
+|---|---|
+| Frontend | React.js, Vite, JavaScript, HTML, CSS |
+| Backend | Java 21, Spring Boot 3.5 |
+| Security | Spring Security, JSON Web Tokens (JWT) |
+| API | REST APIs |
+| Data Access | Spring Data JPA, Hibernate |
+| Database | MySQL 8 |
+| Database Versioning | Flyway |
+| Quality & Testing | JUnit, Maven, Vitest, Playwright |
+| Deployment | Render |
 
-### Controlled takeover of an existing account
+## Application
 
-The optional `APP_ADMIN_TAKE_OVER_EXISTING` environment variable defaults to `false`. When set to `true`, startup promotes an existing account with the configured email to ADMIN, enables it, and replaces its password hash with the configured `APP_ADMIN_PASSWORD`.
-
-Use this switch only when the owner has verified control of the account and understands that, because email verification does not exist yet, an existing account may have been registered by someone else. Prefer a controlled database correction when appropriate. If using the takeover switch, enable it for one deployment only and turn it off immediately afterward. Never leave it enabled as a normal operating setting.
-
-Bootstrap logs report whether configuration was absent, the password was too short, an existing account was left untouched, an account was created, or an account was promoted. Passwords and password hashes are never logged.
-
-## Owner-managed catalogue and promotions
-
-The store owner provisions the administrator account through `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD`. Only ADMIN routes can create or update products, selling prices, private unit purchase costs, categories, and coupon campaigns. Customer registration creates customer accounts only.
-
-The administrator can publish percentage or fixed-value coupons with start/end timestamps, minimum cart values, optional maximum discounts, and redemption limits. The customer offers page shows only currently available promotions. Coupon application is previewed against the signed-in customer's cart and is revalidated during checkout; the order stores the coupon/discount snapshot.
-
-The admin inventory screen estimates stock cost budget, potential retail value, and gross margin potential from current stock. These figures are estimates, not realized revenue or accounting profit. Product purchase costs are returned only by admin APIs and are omitted from public product responses.
-
-## Pricing and shipping
-
-Listed product prices are tax-exclusive. Checkout adds 18% tax as a separate line. Shipping is INR 49.00 unless the merchandise subtotal after coupon discount is at least INR 1,999.00, in which case shipping is free. The backend values are configurable through `APP_PRICING_SHIPPING_FLAT`, `APP_PRICING_FREE_SHIPPING_THRESHOLD`, and `APP_PRICING_TAX_RATE`. The frontend announcement uses `VITE_FREE_SHIPPING_THRESHOLD` (default 1999); keep it equal to `APP_PRICING_FREE_SHIPPING_THRESHOLD` on the deployed API.
+- **Live Store:** https://shopit-frontend-11ff.onrender.com
+- **Project Repository:** https://github.com/Karthik9151/ShopIt
 
 ## Payments
 
-Only an explicitly simulated payment workflow is included. It does not charge money or collect card details. The admin dashboard separates simulated payment value from real verified sales. Integrate and verify a real provider server-side before enabling live payments.
+The current checkout experience supports a simulated payment flow for demonstration and testing. It does not process real payments or collect live card details.
 
-## Checks
+## Project Goal
 
-Frontend: `cd frontend && npm install && npm test -- --run && npm run build`
+The goal of ShopIt is to deliver a complete online retail experience with convenient product discovery, straightforward shopping workflows, and practical store-management features in a single application.
 
-Backend: `cd backend && mvn -B verify`
+---
 
-See `docs/` for architecture, requirements, endpoint contracts, security notes, operations/recovery, TiDB staging verification, and test procedures.
-
-
-## API documentation
-
-OpenAPI and Swagger UI are disabled by default in deployed environments. Enable `APP_API_DOCS_ENABLED=true` only in a trusted local or test profile when interactive API documentation is needed. The frontend Render Blueprint uses a report-only CSP during observation; review browser violations before any enforcement.
-
-
-## Authentication lifecycle
-
-Logout clears the browser's `sessionStorage` token and user state. The API logout endpoint is stateless and does not revoke a copied JWT; previously issued tokens remain usable until expiry unless the account is disabled or the signing key is rotated. Password changes do not yet revoke existing access tokens. See `docs/API_DOCUMENTATION.md` and `docs/SECURITY.md` for this current limitation.
-
-## Test an admin page in 5 minutes
-
-This is a local-only smoke path. It uses the local MySQL database and a test administrator; do not point it at production.
-
-1. Start the API after setting a local `JWT_SECRET_BASE64`, `APP_ADMIN_EMAIL`, and `APP_ADMIN_PASSWORD` (at least 12 characters).
-2. Start the frontend with `cd frontend && npm run dev`.
-3. Sign in using the configured local administrator account.
-4. Open the owner console at `/admin`; browse products, categories, customers, orders, coupons, and inventory.
-5. Verify the backend owner endpoints with the same admin token: `GET /api/admin/dashboard`, `GET /api/admin/products?page=0&size=20`, `GET /api/admin/categories`, and `GET /api/admin/customers?page=0&size=20`.
-6. Create a disposable product and change its stock with `PATCH /api/admin/products/{id}/stock` using a JSON body such as `{"stock":12}`. Stock is bounded from 0 through 1,000,000.
-7. Register a separate customer account and confirm it receives 403 when it calls an `/api/admin/**` endpoint.
-8. Delete the disposable product/category or deactivate them after testing.
-
-A customer must not be redirected into an admin route. A successful HTTP response from an admin endpoint is not a replacement for checking the visible UI, keyboard navigation, and mobile layout.
+*ShopIt — A complete online shopping experience.*
