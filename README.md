@@ -17,7 +17,26 @@ Requirements: JDK 21, Maven 3.9+, Node.js 22.12+, npm, and MySQL 8.
 5. Start the UI in another terminal: `cd frontend && npm install && npm run dev`.
 6. Open `http://localhost:5173`. API: `http://localhost:8080`. OpenAPI UI: `http://localhost:8080/swagger-ui/index.html`.
 
-Flyway creates the schema and seeds a small sample catalogue. Set `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD` (minimum 12 characters) before first startup to provision an administrator. Bootstrap does not overwrite existing accounts.
+Flyway creates the schema and seeds a small sample catalogue. Set `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD` (minimum 12 characters) before first startup to provision an administrator. Bootstrap does not overwrite existing accounts by default.
+
+## Admin setup and troubleshooting
+
+Configure the administrator through `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD`. The email is trimmed and normalized to lowercase. The password must contain at least 12 characters. Customer registration cannot reserve or claim the configured administrator email.
+
+| Symptom | Likely cause | Action |
+|---|---|---|
+| No administrator is created | `APP_ADMIN_EMAIL` is blank | Set the administrator email and restart the API. |
+| Bootstrap reports a short password | `APP_ADMIN_PASSWORD` has fewer than 12 characters | Set a password of at least 12 characters and restart. |
+| Existing account remains a CUSTOMER | The email already belongs to an account and takeover is disabled | Verify ownership of the account, then use the controlled takeover procedure below or correct the account through an authorized database operation. |
+| Administrator login fails | Environment values do not match the provisioned account or the password was changed | Check the configured email and reset the account password through a controlled owner procedure. Never share the password in logs or support messages. |
+
+### Controlled takeover of an existing account
+
+The optional `APP_ADMIN_TAKE_OVER_EXISTING` environment variable defaults to `false`. When set to `true`, startup promotes an existing account with the configured email to ADMIN, enables it, and replaces its password hash with the configured `APP_ADMIN_PASSWORD`.
+
+Use this switch only when the owner has verified control of the account and understands that, because email verification does not exist yet, an existing account may have been registered by someone else. Prefer a controlled database correction when appropriate. If using the takeover switch, enable it for one deployment only and turn it off immediately afterward. Never leave it enabled as a normal operating setting.
+
+Bootstrap logs report whether configuration was absent, the password was too short, an existing account was left untouched, an account was created, or an account was promoted. Passwords and password hashes are never logged.
 
 ## Owner-managed catalogue and promotions
 
@@ -35,6 +54,6 @@ Only an explicitly simulated payment workflow is included. It does not charge mo
 
 Frontend: `cd frontend && npm install && npm test -- --run && npm run build`
 
-Backend: `cd backend && mvn verify`
+Backend: `cd backend && mvn -B verify`
 
 See `docs/` for architecture, requirements, database design, endpoints, security notes, and manual integration checks.

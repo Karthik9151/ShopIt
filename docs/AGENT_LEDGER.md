@@ -12,7 +12,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP id | Review findings | Status | Branch | PR link | Checks run | Owner actions pending |
 |---|---|---|---|---|---|---|
 | WP-00 | F1-F17, N1-N6 | PR OPEN | `wp00-ledger` | https://github.com/Karthik9151/ShopIt/pull/6 | PR run 41430477537: frontend tests and build passed; backend Maven job still running at last check. Main baseline run 41421412026: backend 7/7; frontend 1/1; Docker build passed. Local commands unavailable. | Confirm backup branch location; provide local checkout or authorize remote-only Git workflow |
-| WP-01 | F1 | BLOCKED | `wp01-admin-bootstrap` | — | — | Decide whether to use one-deploy admin takeover switch or database correction |
+| WP-01 | F1 | PR OPEN | `wp01-admin-bootstrap` | https://github.com/Karthik9151/ShopIt/pull/7 | CI pending; local backend/frontend commands unavailable. New AdminBootstrap unit tests and reserved-email integration test added. | Optional one-deploy APP_ADMIN_TAKE_OVER_EXISTING=true if choosing controlled takeover; unset afterward |
 | WP-02 | F2, F14 | BLOCKED | `wp02-pricing` | — | — | Confirm none; D1/D2 apply |
 | WP-03 | F4 | BLOCKED | `wp03-error-handling` | — | — | Confirm trace-id correlation design is acceptable |
 | WP-04 | F5 | BLOCKED | `wp04-session-expiry` | — | — | — |

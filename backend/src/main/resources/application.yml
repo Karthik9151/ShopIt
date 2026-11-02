@@ -35,3 +35,4 @@ app:
   admin:
     email: ${APP_ADMIN_EMAIL:}
     password: ${APP_ADMIN_PASSWORD:}
+    take-over-existing: ${APP_ADMIN_TAKE_OVER_EXISTING:false}
