@@ -39,8 +39,9 @@ public class ProductService {
         return view(product);
     }
 
-    public List<AdminProductView> adminList() {
-        return products.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream().map(this::adminView).toList();
+    public Page<AdminProductView> adminList(String query, Boolean active, Pageable pageable) {
+        String term = query == null || query.isBlank() ? null : query.trim();
+        return products.searchAdmin(term, active, pageable).map(this::adminView);
     }
 
     @Transactional
@@ -95,8 +96,10 @@ public class ProductService {
 
     public ProductView view(Product product) {
         Category category = product.getCategory();
+        int stock = product.getStock();
         return new ProductView(product.getId(), product.getName(), product.getDescription(), product.getPrice(),
-            product.getStock(), product.getImageUrl(), category == null ? null : category.getId(),
+            stock > 0, stock > 0 && stock <= 5, product.getImageUrl(),
+            category == null ? null : category.getId(),
             category == null ? null : category.getName(), product.isActive(), product.getCreatedAt());
     }
 }

@@ -8,6 +8,7 @@
 - No committed/default production JWT secret: backend startup fails if `JWT_SECRET_BASE64` is absent or too short.
 - Backend role authorization; all `/api/admin/**` endpoints require ADMIN.
 - Customer resources are queried by authenticated principal ID, not a request-supplied owner ID. This includes cart, wishlist, orders, payments, profile, and saved addresses.
+- Registration normalizes email/name, reserves the configured administrator email, rejects a password equal to the email or a small list of common passwords, and maps concurrent duplicate-email insert races to the same 409 response.
 - DTO validation; JPA entities and password hashes are not returned by APIs.
 - Server-side product price, tax, shipping, totals, and stock calculations.
 - Pessimistic product row locks and transactions during checkout; product IDs are locked in deterministic order.
@@ -30,6 +31,7 @@ The initial browser client stores its short-lived bearer access token in `sessio
 - Review the frontend's Render `Content-Security-Policy-Report-Only` reports in a real browser before considering any enforced CSP. API and static-site headers should be verified independently.
 - Move access-token handling to an HttpOnly, Secure, SameSite cookie architecture with CSRF protection, or use a backend-for-frontend.
 - Add rate limits for authentication, checkout, password changes, password reset, and payments.
+- Registration currently reveals a generic duplicate-email 409; until verified email delivery exists, this is an account-enumeration trade-off. Reassess the response policy when email verification is implemented.
 - Implement verified email delivery and single-use, expiring password-reset tokens.
 - Before enabling simulated payments on Render staging, set `APP_PAYMENTS_SIMULATED_ENABLED=true` as an owner-managed environment variable. Keep it absent/false outside staging and remove it before replacing simulation with real payment integration.
 - Integrate a real payment provider with server-verified signatures, replay protection, idempotent webhook processing, refunds, and reconciliation.

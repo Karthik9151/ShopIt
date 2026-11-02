@@ -41,6 +41,7 @@ public class SecurityConfig{
   registration.setEnabled(false);
   return registration;
  }
+
  @Bean ApiSurfaceFilter apiSurfaceFilter(
   @Value("${app.api-docs.enabled:false}") boolean apiDocsEnabled) {
   return new ApiSurfaceFilter(apiDocsEnabled);
