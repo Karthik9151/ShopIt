@@ -36,6 +36,12 @@ app:
     email: ${APP_ADMIN_EMAIL:}
     password: ${APP_ADMIN_PASSWORD:}
     take-over-existing: ${APP_ADMIN_TAKE_OVER_EXISTING:false}
+  rate-limit:
+    enabled: ${APP_RATE_LIMIT_ENABLED:true}
+    trust-forwarded-for: ${APP_RATE_LIMIT_TRUST_FORWARDED_FOR:false}
+    bucket-idle-minutes: ${APP_RATE_LIMIT_BUCKET_IDLE_MINUTES:30}
+    eviction-interval-ms: ${APP_RATE_LIMIT_EVICTION_INTERVAL_MS:300000}
+    max-buckets: ${APP_RATE_LIMIT_MAX_BUCKETS:100000}
   payments:
     simulated-enabled: ${APP_PAYMENTS_SIMULATED_ENABLED:false}
   pricing:
