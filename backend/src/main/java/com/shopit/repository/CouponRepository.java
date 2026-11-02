@@ -15,6 +15,10 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     List<Coupon> findByActiveTrueOrderByEndsAtAsc();
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from Coupon c where c.id = :id")
+    Optional<Coupon> findByIdForUpdate(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Coupon c where upper(c.code) = upper(:code)")
     Optional<Coupon> findByCodeIgnoreCaseForUpdate(@Param("code") String code);
 }
