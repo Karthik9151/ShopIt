@@ -48,7 +48,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("stockThreshold") Integer stockThreshold,
             Pageable pageable);
 
-    long countByActiveTrue();\n\n    long countByCategory_Id(Long categoryId);
+    long countByActiveTrue();
+
+    long countByCategory_Id(Long categoryId);
 
     java.util.List<Product> findByActiveTrue();
 
