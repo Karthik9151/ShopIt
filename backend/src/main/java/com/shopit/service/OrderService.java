@@ -124,6 +124,11 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public Page<OrderView> adminOrdersForCustomer(Long customerId, Pageable pageable) {
+        return orders.findAllByUser_IdOrderByCreatedAtDesc(customerId, pageable).map(this::view);
+    }
+
+    @Transactional(readOnly = true)
     public OrderView getMine(String email, Long id) {
         AppUser user = user(email);
         return view(orders.findByIdAndUser_Id(id, user.getId())
