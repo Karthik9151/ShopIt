@@ -152,6 +152,13 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/categories/paged")
+    public Page<AdminCategoryView> pagedCategories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return categories.adminPage(adminPage(page, size));
+    }
+
     @GetMapping("/categories")
     public List<AdminCategoryView> allCategories() {
         return categories.adminList();
