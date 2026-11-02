@@ -2,6 +2,8 @@ package com.shopit.service;
 import com.shopit.dto.ApiDtos.*;
 import com.shopit.entity.*;
 import com.shopit.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -147,8 +149,10 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderView> all() {
-        return orders.findAllByOrderByCreatedAtDesc().stream().map(this::view).toList();
+    public Page<OrderView> adminList(String status, Pageable pageable) {
+        String normalizedStatus = status == null || status.isBlank()
+                ? null : status.trim().toUpperCase(Locale.ROOT);
+        return orders.searchForAdmin(normalizedStatus, pageable).map(this::view);
     }
 
     public OrderView updateStatus(Long id, String next) {

@@ -6,6 +6,7 @@ import com.shopit.repository.UserRepository;
 import com.shopit.security.JwtService;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +18,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AuthService {
     private static final String DUPLICATE_EMAIL_MESSAGE = "An account with this email already exists";
+    private static final java.util.Set<String> COMMON_PASSWORDS = java.util.Set.of(
+            "password", "password123", "1234567890", "qwerty123", "admin123456",
+            "letmein123", "welcome123", "shopit123", "iloveyou123");
 
     private final UserRepository users;
     private final PasswordEncoder encoder;
@@ -45,6 +49,14 @@ public class AuthService {
         if (!adminEmail.isBlank() && adminEmail.equals(normalizedEmail)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, DUPLICATE_EMAIL_MESSAGE);
         }
+        String normalizedPassword = request.password().toLowerCase(Locale.ROOT);
+        if (normalizedPassword.equals(normalizedEmail)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must not equal the email address");
+        }
+        if (COMMON_PASSWORDS.contains(normalizedPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a less common password");
+        }
+
         if (users.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, DUPLICATE_EMAIL_MESSAGE);
         }
@@ -55,7 +67,15 @@ public class AuthService {
         user.setPasswordHash(encoder.encode(request.password()));
         user.setPhone(request.phone());
         user.setRole("CUSTOMER");
-        return response(users.save(user));
+        try {
+            return response(users.save(user));
+        } catch (DataIntegrityViolationException exception) {
+            // The pre-check is not a concurrency guarantee; translate a unique-email race consistently.
+            if (users.existsByEmailIgnoreCase(normalizedEmail)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, DUPLICATE_EMAIL_MESSAGE);
+            }
+            throw exception;
+        }
     }
 
     public AuthResponse login(LoginRequest request) {
