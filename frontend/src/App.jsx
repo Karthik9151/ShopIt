@@ -453,18 +453,15 @@ function Offers(){
 }
 function AdminCoupons(){
  const blank=()=>({id:null,code:'',description:'',discountType:'PERCENT',discountValue:'10',minimumOrderAmount:'0',maximumDiscount:'',startsAt:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16),endsAt:new Date(Date.now()+7*86400000-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16),usageLimit:''});
- const [form,setForm]=useState(blank),[coupons,setCoupons]=useState([]),[tab,setTab]=useState('Active'),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[previewSubtotal,setPreviewSubtotal]=useState('1500');
- const refresh=()=>api.get('/admin/coupons').then(r=>setCoupons(r.data||[])).catch(e=>setError(e.response?.data?.message||'Could not load coupon management.'));
- useEffect(()=>{refresh();},[]);
- const now=Date.now();
- const bucket=o=>{
-  if(!o.active)return 'Paused';
-  if(new Date(o.startsAt).getTime()>now)return 'Scheduled';
-  if(new Date(o.endsAt).getTime()<=now||(o.usageLimit&&o.usageCount>=o.usageLimit))return 'Expired';
-  return 'Active';
+ const [form,setForm]=useState(blank),[couponResult,setCouponResult]=useState(null),[tab,setTab]=useState('Active'),[couponPage,setCouponPage]=useState(0),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[previewSubtotal,setPreviewSubtotal]=useState('1500');
+ const coupons=couponResult?.content||[];
+ const refresh=async()=>{
+  try{const response=await api.get('/admin/coupons/paged',{params:{bucket:tab.toUpperCase(),page:couponPage,size:20}});setCouponResult(response.data);}
+  catch(e){setError(e.response?.data?.message||'Could not load coupon management.');}
  };
+ useEffect(()=>{refresh();},[tab,couponPage]);
  const tabs=['Active','Scheduled','Expired','Paused'];
- const visible=coupons.filter(o=>bucket(o)===tab);
+ const visible=coupons;
  const subtotal=Math.max(0,Number(previewSubtotal)||0),minimum=Number(form.minimumOrderAmount||0);
  const eligible=subtotal>=minimum&&subtotal>0;
  const rawDiscount=form.discountType==='PERCENT'?subtotal*Number(form.discountValue||0)/100:Number(form.discountValue||0);
@@ -522,17 +519,18 @@ function AdminCoupons(){
     </div>
    </form>
    <div className="summary"><h2>Coupon register</h2>
-    <div className="coupon-tabs" role="tablist" aria-label="Coupon status">{tabs.map(value=><button type="button" role="tab" aria-selected={tab===value} className={tab===value?'active':''} key={value} onClick={()=>setTab(value)}>{value} <span>{coupons.filter(o=>bucket(o)===value).length}</span></button>)}</div>
+    <div className="coupon-tabs" role="tablist" aria-label="Coupon status">{tabs.map(value=><button type="button" role="tab" aria-selected={tab===value} className={tab===value?'active':''} key={value} onClick={()=>{setTab(value);setCouponPage(0);}}>{value}{tab===value&&couponResult?` <span>{couponResult.totalElements}</span>`:''}</button>)}</div>
     {visible.length?visible.map(o=>{
      const percent=o.usageLimit?Math.min(100,o.usageCount/o.usageLimit*100):null;
      return <article className="coupon-row" key={o.id}>
       <div><b>{o.code}</b><small>{o.discountType==='PERCENT'?o.discountValue+'% off':formatCurrency(o.discountValue)+' off'} · {formatDate(o.startsAt)} – {formatDate(o.endsAt)}</small>
-       <span className={'status '+(bucket(o)==='Active'?'confirmed':'pending_payment')}>{bucket(o)}</span>
+       <span className={'status '+(tab==='Active'?'confirmed':'pending_payment')}>{tab}</span>
        <div className="coupon-usage"><div><span>{o.usageCount} {o.usageLimit?'/ '+o.usageLimit:'uses · no cap'}</span>{percent!==null&&<b>{Math.round(percent)}%</b>}</div>{percent!==null&&<div className="coupon-usage-track"><span style={{width:percent+'%'}}/></div>}</div>
       </div>
-      <div className="row-actions"><button className="text-link" onClick={()=>edit(o)}>Edit</button>{(bucket(o)==='Expired')?<span className="muted">Ended</span>:<button className="text-link" onClick={()=>toggle(o)}>{o.active?'Pause':'Activate'}</button>}</div>
+      <div className="row-actions"><button className="text-link" onClick={()=>edit(o)}>Edit</button>{tab==='Expired'?<span className="muted">Ended</span>:<button className="text-link" onClick={()=>toggle(o)}>{o.active?'Pause':'Activate'}</button>}</div>
      </article>;
     }):<p className="muted">There are no {tab.toLowerCase()} coupons.</p>}
+    <div className="pagination-controls"><button className="secondary" disabled={couponPage<=0} onClick={()=>setCouponPage(value=>value-1)}>Previous</button><span>Page {couponResult?.totalPages?couponPage+1:0} of {couponResult?.totalPages||0} · {couponResult?.totalElements||0} coupons</span><button className="secondary" disabled={!couponResult||couponPage+1>=couponResult.totalPages} onClick={()=>setCouponPage(value=>value+1)}>Next</button></div>
    </div>
   </div>
  </section>;
