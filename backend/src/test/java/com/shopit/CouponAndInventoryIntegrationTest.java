@@ -2,6 +2,7 @@ package com.shopit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shopit.support.TestAdminCredentials;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,8 +44,8 @@ class CouponAndInventoryIntegrationTest {
 
     private String adminToken() throws Exception {
         String body = mapper.createObjectNode()
-            .put("email", "admin@shopit.test")
-            .put("password", "ShopIt-Admin-Test-2026!")
+            .put("email", TestAdminCredentials.email())
+            .put("password", TestAdminCredentials.password())
             .toString();
         MvcResult result = mvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON).content(body))
@@ -77,12 +78,15 @@ class CouponAndInventoryIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.costPrice").doesNotExist());
 
-        MvcResult adminProducts = mvc.perform(get("/api/admin/products")
+        MvcResult adminProducts = mvc.perform(get("/api/admin/products?size=100")
                 .header("Authorization", "Bearer " + admin))
             .andExpect(status().isOk()).andReturn();
         JsonNode adminCatalogue = mapper.readTree(adminProducts.getResponse().getContentAsString());
+        JsonNode adminProductsContent = adminCatalogue.get("content");
+        assertThat(adminProductsContent).isNotNull();
+        assertThat(adminCatalogue.get("size").asInt()).isEqualTo(100);
         boolean privateCostVisibleToAdmin = false;
-        for (JsonNode product : adminCatalogue) {
+        for (JsonNode product : adminProductsContent) {
             if (product.get("id").asLong() == productId) {
                 privateCostVisibleToAdmin = product.get("costPrice").decimalValue().compareTo(new BigDecimal("40.00")) == 0;
             }

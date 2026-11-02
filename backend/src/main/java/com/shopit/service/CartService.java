@@ -37,7 +37,7 @@ public class CartService{
    ?(available?null:"Only "+p.getStock()+" unit(s) remain")
    :"This product is no longer available";
   return new CartLine(i.getId(),p.getId(),p.getName(),p.getPrice(),i.getQuantity(),
-   p.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())),p.getImageUrl(),p.getStock(),available,reason);
+   p.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())),p.getImageUrl(),Math.min(p.getStock(),100),available,reason);
  }
  private AppUser user(String email){return users.findByEmailIgnoreCase(email).orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED));}
 }
