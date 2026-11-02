@@ -91,7 +91,29 @@ function ApiPendingBanner(){
  </div>;
 }
 
-function Guard({children,admin=false}){const {user}=useAuth(),loc=useLocation();if(!user)return <Navigate to="/login" replace state={{from:loc.pathname}}/>;if(admin&&user.role!=='ADMIN')return <Navigate to="/" replace/>;return children;}
+export function getPostLoginPath(user, requestedPath) {
+ const requested=typeof requestedPath==='string'&&requestedPath.startsWith('/')&&!requestedPath.startsWith('//')?requestedPath:null;
+ const isAdminPath=requested==='/admin'||requested?.startsWith('/admin/');
+ if(user?.role!=='ADMIN'&&isAdminPath)return '/products';
+ if(requested==='/login'||requested==='/register')return user?.role==='ADMIN'?'/admin':'/products';
+ return requested||(user?.role==='ADMIN'?'/admin':'/products');
+}
+
+function AdminAccessRequired(){
+ return <section className="section"><div className="empty" role="status">
+  <span className="eyebrow">Restricted area</span>
+  <h1>Admin access required</h1>
+  <p>This area is available only to authorized ShopIt administrators.</p>
+  <Link className="primary" to="/products">Back to shop</Link>
+ </div></section>;
+}
+
+function Guard({children,admin=false}){
+ const {user}=useAuth(),loc=useLocation();
+ if(!user)return <Navigate to="/login" replace state={{from:loc.pathname}}/>;
+ if(admin&&user.role!=='ADMIN')return <AdminAccessRequired/>;
+ return children;
+}
 function Layout(){
  const {user,logout,isAdmin}=useAuth(),[query,setQuery]=useState(''),[open,setOpen]=useState(false),navigate=useNavigate();
  const search=e=>{e.preventDefault();navigate('/products?q='+encodeURIComponent(query));setOpen(false);};
@@ -138,7 +160,7 @@ function ProductDetails(){
 function AuthPage({register=false}){
  const {login,register:signUp}=useAuth(),navigate=useNavigate(),location=useLocation();const [form,setForm]=useState({name:'',email:'',password:'',phone:''}),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const change=e=>setForm({...form,[e.target.name]:e.target.value});
- const submit=async e=>{e.preventDefault();setBusy(true);setError('');try{const u=register?await signUp(form):await login(form.email,form.password);navigate(location.state?.from||(u.role==='ADMIN'?'/admin':'/products'),{replace:true});}catch(e){setError(e.response?.data?.message||'We could not complete the request. Check your details and try again.');}finally{setBusy(false);}};
+ const submit=async e=>{e.preventDefault();setBusy(true);setError('');try{const u=register?await signUp(form):await login(form.email,form.password);navigate(getPostLoginPath(u,location.state?.from),{replace:true});}catch(e){setError(e.response?.data?.message||'We could not complete the request. Check your details and try again.');}finally{setBusy(false);}};
  return <section className="auth-wrap"><div className="auth-card"><span className="eyebrow">Welcome to ShopIt</span><h1>{register?'Make yourself at home.':'Good to see you again.'}</h1><p>{register?'Create an account and keep your favourites close.':'Sign in to continue where you left off.'}</p>{!register&&location.state?.reason==='expired'&&<div className="notice" role="status">Your session expired. Please sign in again.</div>}<form className="form" onSubmit={submit}>{register&&<label>Your name<input name="name" value={form.name} onChange={change} required maxLength="120"/></label>}<label>Email address<input name="email" type="email" value={form.email} onChange={change} required autoComplete="email"/></label>{register&&<label>Phone (optional)<input name="phone" value={form.phone} onChange={change} maxLength="30"/></label>}<label>Password<input name="password" type="password" value={form.password} onChange={change} required minLength={register?10:1} autoComplete={register?'new-password':'current-password'}/>{register&&<small>Use at least 10 characters.</small>}</label>{error&&<div className="error" role="alert">{error}</div>}<button className="primary full" disabled={busy}>{busy?'Please wait…':register?'Create account':'Sign in'}</button></form><div className="switch">{register?'Already have an account?':'New to ShopIt?'} <Link to={register?'/login':'/register'}>{register?'Sign in':'Create an account'}</Link></div></div></section>;
 }
 function Empty({title,body,link}){return <div className="empty"><h3>{title}</h3><p>{body}</p><Link className="primary" to={link}>Explore the shop</Link></div>;}
