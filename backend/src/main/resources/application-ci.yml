@@ -19,5 +19,8 @@ app:
     email: ${APP_ADMIN_EMAIL:admin@shopit.test}
     password: ${APP_ADMIN_PASSWORD:}
 
+  rate-limit:
+    enabled: ${APP_RATE_LIMIT_ENABLED:false}
+    trust-forwarded-for: false
   payments:
     simulated-enabled: ${APP_PAYMENTS_SIMULATED_ENABLED:true}

@@ -139,7 +139,11 @@ If the frontend's domain changes, update CORS. If the backend URL changes, updat
 
 This is suitable for learning, staging, and demonstrations, not a dependable production store.
 
-## 10. Before real production
+## 10. Rate limiting and trusted proxy headers
+
+The API applies in-memory limits to login, registration, checkout, password changes, and simulated payments. The default implementation uses the socket peer address for IP buckets and does not trust client-supplied forwarding headers. On a hosting proxy, confirm whether it strips/replaces inbound `X-Forwarded-For` before setting `APP_RATE_LIMIT_TRUST_FORWARDED_FOR=true`. Do not enable that switch on an untrusted/direct listener. In-memory limits reset on service restart and are not shared across multiple API instances.
+
+## 11. Before real production
 
 The current payment integration is simulated only. Do not accept real payments until a real provider, verified server-side webhooks, refunds, and reconciliation are implemented and tested.
 

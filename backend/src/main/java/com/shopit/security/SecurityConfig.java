@@ -1,5 +1,6 @@
 package com.shopit.security;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.*;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -17,14 +18,27 @@ import org.springframework.web.cors.*;
 import java.util.*;
 @Configuration @EnableWebSecurity @EnableMethodSecurity
 public class SecurityConfig{
- @Bean SecurityFilterChain filterChain(HttpSecurity http,JwtAuthFilter jwtFilter,AuthenticationProvider provider)throws Exception{
+ @Bean SecurityFilterChain filterChain(HttpSecurity http,JwtAuthFilter jwtFilter,RateLimitFilter rateLimitFilter,AuthenticationProvider provider)throws Exception{
   return http.csrf(csrf->csrf.disable()).cors(Customizer.withDefaults())
    .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authenticationProvider(provider)
    .authorizeHttpRequests(a->a.requestMatchers("/api/auth/**","/api/products/**","/api/categories/**","/api/coupons").permitAll()
     .requestMatchers("/actuator/health/**","/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html").permitAll()
     .requestMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated())
    .exceptionHandling(e->e.authenticationEntryPoint((req,res,ex)->res.sendError(401,"Authentication required")).accessDeniedHandler((req,res,ex)->res.sendError(403,"Access denied")))
-   .addFilterBefore(jwtFilter,UsernamePasswordAuthenticationFilter.class).build();
+   .addFilterBefore(jwtFilter,UsernamePasswordAuthenticationFilter.class)
+   .addFilterAfter(rateLimitFilter,JwtAuthFilter.class).build();
+ }
+
+ @Bean RateLimitFilter rateLimitFilter(
+  RateLimitService limits,
+  @Value("${app.rate-limit.enabled:true}") boolean enabled,
+  @Value("${app.rate-limit.trust-forwarded-for:false}") boolean trustForwardedFor) {
+  return new RateLimitFilter(limits, enabled, trustForwardedFor);
+ }
+ @Bean FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {
+  FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(filter);
+  registration.setEnabled(false);
+  return registration;
  }
  @Bean AuthenticationProvider authenticationProvider(ShopUserDetailsService users,PasswordEncoder encoder){DaoAuthenticationProvider p=new DaoAuthenticationProvider();p.setUserDetailsService(users);p.setPasswordEncoder(encoder);return p;}
  @Bean AuthenticationManager authenticationManager(AuthenticationConfiguration c)throws Exception{return c.getAuthenticationManager();}
