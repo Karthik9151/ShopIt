@@ -25,6 +25,14 @@ class CsrfBoundaryIntegrationTest {
     }
 
     @Test
+    void adminMutationWithoutBearerRetainsCsrfProtection() throws Exception {
+        mvc.perform(post("/api/admin/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void nonApiPostRoutesKeepSpringCsrfProtectionEnabled() throws Exception {
         mvc.perform(post("/non-api/test")
                         .contentType(MediaType.APPLICATION_JSON)
