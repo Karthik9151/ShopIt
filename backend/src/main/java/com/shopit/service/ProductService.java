@@ -59,6 +59,20 @@ public class ProductService {
         return products.searchAdmin(term, active, pageable).map(this::adminView);
     }
 
+    public AdminProductView adminGet(Long id) {
+        Product product = products.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        return adminView(product);
+    }
+
+    @Transactional
+    public AdminProductView setActive(Long id, boolean active) {
+        Product product = products.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        product.setActive(active);
+        return adminView(products.save(product));
+    }
+
     @Transactional
     public AdminProductView createAdmin(ProductRequest request) {
         return adminView(products.save(apply(new Product(), request)));
