@@ -15,7 +15,30 @@ public interface OrderRepository extends JpaRepository<CustomerOrder,Long> {
     Optional<CustomerOrder> findByUser_IdAndRequestId(Long userId,String requestId);
     Optional<CustomerOrder> findByIdAndUser_Id(Long id,Long userId);
     List<CustomerOrder> findByUser_IdOrderByCreatedAtDesc(Long userId);
+    Page<CustomerOrder> findAllByUser_IdOrderByCreatedAtDesc(Long userId, Pageable pageable);
     List<CustomerOrder> findAllByOrderByCreatedAtDesc();
+
+    @Query("select o.status, count(o.id) from CustomerOrder o group by o.status order by o.status")
+    List<Object[]> countOrdersGroupedByStatus();
+
+    @Query("""
+        select oi.productName, coalesce(sum(oi.quantity), 0), coalesce(sum(oi.unitPrice * oi.quantity), 0)
+        from OrderItem oi
+        where exists (
+            select p.id from Payment p
+            where p.order = oi.order and p.status = 'SUCCESS'
+        )
+        group by oi.productName
+        order by sum(oi.quantity) desc, oi.productName asc
+        """)
+    List<Object[]> findTopProductsBySuccessfulOrders(Pageable pageable);
+
+    @Query("""
+        select o.id, o.user.name, o.user.email, o.status, o.total, o.createdAt
+        from CustomerOrder o
+        order by o.createdAt desc
+        """)
+    List<Object[]> findRecentOrdersForAdmin(Pageable pageable);
     @Query("""
         select o from CustomerOrder o
         where (:status is null or o.status = :status)
