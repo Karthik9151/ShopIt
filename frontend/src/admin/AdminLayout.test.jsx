@@ -16,6 +16,6 @@ describe('AdminLayout',()=>{
   for(const label of ['Overview','Orders','Products','Categories','Customers','Coupons','Inventory']){
    expect(screen.getAllByRole('link',{name:label}).length).toBeGreaterThan(0);
   }
-  expect(screen.getByRole('link',{name:'Back to storefront'}).getAttribute('href')).toBe('/products');
+  expect(screen.getByRole('link',{name:/Back to storefront/}).getAttribute('href')).toBe('/products');
  });
 });
