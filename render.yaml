@@ -23,6 +23,7 @@ services:
         sync: false
       - key: APP_ADMIN_PASSWORD
         sync: false
+      # Owner-only staging switch: set APP_PAYMENTS_SIMULATED_ENABLED=true for demos; keep disabled elsewhere and remove before real payment integration.
       - key: APP_CORS_ORIGINS
         sync: false
       - key: APP_PRICING_SHIPPING_FLAT
