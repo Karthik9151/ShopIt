@@ -22,10 +22,10 @@ Status is measured against the requested scope on `shopit-improvements`, not aga
 | Admin stock edit 0–1,000,000 | Added | `PATCH /api/admin/products/{id}/stock`, role/bounds integration test |
 | Admin category list/reactivation/product counts | Added | `GET /api/admin/categories`, `PATCH /api/admin/categories/{id}/status`, integration test |
 | Admin customer search/detail excluding admins | Added | `GET /api/admin/customers?q=...`, `GET /api/admin/customers/{id}`, integration test |
-| Admin date/order-id/email search and CSV exports | Remaining | Add bounded server-side filters, max-5,000 export, and spreadsheet formula-injection escaping |
+| Admin date/email/order-ID filters and CSV exports | Added | Bounded order filters; UTF-8 order/inventory CSV exports capped at 5,000 with formula-safe cells |
 | Full dashboard chart/status/top-product data | Remaining | Add grouped SQL/JPA queries and response DTOs |
-| Full React admin layout/pages/shared UI component set | Remaining | `frontend/src/App.jsx` remains monolithic; explicit access-required view is not implemented |
-| Storefront interaction polish and route titles | Remaining | Audit route-by-route after frontend decomposition |
+| Full React admin layout/pages/shared UI component set | Remaining | `frontend/src/App.jsx` remains monolithic and the full route/page set plus shared UI components is not implemented; a signed-in non-admin now sees an explicit access-required page |
+| Existing-route page titles and non-admin login redirect boundary | Added | Route titles and safe post-login path selection have Vitest coverage; full storefront polish/accessibility audit remains |
 | Playwright e2e workflow and npm audit in CI | Remaining | Existing CI runs Vitest/build and MySQL Maven verification only |
 | Frontend lockfile and npm ci | Remaining | `frontend/package-lock.json` absent on baseline; need network-enabled lock generation |
 | 512 MB JVM tuning and before/after measurement | Remaining | Do not apply unmeasured flags; benchmark on a 512 MB-equivalent runtime |
