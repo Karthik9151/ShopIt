@@ -18,13 +18,13 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
     Page<AppUser> findByRole(String role, Pageable pageable);
 
     @Query("""
-        select user from AppUser user
-        where user.role = 'CUSTOMER'
+        select customer from AppUser customer
+        where customer.role = 'CUSTOMER'
           and (
               :searchText is null
-              or lower(user.name) like lower(concat('%', :searchText, '%'))
-              or lower(user.email) like lower(concat('%', :searchText, '%'))
-              or lower(coalesce(user.phone, '')) like lower(concat('%', :searchText, '%'))
+              or lower(customer.name) like lower(concat('%', :searchText, '%'))
+              or lower(customer.email) like lower(concat('%', :searchText, '%'))
+              or lower(coalesce(customer.phone, '')) like lower(concat('%', :searchText, '%'))
           )
         """)
     Page<AppUser> searchCustomers(@Param("searchText") String searchText, Pageable pageable);
