@@ -60,9 +60,14 @@ Frontend: `cd frontend && npm install && npm test -- --run && npm run build`
 
 Backend: `cd backend && mvn -B verify`
 
-See `docs/` for architecture, requirements, database design, endpoints, security notes, and manual integration checks.
+See `docs/` for architecture, requirements, endpoint contracts, security notes, operations/recovery, TiDB staging verification, and test procedures.
 
 
 ## API documentation
 
 OpenAPI and Swagger UI are disabled by default in deployed environments. Enable `APP_API_DOCS_ENABLED=true` only in a trusted local or test profile when interactive API documentation is needed. The frontend Render Blueprint uses a report-only CSP during observation; review browser violations before any enforcement.
+
+
+## Authentication lifecycle
+
+Logout clears the browser's `sessionStorage` token and user state. The API logout endpoint is stateless and does not revoke a copied JWT; previously issued tokens remain usable until expiry unless the account is disabled or the signing key is rotated. Password changes do not yet revoke existing access tokens. See `docs/API_DOCUMENTATION.md` and `docs/SECURITY.md` for this current limitation.
