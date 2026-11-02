@@ -1,6 +1,8 @@
 # Security implementation and production checklist
 
 ## Implemented
+- Baseline API response headers include nosniff, frame denial, strict-origin referrer policy, and a restrictive permissions policy.
+- OpenAPI/Swagger URLs are hidden with HTTP 404 by default; explicitly enable `APP_API_DOCS_ENABLED=true` only in local/test environments.
 - BCrypt password hashing (cost 12).
 - Short-lived signed JWT access tokens (15 minutes by default).
 - No committed/default production JWT secret: backend startup fails if `JWT_SECRET_BASE64` is absent or too short.
@@ -25,7 +27,7 @@ The initial browser client stores its short-lived bearer access token in `sessio
 ## Before public production deployment
 - Store a generated 256-bit-or-stronger JWT key in a managed secret store and rotate it safely.
 - Serve exclusively over HTTPS and configure exact trusted CORS origins.
-- Add a strict Content Security Policy and security headers.
+- Review the frontend's Render `Content-Security-Policy-Report-Only` reports in a real browser before considering any enforced CSP. API and static-site headers should be verified independently.
 - Move access-token handling to an HttpOnly, Secure, SameSite cookie architecture with CSRF protection, or use a backend-for-frontend.
 - Add rate limits for authentication, checkout, password changes, password reset, and payments.
 - Implement verified email delivery and single-use, expiring password-reset tokens.
