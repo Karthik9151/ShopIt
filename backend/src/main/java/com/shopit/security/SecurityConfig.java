@@ -36,7 +36,9 @@ public class SecurityConfig {
             ApiSurfaceFilter apiSurfaceFilter,
             RequestLogFilter requestLogFilter,
             AuthenticationProvider provider) throws Exception {
-        return http.csrf(csrf -> csrf.disable())
+        // API authentication is a JWT supplied explicitly in the Authorization header, never a cookie.
+        // Keep Spring CSRF protection enabled for non-API routes; exempt only the stateless JSON API.
+        return http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(provider)
