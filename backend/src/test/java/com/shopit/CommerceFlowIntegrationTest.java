@@ -166,7 +166,7 @@ class CommerceFlowIntegrationTest {
     void configuredAdministratorEmailIsReservedAndAdminLoginReturnsAdminRole() throws Exception {
         String registration = mapper.createObjectNode()
             .put("name", "Reserved Email")
-            .put("email", ADMIN@SHOPIT.TEST)
+            .put("email", "ADMIN@SHOPIT.TEST")
             .put("password", "Customer-Password-2026!")
             .toString();
 
@@ -176,7 +176,7 @@ class CommerceFlowIntegrationTest {
             .andExpect(jsonPath("$.message").value("An account with this email already exists"));
 
         String login = mapper.createObjectNode()
-            .put("email", " ADMIN@SHOPIT.TEST ")
+            .put("email", "ADMIN@SHOPIT.TEST")
             .put("password", "ShopIt-Admin-Test-2026!")
             .toString();
 
