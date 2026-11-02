@@ -179,7 +179,10 @@ class CouponAndInventoryIntegrationTest {
         mvc.perform(post("/api/orders/" + order.get("id").asLong() + "/cancel")
                 .header("Authorization", "Bearer " + first.token()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("CANCELLED"));
+            .andExpect(jsonPath("$.status").value("CANCELLED"))
+            .andExpect(jsonPath("$.timeline.length()").value(2))
+            .andExpect(jsonPath("$.timeline[1].actor").value("CUSTOMER"))
+            .andExpect(jsonPath("$.timeline[1].newStatus").value("CANCELLED"));
 
         Customer third = registerCustomer();
         mvc.perform(post("/api/cart/items")

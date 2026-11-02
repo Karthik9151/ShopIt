@@ -12,6 +12,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
+import java.util.List;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -112,6 +114,10 @@ class CommerceFlowIntegrationTest {
         JsonNode order = mapper.readTree(placed.getResponse().getContentAsString());
         long orderId = order.get("id").asLong();
         assertThat(order.get("status").asText()).isEqualTo("PENDING_PAYMENT");
+        assertThat(order.get("timeline").size()).isEqualTo(1);
+        assertThat(order.get("timeline").get(0).get("newStatus").asText()).isEqualTo("PENDING_PAYMENT");
+        assertThat(order.get("timeline").get(0).get("actor").asText()).isEqualTo("CUSTOMER");
+        assertThat(order.get("allowedNextStatuses").toString()).contains("CANCELLED").doesNotContain("CONFIRMED");
 
         mvc.perform(get("/api/orders/" + orderId)
                 .header("Authorization", "Bearer " + other.token()))
@@ -123,6 +129,33 @@ class CommerceFlowIntegrationTest {
         JsonNode payment = mapper.readTree(paid.getResponse().getContentAsString());
         assertThat(payment.get("provider").asText()).isEqualTo("SIMULATED");
         assertThat(payment.get("status").asText()).isEqualTo("SUCCESS");
+
+        MvcResult confirmedResult = mvc.perform(get("/api/orders/" + orderId)
+                .header("Authorization", "Bearer " + customer.token()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("CONFIRMED"))
+            .andExpect(jsonPath("$.timeline.length()").value(2))
+            .andExpect(jsonPath("$.timeline[1].newStatus").value("CONFIRMED"))
+            .andExpect(jsonPath("$.timeline[1].actor").value("PAYMENT"))
+            .andReturn();
+        assertThat(mapper.readTree(confirmedResult.getResponse().getContentAsString())
+                .get("allowedNextStatuses").toString()).contains("PROCESSING");
+
+        String admin = adminToken();
+        for (String nextStatus : List.of("PROCESSING", "SHIPPED", "DELIVERED")) {
+            mvc.perform(put("/api/admin/orders/" + orderId + "/status")
+                    .header("Authorization", "Bearer " + admin)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.createObjectNode().put("status", nextStatus).toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(nextStatus));
+        }
+
+        mvc.perform(put("/api/admin/orders/" + orderId + "/status")
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.createObjectNode().put("status", "CONFIRMED").toString()))
+            .andExpect(status().isConflict());
 
         // A retry with the same idempotency key returns the original order after the cart is cleared.
         MvcResult retry = mvc.perform(post("/api/orders")
