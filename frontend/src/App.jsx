@@ -114,10 +114,41 @@ function Guard({children,admin=false}){
  if(admin&&user.role!=='ADMIN')return <AdminAccessRequired/>;
  return children;
 }
+
+export function getPageTitle(pathname, isAdmin=false){
+ if(pathname==='/')return 'Home';
+ if(pathname==='/products')return 'Shop products';
+ if(pathname.startsWith('/products/'))return 'Product details';
+ if(pathname==='/login')return 'Sign in';
+ if(pathname==='/register')return 'Create account';
+ if(pathname==='/cart')return 'Shopping bag';
+ if(pathname==='/checkout')return 'Checkout';
+ if(pathname==='/wishlist')return 'Wishlist';
+ if(pathname==='/orders')return 'Your orders';
+ if(pathname.startsWith('/orders/'))return 'Order details';
+ if(pathname==='/profile')return 'My account';
+ if(pathname==='/offers')return 'Offers';
+ if(pathname==='/admin'&&!isAdmin)return 'Admin access required';
+ if(pathname==='/admin')return 'Admin dashboard';
+ if(pathname==='/admin/inventory')return 'Admin inventory';
+ if(pathname==='/admin/coupons')return 'Admin coupons';
+ if(pathname.startsWith('/admin'))return isAdmin?'Admin console':'Admin access required';
+ return 'Page not found';
+}
+
+function RouteTitle(){
+ const location=useLocation();
+ const {isAdmin}=useAuth();
+ useEffect(()=>{
+  document.title=getPageTitle(location.pathname,isAdmin)+' | ShopIt';
+ },[location.pathname,isAdmin]);
+ return null;
+}
+
 function Layout(){
  const {user,logout,isAdmin}=useAuth(),[query,setQuery]=useState(''),[open,setOpen]=useState(false),navigate=useNavigate();
  const search=e=>{e.preventDefault();navigate('/products?q='+encodeURIComponent(query));setOpen(false);};
- return <><a className="skip-link" href="#main-content">Skip to main content</a><div className="announcement">A little something good, delivered to your door. <span>Free shipping over {formatCurrency(FREE_SHIPPING_THRESHOLD)}</span></div><header className="header">
+ return <><RouteTitle/><a className="skip-link" href="#main-content">Skip to main content</a><div className="announcement">A little something good, delivered to your door. <span>Free shipping over {formatCurrency(FREE_SHIPPING_THRESHOLD)}</span></div><header className="header">
  <Link to="/" className="brand"><span className="brand-mark">s.</span> shopit</Link>
  <form className="search" onSubmit={search}><Search size={17}/><input aria-label="Search products" placeholder="Search for something lovely..." value={query} onChange={e=>setQuery(e.target.value)}/><button>Search</button></form>
  <nav id="primary-navigation" aria-label="Primary navigation" className={open?'nav open':'nav'}><NavLink to="/products" onClick={()=>setOpen(false)}>Shop</NavLink><NavLink to="/products?sort=createdAt" onClick={()=>setOpen(false)}>New arrivals</NavLink><NavLink to="/offers" onClick={()=>setOpen(false)}>Offers</NavLink>{isAdmin&&<><NavLink to="/admin" onClick={()=>setOpen(false)}>Admin</NavLink><NavLink to="/admin/inventory" onClick={()=>setOpen(false)}>Inventory</NavLink><NavLink to="/admin/coupons" onClick={()=>setOpen(false)}>Coupons</NavLink></>}{user?<><NavLink to="/orders" onClick={()=>setOpen(false)}>My orders</NavLink><button className="nav-button" onClick={()=>{logout();navigate('/');}}><LogOut size={15}/> Sign out</button></>:<NavLink to="/login" onClick={()=>setOpen(false)}>Sign in</NavLink>}</nav>
