@@ -25,11 +25,13 @@ public final class ApiDtos {
     public record CartAddRequest(@NotNull Long productId, @Min(1) @Max(100) int quantity) {}
     public record CartUpdateRequest(@Min(1) @Max(100) int quantity) {}
     public record CartLine(Long id, Long productId, String name, BigDecimal unitPrice, int quantity,
-                           BigDecimal lineTotal, String imageUrl, int availableStock) {}
+                           BigDecimal lineTotal, String imageUrl, int availableStock,
+                           boolean available, String unavailableReason) {}
     public record CartView(List<CartLine> items, BigDecimal subtotal, int itemCount,
                            BigDecimal shipping, BigDecimal tax, BigDecimal total,
                            BigDecimal freeShippingRemaining) {}
-    public record WishlistLine(Long id, Long productId, String name, BigDecimal price, String imageUrl) {}
+    public record WishlistLine(Long id, Long productId, String name, BigDecimal price,
+                                String imageUrl, boolean available, String unavailableReason) {}
     public record CheckoutRequest(@NotBlank @Size(max=1000) String shippingAddress,
                                   @NotBlank @Size(max=80) String requestId, @Size(max=40) String couponCode) {}
     public record OrderLine(Long productId, String productName, BigDecimal unitPrice, int quantity, BigDecimal lineTotal) {}
