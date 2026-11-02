@@ -124,6 +124,13 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public OrderView adminGet(Long id) {
+        CustomerOrder order = orders.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        return view(order);
+    }
+
+    @Transactional(readOnly = true)
     public Page<OrderView> adminOrdersForCustomer(Long customerId, Pageable pageable) {
         return orders.findAllByUser_IdOrderByCreatedAtDesc(customerId, pageable).map(this::view);
     }
