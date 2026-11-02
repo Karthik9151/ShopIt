@@ -98,10 +98,9 @@ class AdminManagementDetailIntegrationTest {
     @Test
     void orderDetailIsAdminOnlyAndReturnsSafeOrderTimeline() throws Exception {
         String adminToken = login(TestAdminCredentials.email(), TestAdminCredentials.password());
-        String customerToken = registerCustomer();
-        String email = mapper.readTree(
-                mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + customerToken))
-                        .andReturn().getResponse().getContentAsString()).path("email").asText();
+        String suffix = UUID.randomUUID().toString().replace("-", "");
+        String email = "management-" + suffix + "@shopit.test";
+        String customerToken = registerCustomer(email);
         AppUser customer = users.findByEmailIgnoreCase(email).orElseThrow();
 
         CustomerOrder order = new CustomerOrder();
@@ -131,9 +130,17 @@ class AdminManagementDetailIntegrationTest {
 
     private String registerCustomer() throws Exception {
         String suffix = UUID.randomUUID().toString().replace("-", "");
+        return registerCustomer("management-" + suffix + "@shopit.test", suffix);
+    }
+
+    private String registerCustomer(String email) throws Exception {
+        return registerCustomer(email, UUID.randomUUID().toString().replace("-", ""));
+    }
+
+    private String registerCustomer(String email, String suffix) throws Exception {
         String body = mapper.createObjectNode()
                 .put("name", "Management test customer")
-                .put("email", "management-" + suffix + "@shopit.test")
+                .put("email", email)
                 .put("password", "Customer-" + suffix + "-Strong!")
                 .toString();
         MvcResult result = mvc.perform(post("/api/auth/register")
