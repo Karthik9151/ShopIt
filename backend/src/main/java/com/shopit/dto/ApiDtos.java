@@ -126,7 +126,7 @@ public final class ApiDtos {
 
     public record StatusUpdate(@NotBlank @Size(max = 30) String status) {}
 
-    public record StockUpdateRequest(@Min(0) @Max(1000000) int stock) {}
+    public record StockUpdateRequest(@NotNull @Min(0) @Max(1000000) Integer stock) {}
     public record ProfileUpdateRequest(@NotBlank @Size(max = 120) String name, @Size(max = 30) String phone) {}
 
     public record PasswordChangeRequest(
