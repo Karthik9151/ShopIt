@@ -27,6 +27,9 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-11 | F11 | PR OPEN — DRAFT | `wp11-registration-hardening` | https://github.com/Karthik9151/ShopIt/pull/17 | First CI 41438913897 failed only Mockito verify count; corrected in ff7a8de. Retry 41439144995 passed Maven/MySQL verify, backend Docker build, frontend tests and production build. | Accept documented email-enumeration trade-off until email verification exists |
 | WP-12 | F13 | PR OPEN — DRAFT | `wp12-public-stock` | https://github.com/Karthik9151/ShopIt/pull/18 | CI 41439282251: Maven/MySQL verification and frontend tests/build passed; backend container build was still in progress at last check. | Low-stock threshold defined as 1–5 units |
 | WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | https://github.com/Karthik9151/ShopIt/pull/19 | CI run 41439602610: Maven/MySQL verification and frontend tests/build passed. JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
+| WP-14 | F16 | PR OPEN — DRAFT | `wp14-admin-pagination` | https://github.com/Karthik9151/ShopIt/pull/20 | CI pending; no local checkout. Admin orders/products paginated, filtered; inventory and dashboard aggregates stay full-table. | Ensure dashboard valuation remains full inventory; not page-limited |
+| WP-15 | Operations | BLOCKED | `wp15-operations` | — | — | Provide/verify operational recovery and database backup procedures |
+| WP-16 | Test coverage, N5 | PR OPEN — CHECKS PASS | `wp16-e2e-testing` | https://github.com/Karthik9151/ShopIt/pull/22 | CI run 41443710648: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | Stacked on unmerged WP-14; merge WP-14 before WP-16 |
 | WP-14 | F16 | PR OPEN — CHECKS PASS | `wp14-admin-pagination` | https://github.com/Karthik9151/ShopIt/pull/20 | CI run 41442965512: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | None for code; no live Render/TiDB action performed |
 | WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | TBD | GET 60-second timeout, safe single GET retry and five-second slow-request banner implemented; JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
@@ -258,6 +261,20 @@ Each package must record:
 Never mark a package MERGED until the owner confirms GitHub merged it. Never mark checks passed without command or CI evidence.
 
 
+### WP-16 package evidence — 2026-11-02
+
+- PR #22 is stacked on the unmerged wp14-admin-pagination branch; this dependency is stated in the PR description. The PR is not merged.
+- Replaced duplicated CI admin email/password literals in CommerceFlowIntegrationTest, CouponAndInventoryIntegrationTest, and PublicStockDisclosureIntegrationTest with a shared environment-backed test helper. The CI workflow generates a new test-only admin identity and JWT signing key per run without echoing values.
+- Added frontend Vitest interaction coverage for unauthenticated admin-route redirection and navigation from sign-in to account creation.
+- No real secrets or production account details were added. No Flyway migration changed. CI outcomes are pending; local Maven/npm commands were unavailable in this runtime.
+- Failure modes addressed: duplicated test credentials drifting between test classes/workflow; unauthenticated access to protected admin routes; broken auth-page navigation. Further full browser/E2E checkout testing remains a coverage gap.
+
+
+### WP-16 verification update — 2026-11-02
+
+- The first CI attempt 41443311352 failed on the duplicate sign-up link rendered across tests and the static uppercase admin email not matching the generated CI administrator. Fixed cleanup between renders and made the admin reservation test use the uppercase form of the generated APP_ADMIN_EMAIL.
+- The second CI attempt 41443710648 passed both jobs: Maven/MySQL 8 integration verification plus backend container build, and frontend Vitest plus production build.
+- WP-16 branch depends on unmerged WP-14 and its PR description explicitly requires WP-14 to merge first. Neither PR has been merged.
 ### WP-15 package evidence — 2026-11-02
 
 - PR #21 adds docs/OPERATIONS.md and links it from docs/DEPLOYMENT.md. Scope covers release checks, provider-managed backup/PITR policy, isolated restore rehearsal, incident response, application rollback, and forward-only migration recovery.
