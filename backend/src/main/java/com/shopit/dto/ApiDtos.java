@@ -39,7 +39,8 @@ public final class ApiDtos {
     public record OrderView(Long id, String status, BigDecimal subtotal, BigDecimal discountAmount, String couponCode,
                             BigDecimal shipping, BigDecimal tax, BigDecimal total, String shippingAddress,
                             Instant createdAt, List<OrderLine> items,
-                            List<OrderStatusHistoryView> timeline, List<String> allowedNextStatuses) {}
+                            List<OrderStatusHistoryView> timeline, List<String> allowedNextStatuses,
+                            boolean simulatedPaymentEnabled) {}
     public record PaymentView(Long id, Long orderId, String provider, String status,
                               String reference, BigDecimal amount, Instant paidAt) {}
     public record StatusUpdate(@NotBlank String status) {}
