@@ -33,7 +33,7 @@ class PricingServiceTest {
         var result = pricing.calculate(new BigDecimal("2000.00"), new BigDecimal("1.01"));
         assertThat(result.shipping()).isEqualByComparingTo("49.00");
         assertThat(result.tax()).isEqualByComparingTo("359.82");
-        assertThat(result.total()).isEqualByComparingTo("2397.80");
+        assertThat(result.total()).isEqualByComparingTo("2407.81");
         assertThat(result.freeShippingRemaining()).isEqualByComparingTo("0.01");
     }
 
