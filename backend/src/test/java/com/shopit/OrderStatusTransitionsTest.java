@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shopit.service.OrderStatusTransitions;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -68,9 +69,16 @@ class OrderStatusTransitionsTest {
     void everyPairInTheOrderStatusMatrixMatchesTheSingleTransitionDefinition() {
         List<String> statuses = List.of(
                 "PENDING_PAYMENT", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED");
+        Map<String, List<String>> expectedTransitions = Map.of(
+                "PENDING_PAYMENT", List.of("CONFIRMED", "CANCELLED"),
+                "CONFIRMED", List.of("PROCESSING"),
+                "PROCESSING", List.of("SHIPPED"),
+                "SHIPPED", List.of("DELIVERED"),
+                "DELIVERED", List.of(),
+                "CANCELLED", List.of());
         for (String current : statuses) {
             for (String next : statuses) {
-                boolean expected = transitions.allowedNextStatuses(current, true).contains(next);
+                boolean expected = expectedTransitions.get(current).contains(next);
                 assertThat(transitions.isAllowed(current, next))
                         .as("%s -> %s", current, next)
                         .isEqualTo(expected);

@@ -28,7 +28,7 @@ public class OrderStatusHistoryService {
 
     @Transactional(readOnly = true)
     public List<OrderStatusHistoryView> timeline(Long orderId) {
-        return history.findByOrder_IdOrderByChangedAtAsc(orderId).stream()
+        return history.findByOrder_IdOrderByChangedAtAscIdAsc(orderId).stream()
                 .map(entry -> new OrderStatusHistoryView(
                         entry.getOldStatus(),
                         entry.getNewStatus(),
