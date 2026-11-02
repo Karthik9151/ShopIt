@@ -59,6 +59,13 @@ public class ProductService {
         return products.searchAdmin(term, active, pageable).map(this::adminView);
     }
 
+    public Page<AdminProductView> adminInventoryList(Integer threshold, Pageable pageable) {
+        if (threshold != null && (threshold < 0 || threshold > 1_000_000)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid inventory threshold");
+        }
+        return products.searchInventory(threshold, pageable).map(this::adminView);
+    }
+
     public AdminProductView adminGet(Long id) {
         Product product = products.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
