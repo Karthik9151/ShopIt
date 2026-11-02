@@ -106,6 +106,17 @@ public class AdminController {
         return products.adminList(q, active, pageable);
     }
 
+    @GetMapping("/inventory")
+    public Page<AdminProductView> inventory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Integer threshold,
+            @RequestParam(defaultValue = "stock") String sort,
+            @RequestParam(defaultValue = "asc") String direction) {
+        Pageable pageable = inventoryPage(page, size, sort, direction);
+        return products.adminInventoryList(threshold, pageable);
+    }
+
     @GetMapping("/products/{id}")
     public AdminProductView getProduct(@PathVariable Long id) {
         return products.adminGet(id);
@@ -254,6 +265,23 @@ public class AdminController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid pagination");
         }
         return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    private Pageable inventoryPage(int page, int size, String sort, String direction) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid pagination");
+        }
+        List<String> allowedSorts = List.of("stock", "name", "createdAt");
+        if (!allowedSorts.contains(sort)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid inventory sort");
+        }
+        Sort.Direction order;
+        try {
+            order = Sort.Direction.fromString(direction);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort direction");
+        }
+        return PageRequest.of(page, size, Sort.by(order, sort));
     }
 
     private CustomerView customerView(AppUser user) {
