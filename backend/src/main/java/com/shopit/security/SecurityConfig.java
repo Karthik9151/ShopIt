@@ -62,8 +62,8 @@ public class SecurityConfig {
                                 response.sendError(401, "Authentication required"))
                         .accessDeniedHandler((request, response, cause) ->
                                 response.sendError(403, "Access denied")))
-                .addFilterBefore(requestLogFilter, JwtAuthFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(requestLogFilter, JwtAuthFilter.class)
                 .addFilterAfter(rateLimitFilter, JwtAuthFilter.class)
                 .addFilterAfter(apiSurfaceFilter, RateLimitFilter.class)
                 .build();
