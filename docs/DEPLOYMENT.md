@@ -129,7 +129,13 @@ If the frontend's domain changes, update CORS. If the backend URL changes, updat
 11. Confirm a second customer cannot access the first customer's orders, profile, addresses, cart, or wishlist.
 12. Check Render deploy logs, health checks, TiDB usage, and GitHub Actions.
 
-## 9. Render Free plan limitations
+## 9. Cold-start resilience and request behavior
+
+The browser API client gives GET requests a 60-second timeout and retries a GET once after a network error or HTTP 502/503/504. Mutating methods are never retried automatically. A visible status banner appears when any request remains pending for more than five seconds.
+
+The backend JVM configuration is intentionally unchanged until startup-to-health time, first business-endpoint latency, peak RSS and heap usage are measured on the actual 512 MB Render instance and compared against a controlled baseline. Do not add a periodic uptime monitor to keep the free service awake.
+
+## 10. Render Free plan limitations
 
 - A Free Render web service spins down after 15 minutes without incoming traffic. Its first request after sleeping can take about one minute to become available.
 - Free web services have limited CPU and memory and can restart.
