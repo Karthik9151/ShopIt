@@ -41,7 +41,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-14 | F16 | BLOCKED | `wp14-admin-pagination` | — | — | Review paginated admin API contract |
 | WP-15 | Operations | PR OPEN — CHECKS PASS | `wp15-operations` | https://github.com/Karthik9151/ShopIt/pull/21 | CI run 41442859399: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | Owner must configure backups/PITR and complete isolated restore rehearsal; no live DB/Render/TiDB action performed |
 | WP-16 | Test coverage, N5 | BLOCKED | `wp16-e2e-testing` | — | — | — |
-| WP-17 | CI security, N6 | BLOCKED | `wp17-ci-security` | — | — | Enable secret scanning/push protection, Dependabot alerts and main branch protection in GitHub settings |
+| WP-17 | CI security, N6 | PR OPEN — BLOCKED (OWNER SETTINGS + LOCKFILE) | `wp17-ci-security` | https://github.com/Karthik9151/ShopIt/pull/23 | Dependabot/CodeQL/dependency review files added; dependency-review run 41443918784 failed because Dependency Graph is disabled. npm lockfile generation failed twice (registry timeout; offline ENOTCACHED). | Owner enable Dependency Graph/Dependabot alerts, secret scanning/push protection and branch protection; generate real package-lock.json in network-enabled environment then use npm ci |
 | WP-18 | TiDB verification | BLOCKED | `wp18-tidb-ci` | — | — | Run scripts/verify-tidb.sh on staging and verify flyway_schema_history; no staging DB access performed |
 | WP-19 | Readability | BLOCKED | `wp19-readability` | — | — | — |
 | WP-20 | Documentation | BLOCKED | `wp20-docs-accuracy` | — | — | Confirm logout route documentation choice; default is document current public behavior |
@@ -261,6 +261,13 @@ Each package must record:
 Never mark a package MERGED until the owner confirms GitHub merged it. Never mark checks passed without command or CI evidence.
 
 
+### WP-17 package evidence — 2026-11-02
+
+- PR #23 adds weekly Dependabot update configuration for Maven, npm, and GitHub Actions; CodeQL analysis for Java and JavaScript/TypeScript; and a dependency-review workflow.
+- CI run 41443918784 failed in Dependency Review because GitHub reports the Dependency Graph is not enabled/supported on this repository. No GitHub settings were changed (owner-only action).
+- The frontend lockfile remains absent. Attempt 1 to retrieve npm registry metadata timed out. Attempt 2, offline lockfile generation, failed with ENOTCACHED because package metadata is not present in the local npm cache. No fake lockfile was committed and CI was not switched to npm ci.
+- WP-17 is therefore BLOCKED as a full package, although the Dependabot and CodeQL configuration files are present in the PR. Required owner actions: enable Dependency Graph, alerts, secret scanning/push protection and branch protection; create a valid lockfile in a network-enabled environment and change the install to npm ci.
+- Local Maven/frontend commands are unavailable because this execution environment has no mounted checkout and npm registry DNS/network access failed. No secrets are present in committed files.
 ### WP-16 package evidence — 2026-11-02
 
 - PR #22 is stacked on the unmerged wp14-admin-pagination branch; this dependency is stated in the PR description. The PR is not merged.
