@@ -56,6 +56,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     long countByStockLessThanAndActiveTrue(int stock);
 
+    @Query("""
+        select p.id, p.name, p.stock
+        from Product p
+        where p.active = true and p.stock <= :threshold
+        order by p.stock asc, p.name asc
+        """)
+    java.util.List<Object[]> findLowStockForAdmin(
+            @Param("threshold") int threshold,
+            Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")
     Optional<Product> findByIdForUpdate(@Param("id") Long id);
