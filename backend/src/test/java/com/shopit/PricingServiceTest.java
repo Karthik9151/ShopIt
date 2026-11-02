@@ -45,6 +45,15 @@ class PricingServiceTest {
     }
 
     @Test
+    void nullAmountsAreTreatedAsZero() {
+        var result = pricing.calculate(null, null);
+        assertThat(result.shipping()).isEqualByComparingTo("49.00");
+        assertThat(result.tax()).isEqualByComparingTo("0.00");
+        assertThat(result.total()).isEqualByComparingTo("49.00");
+        assertThat(result.freeShippingRemaining()).isEqualByComparingTo("1999.00");
+    }
+
+    @Test
     void discountCannotReduceTaxableSubtotalBelowZero() {
         var result = pricing.calculate(new BigDecimal("10.00"), new BigDecimal("15.00"));
         assertThat(result.shipping()).isEqualByComparingTo("49.00");
