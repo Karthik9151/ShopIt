@@ -37,7 +37,7 @@ Use an isolated local database (preferred) or isolated staging service with disp
 
 ## Orders, coupons and payment
 
-The current admin API supports order paging/status filtering and permitted status transitions. The complete requested date/order-id/email filters, CSV export, and grouped dashboard analytics are not implemented in this branch; do not mark them passed.
+The current admin API supports order paging/status/ID/email/date filters, permitted status transitions, and formula-safe CSV exports capped at 5,000 rows. Grouped dashboard analytics are not implemented in this branch; do not mark them passed.
 
 1. Use an isolated customer cart, create a coupon, and preview then check out with it.
 2. Verify the backend calculates subtotal, discount, shipping, tax and total.
