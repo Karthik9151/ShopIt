@@ -27,7 +27,7 @@ CREATE DATABASE shopit;
 6. Keep the endpoint protected by TLS. TiDB Cloud Starter requires TLS; Java uses the system root CA store, so the backend JDBC URL below uses certificate and hostname verification.
 7. In the TiDB Cloud Starter firewall/network settings, restrict access to the outbound IP ranges of the Render backend service after that service has been created. Do not allowlist your phone's current IP; the database connection originates from Render.
 
-TiDB Starter is MySQL-protocol compatible, but it is not the MySQL server distribution. ShopIt's CI currently verifies migrations and integration behavior against MySQL 8.4. Therefore, staging must verify that Flyway migrations and checkout/locking behavior also work against TiDB before using it for anything beyond testing. Stay within the free quota shown in the TiDB dashboard; read/write access can be throttled when a free quota is exhausted.
+TiDB Starter is MySQL-protocol compatible, but it is not the MySQL server distribution. ShopIt's CI currently verifies migrations and integration behavior against MySQL 8.4. Therefore, staging must verify that Flyway migrations and checkout/locking behavior also work against TiDB before using it for anything beyond testing. Stay within the free quota shown in the TiDB dashboard; read/write access can be throttled when a free quota is exhausted. Flyway V4 adds coupon campaign data, order discount snapshots, and product purchase cost. Verify this migration plus coupon row-lock/usage-limit behavior against TiDB before relying on it for a live promotion.
 
 ## 3. Deploy the backend on Render
 
