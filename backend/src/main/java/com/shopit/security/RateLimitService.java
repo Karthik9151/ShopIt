@@ -39,7 +39,7 @@ public class RateLimitService {
 
     public Decision consume(String key, int capacity, Duration refillPeriod) {
         if (!enabled) {
-            return Decision.allowed();
+            return Decision.permitted();
         }
         if (key == null || key.isBlank() || capacity < 1 || refillPeriod.isZero() || refillPeriod.isNegative()) {
             throw new IllegalArgumentException("A rate-limit key, positive capacity and refill period are required");
@@ -95,7 +95,7 @@ public class RateLimitService {
     }
 
     public record Decision(boolean allowed, long retryAfterSeconds) {
-        static Decision allowed() {
+        static Decision permitted() {
             return new Decision(true, 0);
         }
 
