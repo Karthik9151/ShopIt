@@ -1,8 +1,9 @@
-import {beforeEach,describe,expect,it} from 'vitest';
-import {fireEvent,render,screen} from '@testing-library/react';
+import {afterEach,beforeEach,describe,expect,it} from 'vitest';
+import {cleanup,fireEvent,render,screen} from '@testing-library/react';
 import App from './App';
 
 describe('protected route navigation',()=>{
+ afterEach(()=>cleanup());
  beforeEach(()=>{
   sessionStorage.clear();
   window.history.replaceState({},'', '/admin');
