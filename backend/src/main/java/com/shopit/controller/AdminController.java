@@ -156,7 +156,10 @@ public class AdminController {
     public Page<AdminCategoryView> pagedCategories(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return categories.adminPage(adminPage(page, size));
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid pagination");
+        }
+        return categories.adminPage(PageRequest.of(page, size));
     }
 
     @GetMapping("/categories")
