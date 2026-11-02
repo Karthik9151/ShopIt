@@ -134,7 +134,7 @@ test('customer can register, add a product, place an order and review order hist
   await expect(page.getByText(order.shippingAddress)).toBeVisible();
   expect(paymentSimulationRequests).toBe(0);
 
-  await page.getByRole('link', { name: 'Your orders' }).click();
+  await page.locator('a.back[href="/orders"]').click();
   await expect(page.getByRole('heading', { name: 'Your orders' })).toBeVisible();
   await expect(page.getByText('ORDER #501')).toBeVisible();
   expect(paymentSimulationRequests).toBe(0);
