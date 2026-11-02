@@ -31,7 +31,7 @@ public class PaymentService {
             UserRepository users,
             OrderStatusHistoryService statusHistory,
             OrderStatusTransitions transitions,
-            @Value(\"\${app.payments.simulated-enabled:false}\") boolean simulatedPaymentsEnabled) {
+            @Value("${app.payments.simulated-enabled:false}") boolean simulatedPaymentsEnabled) {
         this.payments = payments;
         this.orders = orders;
         this.users = users;
