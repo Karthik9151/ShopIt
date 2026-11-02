@@ -19,8 +19,9 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-05 | F6, F17 | MERGED | `wp05-order-history` | https://github.com/Karthik9151/ShopIt/pull/11 | PR CI run 41434916735: Maven/MySQL, frontend tests and production build all passed. | Verify Flyway V5 on staging and preserve actor attribution during any rollback; TiDB remains unverified |
 | WP-06 | F7 | PR OPEN — DRAFT | `wp06-auto-cancel` | https://github.com/Karthik9151/ShopIt/pull/12 | CI run 41436577576: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | Render free service only sweeps while awake; startup sweep catches up after wake |
 | WP-07 | F9 | BLOCKED | `wp07-cart-availability` | — | — | — |
-| WP-07 | F9 | PR OPEN — DRAFT | `wp07-cart-availability` | https://github.com/Karthik9151/ShopIt/pull/13 | CI pending; run not yet surfaced. Local Maven/npm commands unavailable. | None; remove unavailable product rows before checkout |
+| WP-07 | F9 | PR OPEN — DRAFT | `wp07-cart-availability` | https://github.com/Karthik9151/ShopIt/pull/13 | CI run 41437052277: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | None; remove unavailable product rows before checkout |
 | WP-08 | F3 | BLOCKED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
+| WP-08 | F3 | PR OPEN — DRAFT | `wp08-payment-switch` | https://github.com/Karthik9151/ShopIt/pull/14 | CI pending; run not yet surfaced. Local Maven/npm commands unavailable. | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging only if demo payments are required; never in production |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
 | WP-10 | F12 | BLOCKED | `wp10-public-hardening` | — | — | Verify report-only CSP on live site before enforcement |
 | WP-11 | F11 | BLOCKED | `wp11-registration-hardening` | — | — | Accept documented email-enumeration trade-off until email verification exists |
@@ -149,6 +150,19 @@ The owner explicitly authorized WP-00 through WP-22 without waiting for GATE app
 - Security: additive response fields only; no endpoint/authorization changes. No migration required.
 - Adversarial gaps: no direct stock-shortage-only integration test, no multi-unavailable item assertion, no race-condition stress test for a deactivation concurrent with checkout. Checkout locks product rows and rechecks active/stock state.
 - Rollback: revert code/DTO/frontend changes. No DB migration.
+
+
+### WP-08 package evidence — 2026-11-02
+
+- Branch: `wp08-payment-switch`, stacked on open WP-07 and based on WP-06's payment locking; PR #14 targets main and is draft/unmerged.
+- Main application property `app.payments.simulated-enabled` defaults false; CI profile explicitly defaults true for automated payment-flow coverage.
+- When disabled, POST simulation returns 404 before customer/order/payment repository access. No payment is created and no order status changes.
+- OrderView now includes additive `simulatedPaymentEnabled`; the frontend hides the payment action and explains the disabled state.
+- Added unit test verifies 404 and no repository interactions. Existing MySQL integration payment-flow test remains the enabled-mode regression.
+- Security: no new endpoint or permission; no real payment provider or sensitive payment data.
+- Owner action: set `APP_PAYMENTS_SIMULATED_ENABLED=true` only on the staging demo environment if simulated confirmation is required. No live Render setting was changed.
+- CI on this package was not yet surfaced when ledger updated. Local Maven/npm commands cannot run in this execution runtime.
+- Rollback: revert WP-08; no DB migration. Gaps: CI still needs to prove Spring property binding and the disabled service test against compilation; no dedicated frontend rendering test for the disabled button yet.
 
 ## Per-package completion evidence
 
