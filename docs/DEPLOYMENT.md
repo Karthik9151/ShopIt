@@ -90,7 +90,7 @@ Render's outbound IP ranges are shared by services in the same region. If the se
 1. In Render, select **New → Static Site**.
 2. Connect the same repository `Karthik9151/ShopIt`.
 3. Select the `main` branch.
-4. Build command: `cd frontend && npm ci && npm run build`.
+4. Build command: `cd frontend && npm install --no-audit --no-fund && npm run build`.
 5. Publish directory: `./frontend/dist`.
 6. Add the build-time environment variable:
 
