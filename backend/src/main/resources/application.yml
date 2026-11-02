@@ -36,3 +36,7 @@ app:
     email: ${APP_ADMIN_EMAIL:}
     password: ${APP_ADMIN_PASSWORD:}
     take-over-existing: ${APP_ADMIN_TAKE_OVER_EXISTING:false}
+  pricing:
+    shipping-flat: ${APP_PRICING_SHIPPING_FLAT:49.00}
+    free-shipping-threshold: ${APP_PRICING_FREE_SHIPPING_THRESHOLD:1999.00}
+    tax-rate: ${APP_PRICING_TAX_RATE:0.18}

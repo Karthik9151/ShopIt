@@ -46,6 +46,10 @@ The administrator can publish percentage or fixed-value coupons with start/end t
 
 The admin inventory screen estimates stock cost budget, potential retail value, and gross margin potential from current stock. These figures are estimates, not realized revenue or accounting profit. Product purchase costs are returned only by admin APIs and are omitted from public product responses.
 
+## Pricing and shipping
+
+Listed product prices are tax-exclusive. Checkout adds 18% tax as a separate line. Shipping is INR 49.00 unless the merchandise subtotal after coupon discount is at least INR 1,999.00, in which case shipping is free. The backend values are configurable through `APP_PRICING_SHIPPING_FLAT`, `APP_PRICING_FREE_SHIPPING_THRESHOLD`, and `APP_PRICING_TAX_RATE`. The frontend announcement uses `VITE_FREE_SHIPPING_THRESHOLD` (default 1999); keep it equal to `APP_PRICING_FREE_SHIPPING_THRESHOLD` on the deployed API.
+
 ## Payments
 
 Only an explicitly simulated payment workflow is included. It does not charge money or collect card details. The admin dashboard separates simulated payment value from real verified sales. Integrate and verify a real provider server-side before enabling live payments.

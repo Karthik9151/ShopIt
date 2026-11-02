@@ -25,6 +25,12 @@ services:
         sync: false
       - key: APP_CORS_ORIGINS
         sync: false
+      - key: APP_PRICING_SHIPPING_FLAT
+        value: "49.00"
+      - key: APP_PRICING_FREE_SHIPPING_THRESHOLD
+        value: "1999.00"
+      - key: APP_PRICING_TAX_RATE
+        value: "0.18"
 
   - type: web
     name: shopit-frontend
@@ -39,3 +45,5 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         sync: false
+      - key: VITE_FREE_SHIPPING_THRESHOLD
+        value: "1999.00"
