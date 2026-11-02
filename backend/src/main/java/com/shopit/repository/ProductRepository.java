@@ -25,7 +25,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     long countByActiveTrue();
     java.util.List<Product> findByActiveTrue();
-    java.util.List<Product> findByActiveTrue();
     long countByStockLessThanAndActiveTrue(int stock);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
