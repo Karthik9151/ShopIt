@@ -68,7 +68,7 @@ public class RateLimitService {
                 return Decision.rejected(retryAfter);
             }
             bucket.tokens -= 1.0d;
-            return Decision.allowed();
+            return Decision.permitted();
         }
     }
 
