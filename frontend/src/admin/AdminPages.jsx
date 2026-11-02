@@ -3,14 +3,15 @@ import {Link,useNavigate,useParams} from 'react-router-dom';
 import api from '../services/api';
 import {formatCurrency,formatDate} from '../utils';
 import {getOrderStatusOptions} from '../orderStatus';
+import {Badge,Button,PageHeader,Skeleton} from '../components/ui';
 
 function ErrorMessage({children}){return children?<div className="error" role="alert">{children}</div>:null;}
-function Loading(){return <div className="loading" role="status">Loading administrator data…</div>;}
+function Loading(){return <Skeleton rows={2}/>;}
 function Pagination({page,setPage,totalPages,totalElements}){
  return <div className="pagination-controls">
-  <button className="secondary" disabled={page<=0} onClick={()=>setPage(value=>value-1)}>Previous</button>
+  <Button variant="secondary" disabled={page<=0} onClick={()=>setPage(value=>value-1)}>Previous</Button>
   <span>Page {totalPages?page+1:0} of {totalPages} · {totalElements||0} records</span>
-  <button className="secondary" disabled={page+1>=totalPages} onClick={()=>setPage(value=>value+1)}>Next</button>
+  <Button variant="secondary" disabled={page+1>=totalPages} onClick={()=>setPage(value=>value+1)}>Next</Button>
  </div>;
 }
 function downloadCsv(response,filename){
@@ -21,10 +22,7 @@ function downloadCsv(response,filename){
  URL.revokeObjectURL(url);
 }
 function AdminPageHeader({eyebrow,title,description,action}){
- return <header className="admin-page-header">
-  <div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1>{description&&<p className="muted">{description}</p>}</div>
-  {action}
- </header>;
+ return <PageHeader eyebrow={eyebrow} title={title} description={description} action={action}/>;
 }
 
 export function AdminOrdersPage(){
@@ -70,7 +68,7 @@ export function AdminOrdersPage(){
   <ErrorMessage>{error}</ErrorMessage>
   {loading?<Loading/>:result?.content?.length?<div className="summary admin-orders">
    {result.content.map(order=><article className="admin-list-row" key={order.id}>
-    <div><b>Order #{order.id}</b><small>{formatDate(order.createdAt)} · {order.status.replaceAll('_',' ')}</small><small>{order.shippingAddress}</small></div>
+    <div><b>Order #{order.id}</b><small>{formatDate(order.createdAt)} · <Badge tone={order.status==='DELIVERED'?'success':order.status==='CANCELLED'?'danger':'info'}>{order.status.replaceAll('_',' ')}</Badge></small><small>{order.shippingAddress}</small></div>
     <div><b>{formatCurrency(order.total)}</b><small>{order.items?.length||0} line items</small></div>
     <Link className="text-link" to={'/admin/orders/'+order.id}>Open order →</Link>
    </article>)}
@@ -138,7 +136,7 @@ export function AdminProductsPage(){
   <ErrorMessage>{error}</ErrorMessage>
   {loading?<Loading/>:result?.content?.length?<div className="summary admin-orders">
    {result.content.map(product=><article className="admin-list-row" key={product.id}>
-    <div className="admin-product-identity">{product.imageUrl&&<img src={product.imageUrl} alt=""/>}<span><b>{product.name}</b><small>{product.active?'Active':'Inactive'} · {product.stock} in stock</small></span></div>
+    <div className="admin-product-identity">{product.imageUrl&&<img src={product.imageUrl} alt=""/>}<span><b>{product.name}</b><small><Badge tone={product.active?'success':'neutral'}>{product.active?'Active':'Inactive'}</Badge> · {product.stock} in stock</small></span></div>
     <div><b>{formatCurrency(product.price)}</b><small>Private cost {formatCurrency(product.costPrice??0)}</small></div>
     <div className="row-actions"><Link className="text-link" to={'/admin/products/'+product.id}>Edit</Link><button className="text-link" onClick={()=>toggle(product)}>{product.active?'Deactivate':'Reactivate'}</button></div>
    </article>)}
