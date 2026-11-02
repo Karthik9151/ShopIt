@@ -17,7 +17,7 @@ class OrderStatusTransitionsTest {
         assertThat(transitions.allowedNextStatuses("PENDING_PAYMENT", false))
                 .containsExactly("CANCELLED");
         assertThat(transitions.allowedNextStatuses("PENDING_PAYMENT", true))
-                .containsExactly("CONFIRMED", "CANCELLED");
+                .containsExactly("CONFIRMED");
         assertThat(transitions.isAllowed("PENDING_PAYMENT", "CONFIRMED")).isTrue();
         assertThat(transitions.isAllowed("PENDING_PAYMENT", "CANCELLED")).isTrue();
     }

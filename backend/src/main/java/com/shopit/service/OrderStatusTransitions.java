@@ -18,8 +18,8 @@ public class OrderStatusTransitions {
 
     public List<String> allowedNextStatuses(String currentStatus, boolean successfulPaymentExists) {
         List<String> allowed = ALLOWED.getOrDefault(currentStatus, List.of());
-        if ("PENDING_PAYMENT".equals(currentStatus) && !successfulPaymentExists) {
-            return List.of("CANCELLED");
+        if ("PENDING_PAYMENT".equals(currentStatus)) {
+            return successfulPaymentExists ? List.of("CONFIRMED") : List.of("CANCELLED");
         }
         return allowed;
     }

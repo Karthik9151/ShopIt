@@ -123,6 +123,14 @@ class CommerceFlowIntegrationTest {
                 .header("Authorization", "Bearer " + other.token()))
             .andExpect(status().isNotFound());
 
+        String admin = adminToken();
+        mvc.perform(put("/api/admin/orders/" + orderId + "/status")
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.createObjectNode().put("status", "CONFIRMED").toString()))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.message").value("An order can be confirmed only after a successful payment"));
+
         MvcResult paid = mvc.perform(post("/api/payments/simulate/" + orderId)
                 .header("Authorization", "Bearer " + customer.token()))
             .andExpect(status().isOk()).andReturn();
@@ -141,7 +149,13 @@ class CommerceFlowIntegrationTest {
         assertThat(mapper.readTree(confirmedResult.getResponse().getContentAsString())
                 .get("allowedNextStatuses").toString()).contains("PROCESSING");
 
-        String admin = adminToken();
+        mvc.perform(put("/api/admin/orders/" + orderId + "/status")
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.createObjectNode().put("status", "CANCELLED").toString()))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.message").value("Paid orders cannot be cancelled"));
+
         for (String nextStatus : List.of("PROCESSING", "SHIPPED", "DELIVERED")) {
             mvc.perform(put("/api/admin/orders/" + orderId + "/status")
                     .header("Authorization", "Bearer " + admin)

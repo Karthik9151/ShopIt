@@ -134,12 +134,12 @@ public class OrderService {
         CustomerOrder order = orders.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
         boolean successfulPayment = payments.findByOrder_IdAndStatus(id, "SUCCESS").isPresent();
+        if ("CANCELLED".equals(next) && successfulPayment) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Paid orders cannot be cancelled");
+        }
         transitions.validateTransition(order.getStatus(), next, successfulPayment);
 
         if ("CANCELLED".equals(next)) {
-            if (successfulPayment) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Paid orders cannot be cancelled");
-            }
             restoreStock(order);
             coupons.releaseUsage(order.getCouponId());
         }
