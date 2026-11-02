@@ -82,7 +82,10 @@ public class AdminCsvExportService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stock threshold must be between 0 and 1,000,000");
         }
         String safeSort = switch (sortBy == null ? "createdAt" : sortBy) {
-            case "name", "stock", "price", "createdAt" -> sortBy;
+            case "name" -> "name";
+            case "stock" -> "stock";
+            case "price" -> "price";
+            case "createdAt" -> "createdAt";
             default -> "createdAt";
         };
         Sort.Direction sortDirection = "asc".equalsIgnoreCase(direction)
