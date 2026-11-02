@@ -50,6 +50,10 @@ public final class ApiDtos {
     public record AddressView(Long id, String label, String recipientName, String phone,
                               String addressLine1, String addressLine2, String city,
                               String state, String postalCode, String country, boolean defaultAddress) {}
+    public record CustomerStatusRequest(@NotNull Boolean enabled) {}
+    public record CustomerView(Long id, String name, String email, String phone, boolean enabled, Instant createdAt) {}
+    public record CustomerStatusRequest(@NotNull Boolean enabled) {}
+    public record CustomerView(Long id, String name, String email, String phone, boolean enabled, Instant createdAt) {}
     public record DashboardView(long customers, long products, long orders, long paidPayments,
                                 BigDecimal verifiedSales, BigDecimal simulatedPaymentValue,
                                 long pendingOrders, long lowStockProducts) {}
