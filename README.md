@@ -19,6 +19,14 @@ Requirements: JDK 21, Maven 3.9+, Node.js 22.12+, npm, and MySQL 8.
 
 Flyway creates the schema and seeds a small sample catalogue. Set `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD` (minimum 12 characters) before first startup to provision an administrator. Bootstrap does not overwrite existing accounts.
 
+## Owner-managed catalogue and promotions
+
+The store owner provisions the administrator account through `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD`. Only ADMIN routes can create or update products, selling prices, private unit purchase costs, categories, and coupon campaigns. Customer registration creates customer accounts only.
+
+The administrator can publish percentage or fixed-value coupons with start/end timestamps, minimum cart values, optional maximum discounts, and redemption limits. The customer offers page shows only currently available promotions. Coupon application is previewed against the signed-in customer's cart and is revalidated during checkout; the order stores the coupon/discount snapshot.
+
+The admin inventory screen estimates stock cost budget, potential retail value, and gross margin potential from current stock. These figures are estimates, not realized revenue or accounting profit. Product purchase costs are returned only by admin APIs and are omitted from public product responses.
+
 ## Payments
 
 Only an explicitly simulated payment workflow is included. It does not charge money or collect card details. The admin dashboard separates simulated payment value from real verified sales. Integrate and verify a real provider server-side before enabling live payments.

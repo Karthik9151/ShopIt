@@ -13,14 +13,17 @@
 - Order history, order ownership checks, unpaid cancellation and inventory restoration.
 - Simulated payment record, explicitly labelled and without card data.
 - Admin metrics that distinguish simulated value from real verified sales.
-- Responsive storefront, account screens, and admin workspace.
+- Responsive storefront, account screens, and admin workspace, including separate coupon and inventory valuation pages.
+- Administrator-owned coupon campaigns with percentage/fixed discounts, validity windows, minimum order values, optional discount caps, usage limits, pause/reactivation, and locked redemption during checkout.
+- Customer offers page and coupon preview/apply at checkout; order records preserve coupon code and discount snapshots.
+- Private product purchase cost captured only in admin responses; inventory cost budget, potential retail value, and estimated gross margin calculations.
 - Flyway schema, sample catalogue migration, OpenAPI documentation, and GitHub Actions CI.
 
 ## Not yet implemented
 - Email verification and email-delivered forgot-password/reset workflow (requires a configured mail provider).
 - Refresh-token rotation, token revocation across active sessions, and forced logout on password change.
 - Real payment provider integration, signed callback/webhook verification, refunds, and payment reconciliation.
-- Shipping carrier integration, discounts/coupons, returns, reviews/ratings, and image object storage.
+- Shipping carrier integration, returns, reviews/ratings, and image object storage.
 - Order-status history writes and a customer-facing event timeline.
 - More comprehensive API/service integration tests, browser end-to-end tests, and production load tests.
 - Production rate limiting, CSP/security headers, audit logging, monitoring, backup validation, and security review.

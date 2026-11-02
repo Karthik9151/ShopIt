@@ -15,6 +15,9 @@ public class CustomerOrder {
  @Column(nullable=false,precision=12,scale=2) private BigDecimal tax;
  @Column(nullable=false,precision=12,scale=2) private BigDecimal total;
  @Column(name="shipping_address",nullable=false,length=1000) private String shippingAddress;
+ @Column(name="coupon_id") private Long couponId;
+ @Column(name="coupon_code",length=40) private String couponCode;
+ @Column(name="discount_amount",nullable=false,precision=12,scale=2) private BigDecimal discountAmount=BigDecimal.ZERO;
  @Column(name="created_at",nullable=false,updatable=false) private Instant createdAt=Instant.now();
  @OneToMany(mappedBy="order",cascade=CascadeType.ALL,orphanRemoval=true) private List<OrderItem> items=new ArrayList<>();
  public void addItem(OrderItem item){items.add(item);item.setOrder(this);}

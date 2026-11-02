@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,6 +39,21 @@ public class ProductService {
         return view(product);
     }
 
+    public List<AdminProductView> adminList() {
+        return products.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream().map(this::adminView).toList();
+    }
+
+    @Transactional
+    public AdminProductView createAdmin(ProductRequest request) {
+        return adminView(products.save(apply(new Product(), request)));
+    }
+
+    @Transactional
+    public AdminProductView updateAdmin(Long id, ProductRequest request) {
+        Product product = products.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return adminView(products.save(apply(product, request)));
+    }
+
     @Transactional
     public ProductView create(ProductRequest request) {
         return view(products.save(apply(new Product(), request)));
@@ -61,12 +77,20 @@ public class ProductService {
         product.setName(request.name().trim());
         product.setDescription(request.description());
         product.setPrice(request.price());
+        if (request.costPrice() != null) product.setCostPrice(request.costPrice());
         product.setStock(request.stock());
         product.setImageUrl(request.imageUrl());
         product.setCategory(request.categoryId() == null ? null : categories.findById(request.categoryId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid category")));
         if (request.active() != null) product.setActive(request.active());
         return product;
+    }
+
+    public AdminProductView adminView(Product product) {
+        Category category = product.getCategory();
+        return new AdminProductView(product.getId(), product.getName(), product.getDescription(), product.getPrice(),
+            product.getCostPrice(), product.getStock(), product.getImageUrl(), category == null ? null : category.getId(),
+            category == null ? null : category.getName(), product.isActive(), product.getCreatedAt());
     }
 
     public ProductView view(Product product) {

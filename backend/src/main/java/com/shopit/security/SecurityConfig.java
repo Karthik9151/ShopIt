@@ -20,7 +20,8 @@ public class SecurityConfig{
  @Bean SecurityFilterChain filterChain(HttpSecurity http,JwtAuthFilter jwtFilter,AuthenticationProvider provider)throws Exception{
   return http.csrf(csrf->csrf.disable()).cors(Customizer.withDefaults())
    .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authenticationProvider(provider)
-   .authorizeHttpRequests(a->a.requestMatchers("/api/auth/**","/api/products/**","/api/categories/**","/actuator/health/**","/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html").permitAll()
+   .authorizeHttpRequests(a->a.requestMatchers("/api/auth/**","/api/products/**","/api/categories/**","/api/coupons").permitAll()
+    .requestMatchers("/actuator/health/**","/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html").permitAll()
     .requestMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated())
    .exceptionHandling(e->e.authenticationEntryPoint((req,res,ex)->res.sendError(401,"Authentication required")).accessDeniedHandler((req,res,ex)->res.sendError(403,"Access denied")))
    .addFilterBefore(jwtFilter,UsernamePasswordAuthenticationFilter.class).build();
