@@ -5,6 +5,8 @@ import api,{resetSessionExpiry} from './services/api';
 import {getOrderStatusOptions} from './orderStatus';
 import {formatCurrency,formatDate} from './utils';
 import {getFreeShippingMessage,getFreeShippingThreshold,getShippingLabel} from './pricing';
+import AdminLayout from './admin/AdminLayout';
+import {AdminOrdersPage,AdminOrderDetailPage,AdminProductsPage,AdminProductFormPage,AdminCategoriesPage,AdminCustomersPage} from './admin/AdminPages';
 
 const FREE_SHIPPING_THRESHOLD=getFreeShippingThreshold();
 const AuthContext=createContext(null);
@@ -131,6 +133,13 @@ export function getPageTitle(pathname, isAdmin=false){
  if(pathname==='/admin'&&!isAdmin)return 'Admin access required';
  if(pathname==='/admin')return 'Admin dashboard';
  if(pathname==='/admin/inventory')return 'Admin inventory';
+ if(pathname==='/admin/orders')return 'Admin orders';
+ if(pathname.startsWith('/admin/orders/'))return 'Admin order details';
+ if(pathname==='/admin/products')return 'Admin products';
+ if(pathname==='/admin/products/new')return 'Create product';
+ if(pathname.startsWith('/admin/products/'))return 'Edit product';
+ if(pathname==='/admin/categories')return 'Admin categories';
+ if(pathname==='/admin/customers')return 'Admin customers';
  if(pathname==='/admin/coupons')return 'Admin coupons';
  if(pathname.startsWith('/admin/customers/'))return 'Admin customer details';
  if(pathname.startsWith('/admin'))return isAdmin?'Admin console':'Admin access required';
@@ -157,7 +166,17 @@ function Layout(){
  <button className="mobile-menu" aria-label="Toggle navigation" aria-controls="primary-navigation" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>{open?<X/>:<Menu/>}</button></header>
  <main id="main-content" tabIndex={-1}><Routes>
  <Route index element={<Home/>}/><Route path="/products" element={<Products/>}/><Route path="/products/:id" element={<ProductDetails/>}/><Route path="/login" element={<AuthPage/>}/><Route path="/register" element={<AuthPage register/>}/>
- <Route path="/cart" element={<Guard><Cart/></Guard>}/><Route path="/checkout" element={<Guard><Checkout/></Guard>}/><Route path="/wishlist" element={<Guard><Wishlist/></Guard>}/><Route path="/orders" element={<Guard><Orders/></Guard>}/><Route path="/orders/:id" element={<Guard><OrderDetails/></Guard>}/><Route path="/profile" element={<Guard><Profile/></Guard>}/><Route path="/offers" element={<Offers/>}/><Route path="/admin" element={<Guard admin><Admin/></Guard>}/><Route path="/admin/customers/:id" element={<Guard admin><AdminCustomerDetail/></Guard>}/><Route path="/admin/inventory" element={<Guard admin><AdminInventory/></Guard>}/><Route path="/admin/coupons" element={<Guard admin><AdminCoupons/></Guard>}/><Route path="*" element={<NotFound/>}/>
+ <Route path="/cart" element={<Guard><Cart/></Guard>}/><Route path="/checkout" element={<Guard><Checkout/></Guard>}/><Route path="/wishlist" element={<Guard><Wishlist/></Guard>}/><Route path="/orders" element={<Guard><Orders/></Guard>}/><Route path="/orders/:id" element={<Guard><OrderDetails/></Guard>}/><Route path="/profile" element={<Guard><Profile/></Guard>}/><Route path="/offers" element={<Offers/>}/><Route path="/admin" element={<Guard admin><AdminLayout><Admin/></AdminLayout></Guard>}/>
+ <Route path="/admin/orders" element={<Guard admin><AdminLayout><AdminOrdersPage/></AdminLayout></Guard>}/>
+ <Route path="/admin/orders/:id" element={<Guard admin><AdminLayout><AdminOrderDetailPage/></AdminLayout></Guard>}/>
+ <Route path="/admin/products" element={<Guard admin><AdminLayout><AdminProductsPage/></AdminLayout></Guard>}/>
+ <Route path="/admin/products/new" element={<Guard admin><AdminLayout><AdminProductFormPage/></AdminLayout></Guard>}/>
+ <Route path="/admin/products/:id" element={<Guard admin><AdminLayout><AdminProductFormPage/></AdminLayout></Guard>}/>
+ <Route path="/admin/categories" element={<Guard admin><AdminLayout><AdminCategoriesPage/></AdminLayout></Guard>}/>
+ <Route path="/admin/customers" element={<Guard admin><AdminLayout><AdminCustomersPage/></AdminLayout></Guard>}/>
+ <Route path="/admin/customers/:id" element={<Guard admin><AdminLayout><AdminCustomerDetail/></AdminLayout></Guard>}/>
+ <Route path="/admin/inventory" element={<Guard admin><AdminLayout><AdminInventory/></AdminLayout></Guard>}/>
+ <Route path="/admin/coupons" element={<Guard admin><AdminLayout><AdminCoupons/></AdminLayout></Guard>}/><Route path="*" element={<NotFound/>}/>
  </Routes></main><footer className="footer"><div><Link to="/" className="brand"><span className="brand-mark">s.</span> shopit</Link><p>Good things for everyday life.</p></div><div><b>Explore</b><Link to="/products">All products</Link><Link to="/orders">Your orders</Link></div><div><b>Help</b><a href="mailto:hello@shopit.local">Contact support</a><span>Secure checkout · Easy returns</span></div><small>© {new Date().getFullYear()} ShopIt. Built with care.</small></footer></>;
 }
 function ProductCard({product}){
