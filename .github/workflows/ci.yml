@@ -62,3 +62,5 @@ jobs:
       - name: Maven verification (H2 unit/context and MySQL integration)
         working-directory: backend
         run: mvn --batch-mode verify
+      - name: Build the Render backend container
+        run: docker build --pull --file backend/Dockerfile --tag shopit-api:ci backend
