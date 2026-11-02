@@ -2,6 +2,7 @@ package com.shopit.service;
 import com.shopit.dto.ApiDtos.*;
 import com.shopit.entity.*;
 import com.shopit.repository.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +23,13 @@ public class OrderService {
     private final PaymentRepository payments;
     private final OrderStatusHistoryService statusHistory;
     private final OrderStatusTransitions transitions;
+    private final boolean simulatedPaymentsEnabled;
 
     public OrderService(OrderRepository orders, CartItemRepository cart, UserRepository users,
                         ProductRepository products, CouponService coupons, PricingService pricing,
                         PaymentRepository payments, OrderStatusHistoryService statusHistory,
-                        OrderStatusTransitions transitions) {
+                        OrderStatusTransitions transitions,
+                        @Value(\"\${app.payments.simulated-enabled:false}\") boolean simulatedPaymentsEnabled) {
         this.orders = orders;
         this.cart = cart;
         this.users = users;
@@ -36,6 +39,7 @@ public class OrderService {
         this.payments = payments;
         this.statusHistory = statusHistory;
         this.transitions = transitions;
+        this.simulatedPaymentsEnabled = simulatedPaymentsEnabled;
     }
 
     public OrderView checkout(String email, CheckoutRequest request) {
@@ -192,7 +196,7 @@ public class OrderService {
         return new OrderView(order.getId(), order.getStatus(), order.getSubtotal(), order.getDiscountAmount(), order.getCouponCode(),
             order.getShipping(), order.getTax(), order.getTotal(), order.getShippingAddress(), order.getCreatedAt(), lines,
             statusHistory.timeline(order.getId()),
-            transitions.allowedNextStatuses(order.getStatus(), successfulPayment));
+            transitions.allowedNextStatuses(order.getStatus(), successfulPayment), simulatedPaymentsEnabled);
     }
 
     private AppUser user(String email) {
