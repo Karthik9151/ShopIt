@@ -41,6 +41,18 @@ describe('protected route navigation',()=>{
   expect(screen.getByRole('heading',{name:'Admin access required'})).toBeTruthy();
  });
 
+ it('blocks admin order routes from customer accounts',()=>{
+  sessionStorage.setItem('shopit_access_token','test-only-token');
+  sessionStorage.setItem('shopit_user',JSON.stringify({
+   id:7,name:'Test Customer',email:'customer@example.test',role:'CUSTOMER'
+  }));
+  window.history.replaceState({},'', '/admin/orders/12');
+
+  render(<App/>);
+
+  expect(screen.getByRole('heading',{name:'Admin access required'})).toBeTruthy();
+ });
+
  it('uses a descriptive title for customer detail routes',()=>{
   expect(getPageTitle('/admin/customers/7',true)).toBe('Admin customer details');
  });
