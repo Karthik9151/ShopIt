@@ -23,10 +23,10 @@ The audit was performed by reading repository source, tests, configuration, and 
 
 The current `AdminController` now includes paginated product/order/customer lists, product stock editing, all-category listing/reactivation with product counts, customer search/detail, product/category management, coupon management, and order status changes. The following requested capabilities remain incomplete:
 
-- Date, order-ID, and customer-email filters for admin orders.
-- Server-backed order and inventory CSV exports with a 5,000-row cap and spreadsheet-formula protection.
 - Dashboard series and grouped views for sales-by-day, status breakdown, top products, low-stock rows, and recent orders.
 - Customer order-history detail and richer customer account activity.
+
+Admin order filters and 5,000-row formula-safe CSV exports are now implemented on this branch. Inventory export supports a stock threshold and a safe sort whitelist.
 
 The current dashboard returns basic counts, payment totals, and inventory valuation. It does not supply all of the requested grouped dashboard datasets.
 
