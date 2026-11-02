@@ -21,14 +21,12 @@ The audit was performed by reading repository source, tests, configuration, and 
 
 ### Admin API and workflow coverage
 
-The current `AdminController` exposes paginated product and order lists, product/category create/update/deactivate, customer list/status updates, and order status changes. The following requested capabilities are not present in that controller/API surface:
+The current `AdminController` now includes paginated product/order/customer lists, product stock editing, all-category listing/reactivation with product counts, customer search/detail, product/category management, coupon management, and order status changes. The following requested capabilities remain incomplete:
 
-- A complete admin category list including inactive categories, explicit category reactivation, and category product counts.
-- Customer search and a customer detail endpoint.
 - Date, order-ID, and customer-email filters for admin orders.
-- A dedicated stock-edit endpoint such as `PATCH /api/admin/products/{id}/stock`.
 - Server-backed order and inventory CSV exports with a 5,000-row cap and spreadsheet-formula protection.
 - Dashboard series and grouped views for sales-by-day, status breakdown, top products, low-stock rows, and recent orders.
+- Customer order-history detail and richer customer account activity.
 
 The current dashboard returns basic counts, payment totals, and inventory valuation. It does not supply all of the requested grouped dashboard datasets.
 
