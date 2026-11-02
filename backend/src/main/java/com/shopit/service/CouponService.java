@@ -14,15 +14,17 @@ import java.util.regex.Pattern;
 
 @Service
 public class CouponService {
-    private static final BigDecimal SHIPPING = new BigDecimal("49.00");
-    private static final BigDecimal TAX_RATE = new BigDecimal("0.18");
     private static final Pattern CODE_PATTERN = Pattern.compile("[A-Z0-9_-]{3,40}");
     private final CouponRepository coupons;
     private final CartItemRepository cart;
     private final UserRepository users;
+    private final PricingService pricing;
 
-    public CouponService(CouponRepository coupons, CartItemRepository cart, UserRepository users) {
-        this.coupons = coupons; this.cart = cart; this.users = users;
+    public CouponService(CouponRepository coupons, CartItemRepository cart, UserRepository users, PricingService pricing) {
+        this.coupons = coupons;
+        this.cart = cart;
+        this.users = users;
+        this.pricing = pricing;
     }
 
     @Transactional(readOnly = true)
@@ -73,11 +75,9 @@ public class CouponService {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         Coupon coupon = coupons.findByCodeIgnoreCase(code).orElseThrow(this::invalidCoupon);
         BigDecimal discount = validateAndCalculate(coupon, subtotal, Instant.now());
-        BigDecimal taxable = subtotal.subtract(discount).max(BigDecimal.ZERO);
-        BigDecimal tax = taxable.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal total = taxable.add(SHIPPING).add(tax).setScale(2, RoundingMode.HALF_UP);
-        return new CouponPreview(coupon.getCode(), coupon.getDescription(), subtotal, discount, SHIPPING, tax, total,
-            coupon.getStartsAt(), coupon.getEndsAt());
+        PricingService.PriceBreakdown totals = pricing.calculate(subtotal, discount);
+        return new CouponPreview(coupon.getCode(), coupon.getDescription(), subtotal, discount,
+            totals.shipping(), totals.tax(), totals.total(), coupon.getStartsAt(), coupon.getEndsAt());
     }
 
     @Transactional

@@ -13,21 +13,21 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class OrderService {
-    private static final BigDecimal SHIPPING = new BigDecimal("49.00");
-    private static final BigDecimal TAX_RATE = new BigDecimal("0.18");
     private final OrderRepository orders;
     private final CartItemRepository cart;
     private final UserRepository users;
     private final ProductRepository products;
     private final CouponService coupons;
+    private final PricingService pricing;
 
     public OrderService(OrderRepository orders, CartItemRepository cart, UserRepository users, ProductRepository products,
-                        CouponService coupons) {
+                        CouponService coupons, PricingService pricing) {
         this.orders = orders;
         this.cart = cart;
         this.users = users;
         this.products = products;
         this.coupons = coupons;
+        this.pricing = pricing;
     }
 
     public OrderView checkout(String email, CheckoutRequest request) {
@@ -72,13 +72,12 @@ public class OrderService {
             order.setCouponId(coupon.id());
             order.setCouponCode(coupon.code());
         }
-        BigDecimal taxableSubtotal = subtotal.subtract(discount).max(BigDecimal.ZERO);
-        BigDecimal tax = taxableSubtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
+        PricingService.PriceBreakdown totals = pricing.calculate(subtotal, discount);
         order.setSubtotal(subtotal);
         order.setDiscountAmount(discount);
-        order.setShipping(SHIPPING);
-        order.setTax(tax);
-        order.setTotal(taxableSubtotal.add(SHIPPING).add(tax).setScale(2, RoundingMode.HALF_UP));
+        order.setShipping(totals.shipping());
+        order.setTax(totals.tax());
+        order.setTotal(totals.total());
 
         CustomerOrder saved = orders.save(order);
         cart.deleteByUser_Id(user.getId());
