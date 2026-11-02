@@ -16,9 +16,12 @@ public final class ApiDtos {
     public record ProductRequest(@NotBlank @Size(max=180) String name, @Size(max=10000) String description,
                                  @NotNull @DecimalMin("0.00") @Digits(integer=10,fraction=2) BigDecimal price,
                                  @Min(0) @Max(1000000) int stock, @Size(max=1000) String imageUrl, Long categoryId,
-                                 Boolean active) {}
+                                 Boolean active, @DecimalMin("0.00") @Digits(integer=10,fraction=2) BigDecimal costPrice) {}
     public record ProductView(Long id, String name, String description, BigDecimal price, int stock,
                               String imageUrl, Long categoryId, String categoryName, boolean active, Instant createdAt) {}
+    public record AdminProductView(Long id, String name, String description, BigDecimal price, BigDecimal costPrice,
+                                   int stock, String imageUrl, Long categoryId, String categoryName,
+                                   boolean active, Instant createdAt) {}
     public record CartAddRequest(@NotNull Long productId, @Min(1) @Max(100) int quantity) {}
     public record CartUpdateRequest(@Min(1) @Max(100) int quantity) {}
     public record CartLine(Long id, Long productId, String name, BigDecimal unitPrice, int quantity,
@@ -26,11 +29,11 @@ public final class ApiDtos {
     public record CartView(List<CartLine> items, BigDecimal subtotal, int itemCount) {}
     public record WishlistLine(Long id, Long productId, String name, BigDecimal price, String imageUrl) {}
     public record CheckoutRequest(@NotBlank @Size(max=1000) String shippingAddress,
-                                  @NotBlank @Size(max=80) String requestId) {}
+                                  @NotBlank @Size(max=80) String requestId, @Size(max=40) String couponCode) {}
     public record OrderLine(Long productId, String productName, BigDecimal unitPrice, int quantity, BigDecimal lineTotal) {}
-    public record OrderView(Long id, String status, BigDecimal subtotal, BigDecimal shipping,
-                            BigDecimal tax, BigDecimal total, String shippingAddress, Instant createdAt,
-                            List<OrderLine> items) {}
+    public record OrderView(Long id, String status, BigDecimal subtotal, BigDecimal discountAmount, String couponCode,
+                            BigDecimal shipping, BigDecimal tax, BigDecimal total, String shippingAddress,
+                            Instant createdAt, List<OrderLine> items) {}
     public record PaymentView(Long id, Long orderId, String provider, String status,
                               String reference, BigDecimal amount, Instant paidAt) {}
     public record StatusUpdate(@NotBlank String status) {}
@@ -54,5 +57,19 @@ public final class ApiDtos {
     public record CustomerView(Long id, String name, String email, String phone, boolean enabled, Instant createdAt) {}
     public record DashboardView(long customers, long products, long orders, long paidPayments,
                                 BigDecimal verifiedSales, BigDecimal simulatedPaymentValue,
-                                long pendingOrders, long lowStockProducts) {}
+                                long pendingOrders, long lowStockProducts, BigDecimal inventoryCostBudget,
+                                BigDecimal potentialRetailValue, BigDecimal estimatedGrossMargin) {}
+    public record CouponRequest(@NotBlank @Size(max=40) String code, @Size(max=240) String description,
+                                @NotBlank String discountType, @NotNull @DecimalMin("0.01") @Digits(integer=10,fraction=2) BigDecimal discountValue,
+                                @DecimalMin("0.00") @Digits(integer=10,fraction=2) BigDecimal minimumOrderAmount,
+                                @DecimalMin("0.01") @Digits(integer=10,fraction=2) BigDecimal maximumDiscount,
+                                @NotNull Instant startsAt, @NotNull Instant endsAt, @Min(1) Integer usageLimit, Boolean active) {}
+    public record CouponView(Long id, String code, String description, String discountType, BigDecimal discountValue,
+                             BigDecimal minimumOrderAmount, BigDecimal maximumDiscount, Instant startsAt, Instant endsAt,
+                             Integer usageLimit, int usageCount, boolean active, boolean available) {}
+    public record CouponCheckRequest(@NotBlank @Size(max=40) String code) {}
+    public record CouponStatusRequest(@NotNull Boolean active) {}
+    public record CouponPreview(String code, String description, BigDecimal subtotal, BigDecimal discountAmount,
+                                BigDecimal shipping, BigDecimal tax, BigDecimal total, Instant startsAt, Instant endsAt) {}
+    public record CouponApplication(Long id, String code, BigDecimal discountAmount) {}
 }
