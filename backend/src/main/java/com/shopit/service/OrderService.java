@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.*;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -150,9 +151,33 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Page<OrderView> adminList(String status, Pageable pageable) {
+        return adminList(status, null, null, null, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderView> adminList(
+            String status,
+            Long orderId,
+            String customerEmail,
+            Instant createdFrom,
+            Instant createdBefore,
+            Pageable pageable) {
+        if (createdFrom != null && createdBefore != null && !createdBefore.isAfter(createdFrom)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "The end date must be later than the start date");
+        }
         String normalizedStatus = status == null || status.isBlank()
                 ? null : status.trim().toUpperCase(Locale.ROOT);
-        return orders.searchForAdmin(normalizedStatus, pageable).map(this::view);
+        String normalizedEmail = customerEmail == null || customerEmail.isBlank()
+                ? null : customerEmail.trim().toLowerCase(Locale.ROOT);
+        return orders.searchForAdmin(
+                normalizedStatus,
+                orderId,
+                normalizedEmail,
+                createdFrom,
+                createdBefore,
+                pageable).map(this::view);
     }
 
     public OrderView updateStatus(Long id, String next) {
