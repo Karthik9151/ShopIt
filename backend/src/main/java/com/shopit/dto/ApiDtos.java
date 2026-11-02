@@ -33,9 +33,11 @@ public final class ApiDtos {
     public record CheckoutRequest(@NotBlank @Size(max=1000) String shippingAddress,
                                   @NotBlank @Size(max=80) String requestId, @Size(max=40) String couponCode) {}
     public record OrderLine(Long productId, String productName, BigDecimal unitPrice, int quantity, BigDecimal lineTotal) {}
+    public record OrderStatusHistoryView(String oldStatus, String newStatus, Instant changedAt, String actor) {}
     public record OrderView(Long id, String status, BigDecimal subtotal, BigDecimal discountAmount, String couponCode,
                             BigDecimal shipping, BigDecimal tax, BigDecimal total, String shippingAddress,
-                            Instant createdAt, List<OrderLine> items) {}
+                            Instant createdAt, List<OrderLine> items,
+                            List<OrderStatusHistoryView> timeline, List<String> allowedNextStatuses) {}
     public record PaymentView(Long id, Long orderId, String provider, String status,
                               String reference, BigDecimal amount, Instant paidAt) {}
     public record StatusUpdate(@NotBlank String status) {}

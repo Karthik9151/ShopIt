@@ -19,15 +19,23 @@ public class OrderService {
     private final ProductRepository products;
     private final CouponService coupons;
     private final PricingService pricing;
+    private final PaymentRepository payments;
+    private final OrderStatusHistoryService statusHistory;
+    private final OrderStatusTransitions transitions;
 
-    public OrderService(OrderRepository orders, CartItemRepository cart, UserRepository users, ProductRepository products,
-                        CouponService coupons, PricingService pricing) {
+    public OrderService(OrderRepository orders, CartItemRepository cart, UserRepository users,
+                        ProductRepository products, CouponService coupons, PricingService pricing,
+                        PaymentRepository payments, OrderStatusHistoryService statusHistory,
+                        OrderStatusTransitions transitions) {
         this.orders = orders;
         this.cart = cart;
         this.users = users;
         this.products = products;
         this.coupons = coupons;
         this.pricing = pricing;
+        this.payments = payments;
+        this.statusHistory = statusHistory;
+        this.transitions = transitions;
     }
 
     public OrderView checkout(String email, CheckoutRequest request) {
@@ -80,6 +88,7 @@ public class OrderService {
         order.setTotal(totals.total());
 
         CustomerOrder saved = orders.save(order);
+        statusHistory.record(saved, null, "PENDING_PAYMENT", "CUSTOMER");
         cart.deleteByUser_Id(user.getId());
         return view(saved);
     }
@@ -104,7 +113,13 @@ public class OrderService {
         if (!"PENDING_PAYMENT".equals(order.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Only unpaid orders can be cancelled by the customer");
         }
+        if (payments.findByOrder_IdAndStatus(id, "SUCCESS").isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Paid orders cannot be cancelled");
+        }
+        transitions.validateTransition(order.getStatus(), "CANCELLED", false);
+        String oldStatus = order.getStatus();
         order.setStatus("CANCELLED");
+        statusHistory.record(order, oldStatus, "CANCELLED", "CUSTOMER");
         restoreStock(order);
         coupons.releaseUsage(order.getCouponId());
         return view(order);
@@ -116,22 +131,22 @@ public class OrderService {
     }
 
     public OrderView updateStatus(Long id, String next) {
-        Set<String> valid = Set.of("CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED");
-        if (!valid.contains(next)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported order status");
-
         CustomerOrder order = orders.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (Set.of("CANCELLED", "DELIVERED").contains(order.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Order is final");
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        boolean successfulPayment = payments.findByOrder_IdAndStatus(id, "SUCCESS").isPresent();
+        if ("CANCELLED".equals(next) && successfulPayment) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Paid orders cannot be cancelled");
         }
+        transitions.validateTransition(order.getStatus(), next, successfulPayment);
+
         if ("CANCELLED".equals(next)) {
-            if (!"PENDING_PAYMENT".equals(order.getStatus())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Refund handling is required before cancellation");
-            }
             restoreStock(order);
             coupons.releaseUsage(order.getCouponId());
         }
+
+        String oldStatus = order.getStatus();
         order.setStatus(next);
+        statusHistory.record(order, oldStatus, next, "ADMIN");
         return view(order);
     }
 
@@ -156,8 +171,11 @@ public class OrderService {
                 item.getQuantity(),
                 item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))))
             .toList();
+        boolean successfulPayment = payments.findByOrder_IdAndStatus(order.getId(), "SUCCESS").isPresent();
         return new OrderView(order.getId(), order.getStatus(), order.getSubtotal(), order.getDiscountAmount(), order.getCouponCode(),
-            order.getShipping(), order.getTax(), order.getTotal(), order.getShippingAddress(), order.getCreatedAt(), lines);
+            order.getShipping(), order.getTax(), order.getTotal(), order.getShippingAddress(), order.getCreatedAt(), lines,
+            statusHistory.timeline(order.getId()),
+            transitions.allowedNextStatuses(order.getStatus(), successfulPayment));
     }
 
     private AppUser user(String email) {
