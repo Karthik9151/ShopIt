@@ -24,7 +24,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-08 | F3 | PR OPEN — DRAFT | `wp08-payment-switch` | https://github.com/Karthik9151/ShopIt/pull/14 | CI run 41437483366: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging only if demo payments are required; never in production |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
 | WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First CI run 41438195716 failed at compile (static decision factory call); corrected in b94284c and validation run 41438476868 queued. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
-| WP-10 | F12 | PR OPEN — CHECKS PASS | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | CI 41442109697 and 41442537544 passed Maven/MySQL verify, backend container build, frontend tests and production build. | Owner inspect report-only CSP violations on deployed frontend before any enforcement; no Render settings changed |
+| WP-10 | F12 | PR OPEN — CHECKS PASS | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | CI run 41442109697: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. Local commands unavailable in this runtime. | Owner must inspect deployed report-only CSP violations before considering enforcement; no Render settings changed |
 | WP-11 | F11 | BLOCKED | `wp11-registration-hardening` | — | — | Accept documented email-enumeration trade-off until email verification exists |
 | WP-12 | F13 | BLOCKED | `wp12-stock-exposure` | — | — | Review public ProductView API contract change |
 | WP-13 | F10, F15 | BLOCKED | `wp13-cold-start-jvm` | — | — | Optional uptime monitor intentionally not enabled; no Render settings changes |
@@ -36,7 +36,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-19 | Readability | PR OPEN — CHECKS PASS | `wp19-readability` | https://github.com/Karthik9151/ShopIt/pull/25 | CI 41444506589 passed Maven/MySQL verify, backend container build, frontend tests and production build. | Stacked on WP-14; merge WP-14 first |
 | WP-20 | Documentation | PR OPEN — CHECKS PASS | `wp20-docs-accuracy` | https://github.com/Karthik9151/ShopIt/pull/26 | CI 41445039629 passed Maven/MySQL verify, backend container build, frontend tests and production build. | Stacked on WP-19/WP-14; merge WP-14 then WP-19 first |
 | WP-21 | Accessibility and SEO | PR OPEN — CHECKS PENDING | `wp21-accessibility` | https://github.com/Karthik9151/ShopIt/pull/27 | CI 41445293967 in progress at ledger update; no pass claimed. | Stacked on unmerged WP-14; merge WP-14 first |
-| WP-22 | Demo profile | PR OPEN — CHECKS PENDING | `wp22-demo-profile` | https://github.com/Karthik9151/ShopIt/pull/28 | CI pending: Maven/MySQL verify and frontend tests/build. | Local-only profile; owner must keep SPRING_PROFILES_ACTIVE=demo off Render; no hosted settings changed |
+| WP-22 | Demo profile | PR OPEN — CHECKS PASS | `wp22-demo-profile` | https://github.com/Karthik9151/ShopIt/pull/28 | CI 41445891917 passed Maven/MySQL verification, backend container build, frontend tests and production build. | Keep `SPRING_PROFILES_ACTIVE=demo` off Render and all shared/production environments; no hosted settings changed |
 | WP-23 | Optional features (23a-23h) | BLOCKED | — | — | — | Owner must select one feature and approve its separate plan |
 
 ## Project goals
@@ -210,3 +210,13 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 - WP-18 documentation CI 41444371515 passed. Live TiDB verification remains owner-blocked; the named shell script was not present at baseline and was not executed.
 - WP-19 CI 41444506589 and WP-20 CI 41445039629 passed. WP-21 and WP-22 workflows are pending/in progress at this update; do not mark them green until the exact heads finish successfully.
 - Local `mvn -B verify` and `npm test -- --run && npm run build` commands were not run in this runtime: no mounted checkout, Maven absent, and npm registry/network requests timed out. GitHub Actions provides the recorded results above.
+
+### WP-10 package evidence — 2026-11-02
+
+- Existing PR #16 was found diverged from the post-WP-09 main branch (six commits behind and mergeability state dirty). The wp10-public-hardening branch was rebuilt on top of current main commit 4cc2c3598cb751cfd4b360a42cab526fff8cbbd9, preserving the WP-10-only file set and existing PR. No merge was performed.
+- The resulting PR branch is one commit ahead of main, zero commits behind, and GitHub reports it mergeable.
+- Implemented baseline API response headers and hidden Swagger/OpenAPI routes by default; added local/test/CI profile switches; added static-site headers and a report-only CSP to the Render Blueprint. The CSP is report-only, not enforcing.
+- CI run 41442109697: Maven verification with MySQL 8 integration passed; backend container build passed; frontend unit tests passed; production build passed.
+- Local backend Maven verify and frontend test/build commands were not executable in this runtime because there is no mounted checkout and GitHub DNS resolution failed. No local success is claimed.
+- Security: docs routes return a generic 404 unless the owner explicitly enables the flag in a trusted profile. No auth matcher was weakened, no DB migration was added, and no live Render settings were changed.
+- Owner action: inspect actual browser CSP reports on the deployed frontend before considering an enforcing CSP. Roll back by reverting the WP-10 files/commit; no DB rollback is needed.
