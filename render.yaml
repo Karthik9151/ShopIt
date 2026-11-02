@@ -30,7 +30,7 @@ services:
     name: shopit-frontend
     runtime: static
     branch: main
-    buildCommand: cd frontend && npm ci && npm run build
+    buildCommand: cd frontend && npm install --no-audit --no-fund && npm run build
     staticPublishPath: ./frontend/dist
     routes:
       - type: rewrite
