@@ -28,9 +28,11 @@ public class AdminController {
     private final ProductRepository productRepo;
     private final OrderRepository orderRepo;
     private final PaymentRepository payments;
+    private final AdminCsvExportService csvExports;
 
     public AdminController(ProductService products, CategoryService categories, OrderService orders,
-        UserRepository users, ProductRepository productRepo, OrderRepository orderRepo, PaymentRepository payments) {
+        UserRepository users, ProductRepository productRepo, OrderRepository orderRepo,
+        PaymentRepository payments, AdminCsvExportService csvExports) {
         this.products = products;
         this.categories = categories;
         this.orders = orders;
@@ -38,6 +40,7 @@ public class AdminController {
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
         this.payments = payments;
+        this.csvExports = csvExports;
     }
 
     @GetMapping("/dashboard")
@@ -129,6 +132,17 @@ public class AdminController {
         Pageable pageable = adminPage(page, size);
         return orders.adminList(status, orderId, email, from, to, pageable);
     }
+    @GetMapping(value = "/orders/export.csv", produces = "text/csv")
+    public ResponseEntity<byte[]> exportOrders(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long orderId,
+            @RequestParam(required = false) @Size(max = 190) String email,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
+        String csv = csvExports.ordersCsv(status, orderId, email, from, to);
+        return csvResponse("shopit-orders.csv", csv);
+    }
+
     @PutMapping("/orders/{id}/status")
     public OrderView status(@PathVariable Long id, @Valid @RequestBody StatusUpdate request) {
         return orders.updateStatus(id, request.status().toUpperCase(java.util.Locale.ROOT));
@@ -157,6 +171,22 @@ public class AdminController {
         customer.setEnabled(request.enabled());
         return customerView(users.save(customer));
     }
+    @GetMapping(value = "/inventory/export.csv", produces = "text/csv")
+    public ResponseEntity<byte[]> exportInventory(
+            @RequestParam(required = false) Integer threshold,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String direction) {
+        String csv = csvExports.inventoryCsv(threshold, sort, direction);
+        return csvResponse("shopit-inventory.csv", csv);
+    }
+
+    private ResponseEntity<byte[]> csvResponse(String filename, String csv) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
     private Pageable adminPage(int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid pagination");
