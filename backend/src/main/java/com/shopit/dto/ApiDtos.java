@@ -9,7 +9,7 @@ public final class ApiDtos {
     public record RegisterRequest(@NotBlank @Size(max=120) String name, @NotBlank @Email @Size(max=190) String email,
                                   @NotBlank @Size(min=10,max=72) String password, @Size(max=30) String phone) {}
     public record LoginRequest(@NotBlank @Email String email, @NotBlank String password) {}
-    public record UserView(Long id, String name, String email, String role) {}
+    public record UserView(Long id, String name, String email, String role, String phone) {}
     public record AuthResponse(String token, UserView user, long expiresInMs) {}
     public record CategoryView(Long id, String name, String slug, String description) {}
     public record CategoryRequest(@NotBlank @Size(max=100) String name, @Size(max=500) String description) {}
