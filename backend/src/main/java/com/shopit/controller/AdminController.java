@@ -39,7 +39,8 @@ public class AdminController {
     public DashboardView dashboard() {
         BigDecimal verifiedSales = payments.sumVerifiedSales();
         BigDecimal simulatedValue = payments.sumSimulatedPayments();
-        List<Product> inventory = productRepo.findByActiveTrue();
+        // Include inactive SKUs too: unsold stock still ties up the owner's capital.
+        List<Product> inventory = productRepo.findAll();
         BigDecimal inventoryCost = inventory.stream()
             .map(p -> p.getCostPrice().multiply(BigDecimal.valueOf(p.getStock())))
             .reduce(BigDecimal.ZERO, BigDecimal::add);

@@ -187,4 +187,86 @@ class CouponAndInventoryIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.discountAmount").value(10.0));
     }
+
+    @Test
+    void inactiveInventoryAndPausedCouponStateSurviveAdminEdits() throws Exception {
+        String admin = adminToken();
+        MvcResult beforeResult = mvc.perform(get("/api/admin/dashboard")
+                .header("Authorization", "Bearer " + admin))
+            .andExpect(status().isOk()).andReturn();
+        JsonNode before = mapper.readTree(beforeResult.getResponse().getContentAsString());
+
+        var product = mapper.createObjectNode()
+            .put("name", "Inactive valuation test " + UUID.randomUUID())
+            .put("description", "Inactive stock must remain in the owner's cash budget")
+            .put("price", 50.00)
+            .put("costPrice", 20.00)
+            .put("stock", 3)
+            .put("active", false);
+        MvcResult createdProduct = mvc.perform(post("/api/admin/products")
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON).content(product.toString()))
+            .andExpect(status().isCreated()).andReturn();
+        long productId = mapper.readTree(createdProduct.getResponse().getContentAsString()).get("id").asLong();
+
+        var productEdit = mapper.createObjectNode()
+            .put("name", product.get("name").asText())
+            .put("description", "Edited without changing publication state")
+            .put("price", 50.00)
+            .put("costPrice", 20.00)
+            .put("stock", 3);
+        mvc.perform(put("/api/admin/products/" + productId)
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON).content(productEdit.toString()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.active").value(false));
+
+        MvcResult afterResult = mvc.perform(get("/api/admin/dashboard")
+                .header("Authorization", "Bearer " + admin))
+            .andExpect(status().isOk()).andReturn();
+        JsonNode after = mapper.readTree(afterResult.getResponse().getContentAsString());
+        assertThat(after.get("inventoryCostBudget").decimalValue()
+            .subtract(before.get("inventoryCostBudget").decimalValue())).isEqualByComparingTo("60.00");
+        assertThat(after.get("potentialRetailValue").decimalValue()
+            .subtract(before.get("potentialRetailValue").decimalValue())).isEqualByComparingTo("150.00");
+        assertThat(after.get("estimatedGrossMargin").decimalValue()
+            .subtract(before.get("estimatedGrossMargin").decimalValue())).isEqualByComparingTo("90.00");
+
+        String code = "PAUSE" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        var coupon = mapper.createObjectNode()
+            .put("code", code)
+            .put("description", "Paused coupon edit regression")
+            .put("discountType", "PERCENT")
+            .put("discountValue", 10.00)
+            .put("minimumOrderAmount", 0.00)
+            .put("startsAt", Instant.now().minusSeconds(60).toString())
+            .put("endsAt", Instant.now().plusSeconds(3600).toString())
+            .put("active", true);
+        MvcResult createdCoupon = mvc.perform(post("/api/admin/coupons")
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON).content(coupon.toString()))
+            .andExpect(status().isCreated()).andReturn();
+        long couponId = mapper.readTree(createdCoupon.getResponse().getContentAsString()).get("id").asLong();
+
+        mvc.perform(put("/api/admin/coupons/" + couponId + "/status")
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.createObjectNode().put("active", false).toString()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.active").value(false));
+
+        var couponEdit = mapper.createObjectNode()
+            .put("code", code)
+            .put("description", "Updated description while remaining paused")
+            .put("discountType", "PERCENT")
+            .put("discountValue", 12.00)
+            .put("minimumOrderAmount", 0.00)
+            .put("startsAt", Instant.now().minusSeconds(60).toString())
+            .put("endsAt", Instant.now().plusSeconds(3600).toString());
+        mvc.perform(put("/api/admin/coupons/" + couponId)
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON).content(couponEdit.toString()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.active").value(false));
+    }
 }
