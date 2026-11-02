@@ -2,6 +2,7 @@ package com.shopit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shopit.support.TestAdminCredentials;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,8 +44,8 @@ class CouponAndInventoryIntegrationTest {
 
     private String adminToken() throws Exception {
         String body = mapper.createObjectNode()
-            .put("email", "admin@shopit.test")
-            .put("password", "ShopIt-Admin-Test-2026!")
+            .put("email", TestAdminCredentials.email())
+            .put("password", TestAdminCredentials.password())
             .toString();
         MvcResult result = mvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON).content(body))
