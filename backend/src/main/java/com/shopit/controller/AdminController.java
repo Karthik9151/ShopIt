@@ -56,10 +56,44 @@ public class AdminController {
             .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getStock())))
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal estimatedMargin = potentialRetail.subtract(inventoryCost);
+        List<SalesByDayView> salesByDay = payments.sumVerifiedSalesByDaySince(
+                Instant.now().minus(java.time.Duration.ofDays(29)))
+            .stream()
+            .map(row -> new SalesByDayView(row[0].toString(), (BigDecimal) row[1]))
+            .toList();
+        List<OrderStatusCountView> statusBreakdown = orderRepo.countOrdersGroupedByStatus()
+            .stream()
+            .map(row -> new OrderStatusCountView((String) row[0], ((Number) row[1]).longValue()))
+            .toList();
+        List<TopProductView> topProducts = orderRepo.findTopProductsBySuccessfulOrders(PageRequest.of(0, 5))
+            .stream()
+            .map(row -> new TopProductView(
+                (String) row[0],
+                ((Number) row[1]).longValue(),
+                (BigDecimal) row[2]))
+            .toList();
+        List<LowStockProductView> lowStockItems = productRepo.findLowStockForAdmin(5, PageRequest.of(0, 6))
+            .stream()
+            .map(row -> new LowStockProductView(
+                ((Number) row[0]).longValue(),
+                (String) row[1],
+                ((Number) row[2]).intValue()))
+            .toList();
+        List<RecentOrderView> recentOrders = orderRepo.findRecentOrdersForAdmin(PageRequest.of(0, 6))
+            .stream()
+            .map(row -> new RecentOrderView(
+                ((Number) row[0]).longValue(),
+                (String) row[1],
+                (String) row[2],
+                (String) row[3],
+                (BigDecimal) row[4],
+                (Instant) row[5]))
+            .toList();
         return new DashboardView(users.countByRole("CUSTOMER"), productRepo.countByActiveTrue(),
             orderRepo.count(), payments.countByStatus("SUCCESS"), verifiedSales, simulatedValue,
             orderRepo.countByStatus("PENDING_PAYMENT"), productRepo.countByStockLessThanAndActiveTrue(5),
-            inventoryCost, potentialRetail, estimatedMargin);
+            inventoryCost, potentialRetail, estimatedMargin,
+            salesByDay, statusBreakdown, topProducts, lowStockItems, recentOrders);
     }
 
     @GetMapping("/products")
@@ -164,6 +198,17 @@ public class AdminController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
         return customerView(customer);
     }
+    @GetMapping("/customers/{id}/orders")
+    public Page<OrderView> customerOrders(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        users.findById(id)
+            .filter(user -> "CUSTOMER".equals(user.getRole()))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        return orders.adminOrdersForCustomer(id, adminPage(page, size));
+    }
+
     @PutMapping("/customers/{id}/status")
     public CustomerView updateCustomerStatus(@PathVariable Long id, @Valid @RequestBody CustomerStatusRequest request) {
         AppUser customer = users.findById(id).filter(user -> "CUSTOMER".equals(user.getRole()))
