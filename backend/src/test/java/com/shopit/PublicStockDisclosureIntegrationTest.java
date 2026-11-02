@@ -56,12 +56,14 @@ class PublicStockDisclosureIntegrationTest {
         assertPublicStock(fiveLeft, true, true);
         assertPublicStock(sixLeft, true, false);
 
-        mvc.perform(get("/api/admin/products").header("Authorization", "Bearer " + admin))
+        mvc.perform(get("/api/admin/products?size=100").header("Authorization", "Bearer " + admin))
                 .andExpect(status().isOk());
-        MvcResult adminResult = mvc.perform(get("/api/admin/products")
+        MvcResult adminResult = mvc.perform(get("/api/admin/products?size=100")
                 .header("Authorization", "Bearer " + admin)).andReturn();
-        JsonNode products = mapper.readTree(adminResult.getResponse().getContentAsString());
-        assertThat(findStock(products, sixLeft)).isEqualTo(6);
+        JsonNode page = mapper.readTree(adminResult.getResponse().getContentAsString());
+        assertThat(page.get("content")).isNotNull();
+        assertThat(page.get("size").asInt()).isEqualTo(100);
+        assertThat(findStock(page.get("content"), sixLeft)).isEqualTo(6);
     }
 
     private void assertPublicStock(long id, boolean inStock, boolean lowStock) throws Exception {

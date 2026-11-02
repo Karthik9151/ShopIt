@@ -55,7 +55,14 @@ public class AdminController {
     }
 
     @GetMapping("/products")
-    public List<AdminProductView> allProducts() { return products.adminList(); }
+    public Page<AdminProductView> allProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Boolean active) {
+        Pageable pageable = adminPage(page, size);
+        return products.adminList(q, active, pageable);
+    }
 
     @PostMapping("/products")
     public ResponseEntity<AdminProductView> createProduct(@Valid @RequestBody ProductRequest request) {
@@ -87,7 +94,13 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
     @GetMapping("/orders")
-    public List<OrderView> allOrders() { return orders.all(); }
+    public Page<OrderView> allOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String status) {
+        Pageable pageable = adminPage(page, size);
+        return orders.adminList(status, pageable);
+    }
     @PutMapping("/orders/{id}/status")
     public OrderView status(@PathVariable Long id, @Valid @RequestBody StatusUpdate request) {
         return orders.updateStatus(id, request.status().toUpperCase(java.util.Locale.ROOT));
@@ -106,6 +119,13 @@ public class AdminController {
         customer.setEnabled(request.enabled());
         return customerView(users.save(customer));
     }
+    private Pageable adminPage(int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid pagination");
+        }
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
     private CustomerView customerView(AppUser user) {
         return new CustomerView(user.getId(), user.getName(), user.getEmail(), user.getPhone(),
             user.isEnabled(), user.getCreatedAt());

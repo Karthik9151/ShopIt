@@ -23,6 +23,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                          @Param("maxPrice") BigDecimal maxPrice,
                          Pageable pageable);
 
+    @Query("""
+        select p from Product p
+        where (:queryText is null or lower(p.name) like lower(concat('%', :queryText, '%')))
+          and (:active is null or p.active = :active)
+        """)
+    Page<Product> searchAdmin(@Param("queryText") String queryText,
+                              @Param("active") Boolean active,
+                              Pageable pageable);
+
     long countByActiveTrue();
     java.util.List<Product> findByActiveTrue();
     long countByStockLessThanAndActiveTrue(int stock);

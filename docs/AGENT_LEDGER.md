@@ -26,6 +26,8 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-10 | F12 | PR OPEN — DRAFT | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | Corrected CI run 41438484902 and latest ledger run 41438550884 passed Maven/MySQL, frontend tests/build and backend Docker build. | Owner to inspect live report-only CSP violations; no HSTS or enforced CSP |
 | WP-11 | F11 | PR OPEN — DRAFT | `wp11-registration-hardening` | https://github.com/Karthik9151/ShopIt/pull/17 | First CI 41438913897 failed only Mockito verify count; corrected in ff7a8de. Retry 41439144995 passed Maven/MySQL verify, backend Docker build, frontend tests and production build. | Accept documented email-enumeration trade-off until email verification exists |
 | WP-12 | F13 | PR OPEN — DRAFT | `wp12-public-stock` | https://github.com/Karthik9151/ShopIt/pull/18 | CI 41439282251: Maven/MySQL verification and frontend tests/build passed; backend container build was still in progress at last check. | Low-stock threshold defined as 1–5 units |
+| WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | https://github.com/Karthik9151/ShopIt/pull/19 | CI run 41439602610: Maven/MySQL verification and frontend tests/build passed. JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
+| WP-14 | F16 | PR OPEN — CHECKS PASS | `wp14-admin-pagination` | https://github.com/Karthik9151/ShopIt/pull/20 | CI run 41442965512: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | None for code; no live Render/TiDB action performed |
 | WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | TBD | GET 60-second timeout, safe single GET retry and five-second slow-request banner implemented; JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
 | WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First CI run 41438195716 failed at compile (static decision factory call); corrected in b94284c and validation run 41438476868 queued. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
@@ -229,6 +231,19 @@ The owner explicitly authorized WP-00 through WP-22 without waiting for GATE app
 - CI pending at this ledger revision; local Maven/npm commands unavailable.
 - Rollback: revert WP-13 frontend client, banner, CSS, test and docs. No DB migration. Residual gap: real-browser retry scheduling is not covered by an end-to-end test.
 
+
+### WP-14 package evidence — 2026-11-02
+
+- Branch: `wp14-admin-pagination`, stacked on WP-13 branch to preserve the package history; PR #20 will remain draft/unmerged.
+- GET `/api/admin/orders?page=0&size=20&status=` now returns a Spring Page; order status filter is normalized to uppercase.
+- GET `/api/admin/products?page=0&size=20&q=&active=` now returns a Spring Page and supports name search and active-state filter.
+- Page is zero-based; default size 20; maximum size 100; negative page or invalid/oversized size yields 400.
+- Product catalogue in Admin has query/active filters and page controls. Recent orders has status filtering and page controls. AdminInventory shows paged inventory rows, while dashboard KPIs and valuation remain aggregate/full-table.
+- Integration test covers response shape, page boundaries, search/active filter, status filter and invalid bounds.
+- WP-13 CI run 41439602610 passed Maven/MySQL verification and frontend tests/build. WP-14 CI pending. Local commands unavailable.
+- Security: endpoints remain within the existing admin authorization boundary; no schema change.
+- Rollback: revert WP-14 controller/repository/service/frontend/test changes. Gap: integration test disables security filters to focus on pagination and separate pre-existing security tests cover admin authorization.
+
 ## Per-package completion evidence
 
 Each package must record:
@@ -241,3 +256,13 @@ Each package must record:
 - Risks, rollback and pending owner actions.
 
 Never mark a package MERGED until the owner confirms GitHub merged it. Never mark checks passed without command or CI evidence.
+
+
+### WP-14 package evidence — 2026-11-02
+
+- Existing PR #20 (wp14-admin-pagination) was six commits behind main and initially dirty. The branch was rebased using a two-parent reconciliation commit so current merged WP-09 main is the first parent while the existing WP-13 work ancestry is retained. The PR now has no base divergence and GitHub reports it mergeable. No PR was merged.
+- Admin product listing supports page/size/search/active filters; admin order listing supports page/size/status filters. Page size defaults to 20 and is capped at 100; negative page and over-limit sizes return HTTP 400. Dashboard/inventory valuation remains based on the full data set, not the current page.
+- The first verification failure was missing Spring Data Page/Pageable imports in OrderService. After adding them, Maven surfaced two older integration tests that still iterated the now-paged admin product response as a raw array. Updated both tests to inspect the Page content array and request a sufficient page size.
+- CI run 41442965512 passed: Maven verification with MySQL 8 integration, backend container build, frontend unit tests, and production build.
+- Local Maven/frontend commands were not run because this runtime has no mounted repository checkout and GitHub DNS resolution failed. No local command success is claimed.
+- No Flyway migration was added or edited. API pagination is additive; no authorization changes. Rollback by reverting WP-14 code/test changes. No live Render/TiDB validation was performed.

@@ -77,12 +77,15 @@ class CouponAndInventoryIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.costPrice").doesNotExist());
 
-        MvcResult adminProducts = mvc.perform(get("/api/admin/products")
+        MvcResult adminProducts = mvc.perform(get("/api/admin/products?size=100")
                 .header("Authorization", "Bearer " + admin))
             .andExpect(status().isOk()).andReturn();
         JsonNode adminCatalogue = mapper.readTree(adminProducts.getResponse().getContentAsString());
+        JsonNode adminProductsContent = adminCatalogue.get("content");
+        assertThat(adminProductsContent).isNotNull();
+        assertThat(adminCatalogue.get("size").asInt()).isEqualTo(100);
         boolean privateCostVisibleToAdmin = false;
-        for (JsonNode product : adminCatalogue) {
+        for (JsonNode product : adminProductsContent) {
             if (product.get("id").asLong() == productId) {
                 privateCostVisibleToAdmin = product.get("costPrice").decimalValue().compareTo(new BigDecimal("40.00")) == 0;
             }
