@@ -20,7 +20,9 @@ public final class ApiDtos {
 
     public record UserView(Long id, String name, String email, String role, String phone) {}
     public record AuthResponse(String token, UserView user, long expiresInMs) {}
-    public record CategoryView(Long id, String name, String slug, String description) {}\n\n    public record AdminCategoryView(Long id, String name, String slug, String description, boolean active, long productCount) {}
+    public record CategoryView(Long id, String name, String slug, String description) {}
+
+    public record AdminCategoryView(Long id, String name, String slug, String description, boolean active, long productCount) {}
 
     public record CategoryRequest(
             @NotBlank @Size(max = 100) String name,
@@ -156,7 +158,9 @@ public final class ApiDtos {
             String country,
             boolean defaultAddress) {}
 
-    public record CustomerStatusRequest(@NotNull Boolean enabled) {}\n\n    public record CategoryStatusRequest(@NotNull Boolean active) {}
+    public record CustomerStatusRequest(@NotNull Boolean enabled) {}
+
+    public record CategoryStatusRequest(@NotNull Boolean active) {}
 
     public record CustomerView(Long id, String name, String email, String phone, boolean enabled, Instant createdAt) {}
 
