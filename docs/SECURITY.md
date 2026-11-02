@@ -13,6 +13,8 @@
 - Simulated payment stores no card number, CVV, or banking credentials; its value is excluded from real verified sales. The simulation endpoint returns 404 and creates no payment record unless `APP_PAYMENTS_SIMULATED_ENABLED=true`; code and default configuration are disabled by default. The CI profile explicitly enables it for automated flow tests.
 - Customer accounts can be disabled by an administrator.
 - Product purchase cost is returned only by the ADMIN-only inventory API; the public ProductView omits this field.
+- Login is rate-limited by client IP (10/minute) and a one-way hash of normalized account email (5/minute); registration is limited to 5/hour/IP, orders to 10/minute/user, password changes to 5 per 10 minutes/user, and simulated payments to 5/minute/user. Limits use in-memory token buckets with idle eviction and return 429 plus Retry-After.
+- Forwarded client IPs are ignored by default. Set `APP_RATE_LIMIT_TRUST_FORWARDED_FOR=true` only when the trusted edge proxy overwrites inbound X-Forwarded-For values; otherwise clients could spoof IP buckets. On a proxy that does not expose a trustworthy client address, IP limits aggregate at the proxy address until that behavior is confirmed.
 - Coupon creation and management require ADMIN. Customers can only read currently published offers and validate a coupon against their own cart.
 - Checkout revalidates coupons server-side and takes a pessimistic coupon-row lock while applying usage limits, within the order transaction.
 - Database credentials and secrets are environment-configured; `.env` is ignored by Git.
