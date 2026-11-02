@@ -21,8 +21,9 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-07 | F9 | BLOCKED | `wp07-cart-availability` | — | — | — |
 | WP-07 | F9 | PR OPEN — DRAFT | `wp07-cart-availability` | https://github.com/Karthik9151/ShopIt/pull/13 | CI run 41437052277: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | None; remove unavailable product rows before checkout |
 | WP-08 | F3 | BLOCKED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
-| WP-08 | F3 | PR OPEN — DRAFT | `wp08-payment-switch` | https://github.com/Karthik9151/ShopIt/pull/14 | CI pending; run not yet surfaced. Local Maven/npm commands unavailable. | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging only if demo payments are required; never in production |
+| WP-08 | F3 | PR OPEN — DRAFT | `wp08-payment-switch` | https://github.com/Karthik9151/ShopIt/pull/14 | CI run 41437483366: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging only if demo payments are required; never in production |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
+| WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | CI pending; run not yet surfaced. Local Maven/npm commands unavailable. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
 | WP-10 | F12 | BLOCKED | `wp10-public-hardening` | — | — | Verify report-only CSP on live site before enforcement |
 | WP-11 | F11 | BLOCKED | `wp11-registration-hardening` | — | — | Accept documented email-enumeration trade-off until email verification exists |
 | WP-12 | F13 | BLOCKED | `wp12-stock-exposure` | — | — | Review public ProductView API contract change |
@@ -163,6 +164,20 @@ The owner explicitly authorized WP-00 through WP-22 without waiting for GATE app
 - Owner action: set `APP_PAYMENTS_SIMULATED_ENABLED=true` only on the staging demo environment if simulated confirmation is required. No live Render setting was changed.
 - CI on this package was not yet surfaced when ledger updated. Local Maven/npm commands cannot run in this execution runtime.
 - Rollback: revert WP-08; no DB migration. Gaps: CI still needs to prove Spring property binding and the disabled service test against compilation; no dedicated frontend rendering test for the disabled button yet.
+
+
+### WP-09 package evidence — 2026-11-02
+
+- Branch: `wp09-rate-limiting`, stacked on open WP-08 to retain package ledger/history; PR #15 targets main and remains draft/unmerged.
+- Token buckets apply: login 10/min/IP and 5/min/account-email hash; registration 5/hour/IP; orders 10/min/authenticated user; password change 5/10min/authenticated user; simulated payment 5/min/authenticated user.
+- Rejected calls return HTTP 429 and `Retry-After`; login email bucket identifiers use SHA-256 of normalized email and are not logged.
+- Idle buckets are evicted every five minutes after 30 idle minutes; maximum in-memory bucket count defaults to 100,000. Counters are process-local and reset on restart.
+- Rate limits are enabled by default and disabled in the CI profile to avoid test-suite cross-talk. Unit tests cover burst exhaustion, independent buckets, disabled mode and the registration 429 response.
+- Forwarded IP header use is disabled by default. Owner must confirm the edge proxy overwrites inbound `X-Forwarded-For` before setting `APP_RATE_LIMIT_TRUST_FORWARDED_FOR=true`; without this, hosted IP limits may aggregate against the proxy peer.
+- Security: no endpoint surface change, and no raw email address is logged or used as a bucket key. No migration.
+- CI for WP-09 not yet surfaced at the time this update was made; local Maven/npm commands unavailable.
+- Adversarial gaps: no multi-instance/shared-distributed quota, no dedicated authenticated order/password filter integration test, and no proxy-header integration test. In-memory limiter is a single-process mitigation, not a distributed abuse-control system.
+- Rollback: revert WP-09. No DB migration.
 
 ## Per-package completion evidence
 
