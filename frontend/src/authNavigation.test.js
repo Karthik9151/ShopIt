@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {getPostLoginPath} from './App';
+import {getPageTitle,getPostLoginPath} from './App';
 
 describe('post-login destination',()=>{
  const customer={id:1,role:'CUSTOMER'};
@@ -18,6 +18,15 @@ describe('post-login destination',()=>{
  it('allows administrators to return to the requested admin route',()=>{
   expect(getPostLoginPath(admin,'/admin/orders')).toBe('/admin/orders');
   expect(getPostLoginPath(admin,null)).toBe('/admin');
+ });
+
+ it('provides descriptive titles for known routes and access boundaries',()=>{
+  expect(getPageTitle('/products')).toBe('Shop products');
+  expect(getPageTitle('/orders/42')).toBe('Order details');
+  expect(getPageTitle('/admin')).toBe('Admin access required');
+  expect(getPageTitle('/admin',true)).toBe('Admin dashboard');
+  expect(getPageTitle('/admin/inventory',true)).toBe('Admin inventory');
+  expect(getPageTitle('/unmatched')).toBe('Page not found');
  });
 
  it('does not redirect to an external or authentication loop path',()=>{
