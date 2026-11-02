@@ -40,3 +40,7 @@ app:
     shipping-flat: ${APP_PRICING_SHIPPING_FLAT:49.00}
     free-shipping-threshold: ${APP_PRICING_FREE_SHIPPING_THRESHOLD:1999.00}
     tax-rate: ${APP_PRICING_TAX_RATE:0.18}
+
+  orders:
+    unpaid-ttl-minutes: ${APP_ORDERS_UNPAID_TTL_MINUTES:30}
+    expiry-sweep-ms: ${APP_ORDERS_EXPIRY_SWEEP_MS:300000}
