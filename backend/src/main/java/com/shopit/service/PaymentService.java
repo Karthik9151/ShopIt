@@ -9,6 +9,7 @@ import com.shopit.repository.PaymentRepository;
 import com.shopit.repository.UserRepository;
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,21 +23,27 @@ public class PaymentService {
     private final UserRepository users;
     private final OrderStatusHistoryService statusHistory;
     private final OrderStatusTransitions transitions;
+    private final boolean simulatedPaymentsEnabled;
 
     public PaymentService(
             PaymentRepository payments,
             OrderRepository orders,
             UserRepository users,
             OrderStatusHistoryService statusHistory,
-            OrderStatusTransitions transitions) {
+            OrderStatusTransitions transitions,
+            @Value("${app.payments.simulated-enabled:false}") boolean simulatedPaymentsEnabled) {
         this.payments = payments;
         this.orders = orders;
         this.users = users;
         this.statusHistory = statusHistory;
         this.transitions = transitions;
+        this.simulatedPaymentsEnabled = simulatedPaymentsEnabled;
     }
 
     public PaymentView simulate(String email, Long orderId) {
+        if (!simulatedPaymentsEnabled) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment simulation is not available");
+        }
         AppUser user = user(email);
         // Serialize payment confirmation against the expiry worker and cancellation paths.
         CustomerOrder order = orders.findByIdAndUser_IdForUpdate(orderId, user.getId())

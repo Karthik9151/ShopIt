@@ -10,7 +10,7 @@
 - Server-side product price, tax, shipping, totals, and stock calculations.
 - Pessimistic product row locks and transactions during checkout; product IDs are locked in deterministic order.
 - Unpaid cancellations restore stock; paid orders cannot be cancelled through the unpaid-cancellation path.
-- Simulated payment stores no card number, CVV, or banking credentials; its value is excluded from real verified sales.
+- Simulated payment stores no card number, CVV, or banking credentials; its value is excluded from real verified sales. The simulation endpoint returns 404 and creates no payment record unless `APP_PAYMENTS_SIMULATED_ENABLED=true`; code and default configuration are disabled by default. The CI profile explicitly enables it for automated flow tests.
 - Customer accounts can be disabled by an administrator.
 - Product purchase cost is returned only by the ADMIN-only inventory API; the public ProductView omits this field.
 - Coupon creation and management require ADMIN. Customers can only read currently published offers and validate a coupon against their own cart.
@@ -27,6 +27,7 @@ The initial browser client stores its short-lived bearer access token in `sessio
 - Move access-token handling to an HttpOnly, Secure, SameSite cookie architecture with CSRF protection, or use a backend-for-frontend.
 - Add rate limits for authentication, checkout, password changes, password reset, and payments.
 - Implement verified email delivery and single-use, expiring password-reset tokens.
+- Before enabling simulated payments on Render staging, set `APP_PAYMENTS_SIMULATED_ENABLED=true` as an owner-managed environment variable. Keep it absent/false outside staging and remove it before replacing simulation with real payment integration.
 - Integrate a real payment provider with server-verified signatures, replay protection, idempotent webhook processing, refunds, and reconciliation.
 - Add audit events, monitoring, alerting, backups, and dependency/security scanning.
 - Review coupon abuse controls and test race conditions/usage limits against the actual TiDB deployment before public promotion campaigns.
