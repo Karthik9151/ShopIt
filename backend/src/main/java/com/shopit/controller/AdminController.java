@@ -90,6 +90,18 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/categories")
+    public List<AdminCategoryView> allCategories() {
+        return categories.adminList();
+    }
+
+    @PatchMapping("/categories/{id}/status")
+    public AdminCategoryView updateCategoryStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryStatusRequest request) {
+        return categories.setActive(id, request.active());
+    }
+
     @PostMapping("/categories")
     public ResponseEntity<CategoryView> createCategory(@Valid @RequestBody CategoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categories.create(request));
