@@ -42,3 +42,27 @@
 .skip-link:focus {
   top: 12px;
 }
+
+
+/* Admin dashboard reporting and customer order history. */
+.admin-analytics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0 28px}
+.admin-analytics>.summary{min-width:0}
+.admin-analytics h2{font:24px Georgia,serif;margin:0 0 16px}
+.admin-analytics-wide{grid-column:1/-1}
+.analytics-bar-row{display:grid;grid-template-columns:92px minmax(60px,1fr) 108px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:10px}
+.analytics-bar-row>b{text-align:right;white-space:nowrap}
+.analytics-bar-track{height:10px;border-radius:999px;background:#e8e5da;overflow:hidden}
+.analytics-bar-track span{display:block;height:100%;background:#287d79;border-radius:999px}
+.analytics-list-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:11px}
+.analytics-list-row>span{min-width:0;display:grid;gap:4px}
+.analytics-list-row small{display:block;color:var(--muted);font-size:9px;overflow-wrap:anywhere}
+.analytics-list-row>b{text-align:right;font-size:10px;white-space:nowrap}
+.customer-detail-summary{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:18px 0}
+.customer-detail-summary>div{display:grid;gap:7px}
+.customer-detail-summary>div:last-child{justify-items:end}
+.customer-detail-summary span,.customer-detail-summary small{font-size:11px;color:var(--muted)}
+.customer-order-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.customer-order-row>div:first-child{display:grid;gap:5px}
+.customer-order-row small{display:block;color:var(--muted);font-size:10px;margin-top:5px}
+.customer-order-row details{grid-column:1/-1;font-size:11px}
+@media(max-width:700px){.admin-analytics{grid-template-columns:1fr}.admin-analytics-wide{grid-column:auto}.analytics-bar-row{grid-template-columns:78px minmax(40px,1fr) 88px;gap:7px}.customer-detail-summary{align-items:flex-start;flex-direction:column}.customer-detail-summary>div:last-child{justify-items:start}.customer-order-row{grid-template-columns:minmax(0,1fr) auto}}
