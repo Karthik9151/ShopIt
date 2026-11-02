@@ -462,10 +462,67 @@ function AdminCoupons(){
  return <section className="section admin"><Link className="back" to="/admin">← Owner dashboard</Link><span className="eyebrow">Promotions and campaigns</span><h1>Discount coupons</h1><p className="muted">Only administrator accounts can create, edit, activate or pause coupon codes. Customers can see published offers and apply them at checkout.</p>{error&&<div className="error" role="alert">{error}</div>}{message&&<div className="notice" role="status">{message}</div>}<div className="coupon-admin-layout"><form className="summary form" onSubmit={submit}><h2>{form.id?'Edit coupon':'Create a coupon'}</h2><label>Coupon code<input required maxLength="40" pattern="[A-Za-z0-9_-]{3,40}" value={form.code} onChange={e=>setForm({...form,code:e.target.value.toUpperCase()})} placeholder="WELCOME10"/></label><label>Customer-facing description<input maxLength="240" value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="10% off your first order"/></label><label>Discount type<select value={form.discountType} onChange={e=>setForm({...form,discountType:e.target.value})}><option value="PERCENT">Percentage discount</option><option value="FIXED">Fixed amount discount</option></select></label><label>Discount value<input required type="number" min=".01" max={form.discountType==='PERCENT'?100:undefined} step=".01" value={form.discountValue} onChange={e=>setForm({...form,discountValue:e.target.value})}/></label><label>Minimum cart value (INR)<input type="number" min="0" step=".01" value={form.minimumOrderAmount} onChange={e=>setForm({...form,minimumOrderAmount:e.target.value})}/></label><label>Maximum discount cap (INR, optional)<input type="number" min=".01" step=".01" value={form.maximumDiscount} onChange={e=>setForm({...form,maximumDiscount:e.target.value})}/></label><label>Starts at<input required type="datetime-local" value={form.startsAt} onChange={e=>setForm({...form,startsAt:e.target.value})}/></label><label>Expires at<input required type="datetime-local" value={form.endsAt} onChange={e=>setForm({...form,endsAt:e.target.value})}/></label><label>Maximum total redemptions (blank = unlimited)<input type="number" min="1" step="1" value={form.usageLimit} onChange={e=>setForm({...form,usageLimit:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Saving…':form.id?'Save coupon':'Publish coupon'}</button>{form.id&&<button type="button" className="secondary" onClick={()=>setForm(blank())}>Cancel edit</button>}</form><div className="summary"><h2>Coupon register</h2>{coupons.length?coupons.map(o=><div className="coupon-row" key={o.id}><div><b>{o.code}</b><small>{o.discountType==='PERCENT'?o.discountValue+'% off':formatCurrency(o.discountValue)+' off'} · {o.usageCount}{o.usageLimit?' / '+o.usageLimit:' uses'}</small><small>{formatDate(o.startsAt)} – {formatDate(o.endsAt)}</small><span className={'status '+(!o.active||!o.available?'pending_payment':'')}>{!o.active?'Paused':o.available?'Available':'Scheduled / expired / used up'}</span></div><div className="row-actions"><button className="text-link" onClick={()=>edit(o)}>Edit</button><button className="text-link" onClick={()=>toggle(o)}>{o.active?'Pause':'Activate'}</button></div></div>):<p className="muted">No coupons have been created yet.</p>}</div></div></section>;
 }
 function AdminInventory(){
- const {user}=useAuth();
- const [data,setData]=useState(null),[products,setProducts]=useState([]),[error,setError]=useState(''),[page,setPage]=useState(0),[totalPages,setTotalPages]=useState(0);
- useEffect(()=>{Promise.all([api.get('/admin/dashboard'),api.get('/admin/products',{params:{page,size:20}})]).then(([d,p])=>{setData(d.data);setProducts(p.data.content||[]);setTotalPages(p.data.totalPages||0);}).catch(()=>setError(user?.role==='ADMIN'?'Could not load inventory data.':'Administrator access is required to view inventory cost and valuation.'));},[user?.role,page]);
- return <section className="section admin"><Link className="back" to="/admin">← Owner dashboard</Link><span className="eyebrow">Stock valuation</span><h1>Inventory & budget</h1><p className="muted">Unit cost is private owner data. It is excluded from public product responses and storefront pages.</p>{error&&<div className="error">{error}</div>}{data&&<div className="stats budget-stats">{[['Inventory cost budget',formatCurrency(data.inventoryCostBudget)],['Potential retail value',formatCurrency(data.potentialRetailValue)],['Estimated gross margin potential',formatCurrency(data.estimatedGrossMargin)]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}</div>}<div className="summary admin-orders"><h2>Inventory breakdown</h2>{products.map(p=><div className="inventory-row" key={p.id}><div><b>{p.name}</b><small>{p.stock} units · {p.active?'Active':'Inactive'}</small></div><div><small>Unit cost</small><b>{formatCurrency(p.costPrice??0)}</b></div><div><small>Unit selling price</small><b>{formatCurrency(p.price)}</b></div><div><small>Cost value in stock</small><b>{formatCurrency(Number(p.costPrice??0)*p.stock)}</b></div><div><small>Potential margin</small><b>{formatCurrency((Number(p.price)-Number(p.costPrice??0))*p.stock)}</b></div></div>)}{!products.length&&!error&&<p className="muted">No inventory records found.</p>}<div className="pagination-controls"><button className="secondary" disabled={page<=0} onClick={()=>setPage(value=>value-1)}>Previous inventory</button><span>Page {totalPages?page+1:0} of {totalPages}</span><button className="secondary" disabled={page+1>=totalPages} onClick={()=>setPage(value=>value+1)}>Next inventory</button></div></div><p className="muted">Potential margin assumes all current stock sells at its present list price. It excludes coupons, tax, shipping subsidies, payment fees, returns, and operating expenses; it is not accounting profit.</p></section>;
+ const [data,setData]=useState(null),[products,setProducts]=useState([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
+ const [page,setPage]=useState(0),[totalPages,setTotalPages]=useState(0),[totalElements,setTotalElements]=useState(0);
+ const [threshold,setThreshold]=useState(''),[appliedThreshold,setAppliedThreshold]=useState(''),[sort,setSort]=useState('stock'),[direction,setDirection]=useState('asc');
+ const [draftStock,setDraftStock]=useState({}),[savingStock,setSavingStock]=useState({}),[exporting,setExporting]=useState(false);
+ const load=async()=>{
+  setLoading(true);setError('');
+  try{
+   const [dashboard,inventory]=await Promise.all([
+    api.get('/admin/dashboard'),
+    api.get('/admin/inventory',{params:{page,size:20,threshold:appliedThreshold===''?undefined:Number(appliedThreshold),sort,direction}})
+   ]);
+   setData(dashboard.data);setProducts(inventory.data.content||[]);setTotalPages(inventory.data.totalPages||0);setTotalElements(inventory.data.totalElements||0);
+  }catch(e){setError(e.response?.data?.message||'Could not load inventory.');}
+  finally{setLoading(false);}
+ };
+ useEffect(()=>{load();},[page,appliedThreshold,sort,direction]);
+ const applyFilter=event=>{event.preventDefault();setPage(0);setAppliedThreshold(threshold.trim());};
+ const saveStock=async product=>{
+  const value=Number(draftStock[product.id]??product.stock);
+  if(!Number.isInteger(value)||value<0||value>1000000){setError('Stock must be a whole number from 0 to 1,000,000.');return;}
+  setSavingStock(current=>({...current,[product.id]:true}));setError('');
+  try{
+   const response=await api.patch('/admin/products/'+product.id+'/stock',{stock:value});
+   setProducts(current=>current.map(item=>item.id===product.id?response.data:item));
+   setDraftStock(current=>{const next={...current};delete next[product.id];return next;});
+  }catch(e){setError(e.response?.data?.message||'Stock update failed.');}
+  finally{setSavingStock(current=>({...current,[product.id]:false}));}
+ };
+ const exportCsv=async()=>{
+  setExporting(true);setError('');
+  try{
+   const response=await api.get('/admin/inventory/export.csv',{params:{threshold:appliedThreshold===''?undefined:Number(appliedThreshold),sort,direction},responseType:'blob'});
+   const url=URL.createObjectURL(new Blob([response.data],{type:'text/csv;charset=utf-8'}));
+   const anchor=document.createElement('a');anchor.href=url;anchor.download='shopit-inventory.csv';anchor.click();URL.revokeObjectURL(url);
+  }catch{setError('Could not export inventory.');}
+  finally{setExporting(false);}
+ };
+ return <section className="section admin admin-page">
+  <Link className="back" to="/admin">← Owner dashboard</Link>
+  <span className="eyebrow">Stock operations</span><h1>Inventory</h1>
+  <p className="muted">Unit cost and stock quantities are private administrator data. Quick edits are saved through the server.</p>
+  {error&&<div className="error" role="alert">{error}</div>}
+  {data&&<div className="stats budget-stats">{[['Inventory cost budget',formatCurrency(data.inventoryCostBudget)],['Potential retail value',formatCurrency(data.potentialRetailValue)],['Estimated gross margin potential',formatCurrency(data.estimatedGrossMargin)]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}</div>}
+  <form className="summary admin-inventory-filters" onSubmit={applyFilter}>
+   <label>Stock at or below<input aria-label="Stock threshold" type="number" min="0" max="1000000" step="1" value={threshold} onChange={e=>setThreshold(e.target.value)} placeholder="All stock levels"/></label>
+   <label>Sort by<select value={sort} onChange={e=>{setSort(e.target.value);setPage(0);}}><option value="stock">Stock quantity</option><option value="name">Product name</option><option value="createdAt">Created date</option></select></label>
+   <label>Direction<select value={direction} onChange={e=>{setDirection(e.target.value);setPage(0);}}><option value="asc">Ascending</option><option value="desc">Descending</option></select></label>
+   <div className="row-actions"><button className="primary">Apply</button><button type="button" className="secondary" disabled={exporting} onClick={exportCsv}>{exporting?'Preparing…':'Export CSV'}</button></div>
+  </form>
+  <div className="summary admin-orders"><h2>Stock register</h2>
+   {loading?<div className="loading" role="status">Loading inventory…</div>:products.length?products.map(product=><div className="inventory-row" key={product.id}>
+    <div><b>{product.name}</b><small>{product.active?'Active':'Inactive'} · {product.categoryName||'Uncategorised'}</small></div>
+    <div><small>Unit cost</small><b>{formatCurrency(product.costPrice??0)}</b></div>
+    <div><small>Selling price</small><b>{formatCurrency(product.price)}</b></div>
+    <div><small>Stock quantity</small><input className="stock-quick-edit" aria-label={'Stock for '+product.name} type="number" min="0" max="1000000" step="1" value={draftStock[product.id]??product.stock} onChange={e=>setDraftStock(current=>({...current,[product.id]:e.target.value}))}/></div>
+    <div className="inventory-stock-action"><small>Stock value</small><b>{formatCurrency(Number(product.costPrice??0)*product.stock)}</b><button className="text-link" disabled={savingStock[product.id]||Number(draftStock[product.id]??product.stock)===product.stock} onClick={()=>saveStock(product)}>{savingStock[product.id]?'Saving…':'Save stock'}</button></div>
+   </div>):<p className="muted">No products match this stock threshold.</p>}
+   {!loading&&<div className="pagination-controls"><button className="secondary" disabled={page<=0} onClick={()=>setPage(value=>value-1)}>Previous</button><span>Page {totalPages?page+1:0} of {totalPages} · {totalElements} products</span><button className="secondary" disabled={page+1>=totalPages} onClick={()=>setPage(value=>value+1)}>Next</button></div>}
+  </div>
+  <p className="muted">Estimated margin assumes all current stock sells at the current list price. It excludes coupons, tax, shipping subsidies, payment fees, returns and operating expenses; it is not accounting profit.</p>
+ </section>;
 }
 function NotFound(){return <div className="empty not-found"><span className="eyebrow">404 · Off the map</span><h1>This page wandered off.</h1><p>Let's get you back to the good stuff.</p><Link to="/" className="primary">Go home</Link></div>;}
 export default function App(){return <BrowserRouter><AuthProvider><SessionExpiryRedirect/><ApiPendingBanner/><Layout/></AuthProvider></BrowserRouter>;}
