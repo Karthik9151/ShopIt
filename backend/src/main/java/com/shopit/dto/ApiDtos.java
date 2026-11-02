@@ -122,7 +122,9 @@ public final class ApiDtos {
     public record PaymentView(
             Long id, Long orderId, String provider, String status, String reference, BigDecimal amount, Instant paidAt) {}
 
-    public record StatusUpdate(@NotBlank String status) {}
+    public record StatusUpdate(@NotBlank @Size(max = 30) String status) {}
+
+    public record StockUpdateRequest(@Min(0) @Max(1000000) int stock) {}
     public record ProfileUpdateRequest(@NotBlank @Size(max = 120) String name, @Size(max = 30) String phone) {}
 
     public record PasswordChangeRequest(
