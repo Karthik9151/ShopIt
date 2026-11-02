@@ -21,7 +21,7 @@ public class ProductController {
                                   @RequestParam(defaultValue = "12") int size,
                                   @RequestParam(defaultValue = "createdAt") String sort,
                                   @RequestParam(defaultValue = "desc") String direction) {
-        if (page < 0 || size < 1 || size > 48) throw new IllegalArgumentException("Invalid pagination parameters");
+        if (page < 0 || size < 1 || size > 100) throw new IllegalArgumentException("Invalid pagination parameters");
         String key = Set.of("createdAt", "name", "price").contains(sort) ? sort : "createdAt";
         Sort ordering = "asc".equalsIgnoreCase(direction)
             ? Sort.by(key).ascending() : Sort.by(key).descending();

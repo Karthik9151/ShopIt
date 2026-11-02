@@ -139,6 +139,16 @@ class CommerceFlowIntegrationTest {
         assertThat(metrics.get("simulatedPaymentValue").decimalValue()).isGreaterThanOrEqualTo(payment.get("amount").decimalValue());
     }
 
+
+    @Test
+    void catalogueSupportsAdminBatchSizeWithinConfiguredLimit() throws Exception {
+        mvc.perform(get("/api/products?size=100"))
+            .andExpect(status().isOk());
+
+        mvc.perform(get("/api/products?size=101"))
+            .andExpect(status().isBadRequest());
+    }
+
     @Test
     void administratorCanDisableCustomerAndExistingJwtStopsAuthenticating() throws Exception {
         Customer customer = register();
