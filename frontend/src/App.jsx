@@ -332,7 +332,7 @@ function AdminAnalytics({data}){
   <section className="summary admin-analytics-wide">
    <h2>Recent orders</h2>
    {recentOrders.length?recentOrders.map(item=><div className="analytics-list-row" key={item.id}>
-    <span>#{item.id} · {item.customerName} <small>{item.customerEmail} · {formatDate(item.createdAt)}</small></span>
+    <span><Link to={'/admin/orders/'+item.id}>#{item.id} · {item.customerName}</Link> <small>{item.customerEmail} · {formatDate(item.createdAt)}</small></span>
     <b>{formatCurrency(item.total)} · {item.status.replaceAll('_',' ')}</b>
    </div>):<p className="muted">No orders have been placed yet.</p>}
   </section>
@@ -340,36 +340,54 @@ function AdminAnalytics({data}){
 }
 
 function Admin(){
- const {user}=useAuth();
- const emptyProduct=()=>({id:null,name:'',description:'',price:'',costPrice:'0',stock:0,imageUrl:'',categoryId:''});
- const [data,setData]=useState(null),[orders,setOrders]=useState([]),[products,setProducts]=useState([]),[categories,setCategories]=useState([]),[customers,setCustomers]=useState([]),[error,setError]=useState('');
- const [form,setForm]=useState(emptyProduct),[categoryForm,setCategoryForm]=useState({id:null,name:'',description:''});
- const [productPage,setProductPage]=useState(0),[productPages,setProductPages]=useState(0),[orderPage,setOrderPage]=useState(0),[orderPages,setOrderPages]=useState(0);
- const [productQuery,setProductQuery]=useState(''),[productActive,setProductActive]=useState(''),[orderStatus,setOrderStatus]=useState('');
- const refresh=async()=>{try{const r=await Promise.all([
-  api.get('/admin/dashboard'),
-  api.get('/admin/orders',{params:{page:orderPage,size:20,status:orderStatus||undefined}}),
-  api.get('/admin/products',{params:{page:productPage,size:20,q:productQuery||undefined,active:productActive===''?undefined:productActive}}),
-  api.get('/categories'),
-  api.get('/admin/customers?size=100')
- ]);setData(r[0].data);setOrders(r[1].data.content||[]);setOrderPages(r[1].data.totalPages||0);setProducts(r[2].data.content||[]);setProductPages(r[2].data.totalPages||0);setCategories(r[3].data);setCustomers(r[4].data.content||[]);}catch{setError(user?.role==='ADMIN'?'Could not load administrator data.':'Administrator access is required.');}};
- useEffect(()=>{refresh();},[productPage,orderPage,productQuery,productActive,orderStatus]);
- const saveProduct=async e=>{e.preventDefault();setError('');try{const payload={...form,price:Number(form.price),costPrice:Number(form.costPrice||0),stock:Number(form.stock),categoryId:form.categoryId?Number(form.categoryId):null};if(form.id)await api.put('/admin/products/'+form.id,payload);else await api.post('/admin/products',payload);setForm(emptyProduct());await refresh();}catch(e){setError(e.response?.data?.message||'Could not save product.');}};
- const editProduct=p=>setForm({id:p.id,name:p.name,description:p.description||'',price:String(p.price),costPrice:String(p.costPrice??0),stock:p.stock,imageUrl:p.imageUrl||'',categoryId:p.categoryId?String(p.categoryId):''});
- const deactivateProduct=async id=>{try{await api.delete('/admin/products/'+id);await refresh();}catch(e){setError(e.response?.data?.message||'Could not deactivate product.');}};
- const saveCategory=async e=>{e.preventDefault();setError('');try{const payload={name:categoryForm.name,description:categoryForm.description};if(categoryForm.id)await api.put('/admin/categories/'+categoryForm.id,payload);else await api.post('/admin/categories',payload);setCategoryForm({id:null,name:'',description:''});await refresh();}catch(e){setError(e.response?.data?.message||'Could not save category.');}};
- const editCategory=c=>setCategoryForm({id:c.id,name:c.name,description:c.description||''});
- const deactivateCategory=async id=>{try{await api.delete('/admin/categories/'+id);await refresh();}catch(e){setError(e.response?.data?.message||'Could not deactivate category.');}};
- const changeStatus=async(id,status)=>{try{await api.put('/admin/orders/'+id+'/status',{status});await refresh();}catch(e){setError(e.response?.data?.message||'Status update failed.');}};
- const changeCustomer=async customer=>{try{await api.put('/admin/customers/'+customer.id+'/status',{enabled:!customer.enabled});await refresh();}catch(e){setError(e.response?.data?.message||'Customer status update failed.');}};
- return <section className="section admin"><span className="eyebrow">Owner workspace · ShopIt operations</span><h1>Store dashboard</h1><div className="admin-shortcuts"><Link className="secondary" to="/admin/inventory">Inventory & budget</Link><Link className="secondary" to="/admin/coupons">Discount coupons</Link><Link className="secondary" to="/offers">Customer offers page</Link></div>{error&&<div className="error" role="alert">{error}</div>}
- {data&&<><div className="stats">{[['Customers',data.customers],['Active products',data.products],['Orders',data.orders],['Successful payments',data.paidPayments],['Verified sales',formatCurrency(data.verifiedSales)],['Simulated payment value',formatCurrency(data.simulatedPaymentValue)],['Pending orders',data.pendingOrders],['Low-stock products',data.lowStockProducts]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}</div><div className="stats budget-stats">{[['Inventory cost budget',formatCurrency(data.inventoryCostBudget)],['Potential retail value',formatCurrency(data.potentialRetailValue)],['Estimated gross margin potential',formatCurrency(data.estimatedGrossMargin)]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}</div><p className="muted">Inventory estimates use your saved unit cost × current stock and selling price × current stock. They are not realized sales or net profit.</p></>}
- <AdminAnalytics data={data}/>
- <div className="admin-grid"><form className="summary form" onSubmit={saveProduct}><h2>{form.id?'Edit product':'Add your product'}</h2><label>Product name<input required maxLength="180" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Description<textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label><label>Selling price (INR)<input required type="number" min="0" step=".01" value={form.price} onChange={e=>setForm({...form,price:e.target.value})}/></label><label>Your purchase / unit cost (INR)<input type="number" min="0" step=".01" value={form.costPrice} onChange={e=>setForm({...form,costPrice:e.target.value})}/><small>Private owner-only figure. Customers never receive this value.</small></label><label>Available stock<input type="number" min="0" value={form.stock} onChange={e=>setForm({...form,stock:e.target.value})}/></label><label>Product image URL<input value={form.imageUrl} onChange={e=>setForm({...form,imageUrl:e.target.value})}/></label><label>Category<select value={form.categoryId} onChange={e=>setForm({...form,categoryId:e.target.value})}><option value="">None</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><button className="primary">{form.id?'Save product changes':'Publish product'}</button>{form.id&&<button type="button" className="secondary" onClick={()=>setForm(emptyProduct())}>Cancel edit</button>}</form>
- <div className="summary"><form className="form" onSubmit={saveCategory}><h2>{categoryForm.id?'Edit category':'Create category'}</h2><label>Category name<input required maxLength="100" value={categoryForm.name} onChange={e=>setCategoryForm({...categoryForm,name:e.target.value})}/></label><label>Description<textarea maxLength="500" value={categoryForm.description} onChange={e=>setCategoryForm({...categoryForm,description:e.target.value})}/></label><button className="secondary">{categoryForm.id?'Save category':'Create category'}</button>{categoryForm.id&&<button type="button" className="text-link" onClick={()=>setCategoryForm({id:null,name:'',description:''})}>Cancel edit</button>}</form><h2 className="subhead">Categories</h2>{categories.map(c=><div className="admin-row" key={c.id}><span>{c.name}</span><div className="row-actions"><button className="text-link" onClick={()=>editCategory(c)}>Edit</button><button className="text-link" onClick={()=>deactivateCategory(c.id)}>Deactivate</button></div></div>)}</div></div>
- <div className="summary admin-orders"><h2>My product catalogue</h2><div className="admin-pagination-filters"><input aria-label="Search admin products" placeholder="Search products" value={productQuery} onChange={e=>{setProductQuery(e.target.value);setProductPage(0);}}/><select aria-label="Filter product publication" value={productActive} onChange={e=>{setProductActive(e.target.value);setProductPage(0);}}><option value="">All publication states</option><option value="true">Active</option><option value="false">Inactive</option></select></div>{products.map(p=><div className="admin-row" key={p.id}><span>{p.name} · Sell {formatCurrency(p.price)} · Cost {formatCurrency(p.costPrice??0)} · {p.stock} units</span><div className="row-actions"><button className="text-link" onClick={()=>editProduct(p)}>Edit</button><button className="text-link" onClick={()=>deactivateProduct(p.id)}>Deactivate</button></div></div>)}<div className="pagination-controls"><button className="secondary" disabled={productPage<=0} onClick={()=>setProductPage(value=>value-1)}>Previous products</button><span>Page {productPages?productPage+1:0} of {productPages}</span><button className="secondary" disabled={productPage+1>=productPages} onClick={()=>setProductPage(value=>value+1)}>Next products</button></div></div>
- <div className="summary admin-orders"><h2>Customers</h2>{customers.map(c=><div className="admin-row" key={c.id}><span>{c.name} · {c.email} · {c.phone||'No phone'} <small>{c.enabled?'Active':'Disabled'}</small></span><div className="row-actions"><Link className="text-link" to={'/admin/customers/'+c.id}>View details</Link><button className="text-link" onClick={()=>changeCustomer(c)}>{c.enabled?'Disable':'Enable'}</button></div></div>)}</div>
- <div className="summary admin-orders"><h2>Recent orders</h2><select aria-label="Filter order status" value={orderStatus} onChange={e=>{setOrderStatus(e.target.value);setOrderPage(0);}}><option value="">All statuses</option>{['PENDING_PAYMENT','CONFIRMED','PROCESSING','SHIPPED','DELIVERED','CANCELLED'].map(value=><option key={value} value={value}>{value}</option>)}</select>{orders.map(o=><div className="admin-row" key={o.id}><span>#{o.id} · {formatDate(o.createdAt)} · {formatCurrency(o.total)} · {o.status}</span><select aria-label={'Status for order '+o.id} value={o.status} onChange={e=>changeStatus(o.id,e.target.value)}>{getOrderStatusOptions(o).map(status=><option key={status} value={status}>{status}</option>)}</select><details><summary>Timeline</summary>{(o.timeline||[]).map((event,index)=><small className="muted" key={index}>{event.newStatus.replaceAll('_',' ')} · {event.actor} · {new Date(event.changedAt).toLocaleString()}</small>)}</details></div>)}<div className="pagination-controls"><button className="secondary" disabled={orderPage<=0} onClick={()=>setOrderPage(value=>value-1)}>Previous orders</button><span>Page {orderPages?orderPage+1:0} of {orderPages}</span><button className="secondary" disabled={orderPage+1>=orderPages} onClick={()=>setOrderPage(value=>value+1)}>Next orders</button></div></div></section>;
+ const [data,setData]=useState(null),[loading,setLoading]=useState(true),[error,setError]=useState('');
+ const load=async()=>{
+  setLoading(true);setError('');
+  try{const response=await api.get('/admin/dashboard');setData(response.data);}
+  catch(e){setError(e.response?.data?.message||'Could not load the owner dashboard.');}
+  finally{setLoading(false);}
+ };
+ useEffect(()=>{load();},[]);
+ const statusCount=(statuses)=>(data?.statusBreakdown||[])
+  .filter(item=>statuses.includes(item.status))
+  .reduce((total,item)=>total+Number(item.count||0),0);
+ return <section className="section admin admin-page">
+  <span className="eyebrow">Owner workspace · ShopIt operations</span>
+  <h1>Store dashboard</h1>
+  <div className="admin-shortcuts">
+   <Link className="secondary" to="/admin/orders">Manage orders</Link>
+   <Link className="secondary" to="/admin/products">Manage products</Link>
+   <Link className="secondary" to="/admin/categories">Manage categories</Link>
+   <Link className="secondary" to="/admin/customers">Manage customers</Link>
+   <Link className="secondary" to="/admin/inventory">Inventory</Link>
+   <Link className="secondary" to="/admin/coupons">Coupons</Link>
+  </div>
+  {error&&<div className="error" role="alert">{error}</div>}
+  {loading?<div className="loading" role="status">Loading store performance…</div>:data&&<>
+   <div className="stats admin-kpis">
+    {[
+     ['Awaiting payment',data.pendingOrders],
+     ['To ship',statusCount(['CONFIRMED','PROCESSING'])],
+     ['Low-stock products',data.lowStockProducts],
+     ['Customers',data.customers],
+     ['Verified sales',formatCurrency(data.verifiedSales)],
+     ['Simulated payment value',formatCurrency(data.simulatedPaymentValue)],
+     ['Estimated stock margin',formatCurrency(data.estimatedGrossMargin)]
+    ].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}
+   </div>
+   <div className="stats budget-stats">
+    {[
+     ['Active products',data.products],
+     ['All orders',data.orders],
+     ['Successful payment records',data.paidPayments],
+     ['Inventory cost budget',formatCurrency(data.inventoryCostBudget)],
+     ['Potential retail value',formatCurrency(data.potentialRetailValue)]
+    ].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}
+   </div>
+   <p className="muted">Estimated stock margin is potential retail value minus current unit-cost value. It is not realized profit or accounting margin. Simulated payment value is kept separate from verified sales.</p>
+   <AdminAnalytics data={data}/>
+  </>}
+ </section>;
 }
 function AdminCustomerDetail(){
  const {id}=useParams();
