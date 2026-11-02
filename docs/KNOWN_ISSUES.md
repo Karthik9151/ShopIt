@@ -21,20 +21,18 @@ The audit was performed by reading repository source, tests, configuration, and 
 
 ### Admin API and workflow coverage
 
-The current `AdminController` now includes paginated product/order/customer lists, product stock editing, all-category listing/reactivation with product counts, customer search/detail, product/category management, coupon management, and order status changes. The following requested capabilities remain incomplete:
+The current `AdminController` includes paginated product/order/customer lists, product stock editing, all-category listing/reactivation with product counts, customer search/detail, product/category management, coupon management, and order status changes. Admin order filters and 5,000-row formula-safe CSV exports are implemented, and inventory export supports a stock threshold with a safe sort whitelist.
 
-- Dashboard series and grouped views for sales-by-day, status breakdown, top products, low-stock rows, and recent orders.
-- Customer order-history detail and richer customer account activity.
+The continuation adds grouped dashboard datasets for verified daily sales, order-status counts, top products from successfully paid orders, low-stock products, and recent orders. It also adds the paginated admin-only `GET /api/admin/customers/{id}/orders` endpoint; it reuses `OrderView`, including the existing item and status timeline data. The original `DashboardView` properties remain unchanged and the new collections are additive.
 
-Admin order filters and 5,000-row formula-safe CSV exports are now implemented on this branch. Inventory export supports a stock threshold and a safe sort whitelist.
-
-The current dashboard returns basic counts, payment totals, and inventory valuation. It does not supply all of the requested grouped dashboard datasets.
+The new dashboard reporting queries and customer-history endpoint have regression tests on the working branch; final verification depends on the pull-request CI run.
 
 ### Frontend structure and admin usability
 
 - Storefront and admin route/page implementations remain concentrated in `frontend/src/App.jsx`; the requested page/component/context/hook split and shared `AdminLayout` are not complete.
-- The current admin route guard redirects a non-admin user to the storefront rather than rendering the requested explicit “Admin access required” page.
-- The requested dedicated shared UI component set and per-route page-title behavior have not been completed or verified.
+- The authenticated non-admin guard already renders an explicit “Admin access required” page, including nested customer-detail paths. Regression tests cover the route boundary.
+- Page titles are set from the current route path and now include a customer-detail title. A full per-route metadata audit has not yet been run.
+- The requested shared `AdminLayout`, dedicated page modules for orders/products/categories/customers, and shared UI component set are still incomplete.
 - Playwright end-to-end scenarios for the full customer/admin lifecycle are not present in the frontend package scripts or the current CI workflow.
 
 ### Runtime and deployment verification
