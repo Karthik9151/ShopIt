@@ -15,8 +15,10 @@ app:
     expiration-ms: 900000
   cors:
     origins: http://localhost:5173
-  api-docs:
-    enabled: true
   admin:
     email:
     password:
+  api-docs:
+    enabled: true
+  rate-limit:
+    enabled: false

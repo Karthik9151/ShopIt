@@ -25,7 +25,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
 | WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First CI run 41438195716 failed at compile (static decision factory call); corrected in b94284c and validation run 41438476868 queued. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
 | WP-10 | F12 | PR OPEN — CHECKS PASS | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | CI run 41442109697: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. Local commands unavailable in this runtime. | Owner must inspect deployed report-only CSP violations before considering enforcement; no Render settings changed |
-| WP-11 | F11 | BLOCKED | `wp11-registration-hardening` | — | — | Accept documented email-enumeration trade-off until email verification exists |
+| WP-11 | F11 | PR OPEN — CHECKS PASS | `wp11-registration-hardening` | https://github.com/Karthik9151/ShopIt/pull/17 | CI 41439144995: Maven/MySQL verify, backend container build, frontend unit tests and production build passed. | Accept the documented duplicate-email 409 enumeration trade-off until verified email delivery exists |
 | WP-12 | F13 | BLOCKED | `wp12-stock-exposure` | — | — | Review public ProductView API contract change |
 | WP-13 | F10, F15 | BLOCKED | `wp13-cold-start-jvm` | — | — | Optional uptime monitor intentionally not enabled; no Render settings changes |
 | WP-14 | F16 | BLOCKED | `wp14-admin-pagination` | — | — | Review paginated admin API contract |
@@ -179,6 +179,29 @@ The owner explicitly authorized WP-00 through WP-22 without waiting for GATE app
 - Adversarial gaps: no multi-instance/shared-distributed quota, no dedicated authenticated order/password filter integration test, and no proxy-header integration test. In-memory limiter is a single-process mitigation, not a distributed abuse-control system.
 - Rollback: revert WP-09. No DB migration.
 
+
+### WP-10 package evidence — 2026-11-02
+
+- Existing PR #16 was found diverged from the post-WP-09 main branch (six commits behind and mergeability state dirty). The wp10-public-hardening branch was rebuilt on top of current main commit 4cc2c3598cb751cfd4b360a42cab526fff8cbbd9, preserving the WP-10-only file set and existing PR. No merge was performed.
+- The resulting PR branch is one commit ahead of main, zero commits behind, and GitHub reports it mergeable.
+- Implemented baseline API response headers and hidden Swagger/OpenAPI routes by default; added local/test/CI profile switches; added static-site headers and a report-only CSP to the Render Blueprint. The CSP is report-only, not enforcing.
+- CI run 41442109697: Maven verification with MySQL 8 integration passed; backend container build passed; frontend unit tests passed; production build passed.
+- Local backend Maven verify and frontend test/build commands were not executable in this runtime because there is no mounted checkout and GitHub DNS resolution failed. No local success is claimed.
+- Security: docs routes return a generic 404 unless the owner explicitly enables the flag in a trusted profile. No auth matcher was weakened, no DB migration was added, and no live Render settings were changed.
+- Owner action: inspect actual browser CSP reports on the deployed frontend before considering an enforcing CSP. Roll back by reverting the WP-10 files/commit; no DB rollback is needed.
+
+
+### WP-11 package evidence — 2026-11-02
+
+- Branch: `wp11-registration-hardening`, stacked on open WP-10 branch to preserve the ordered package ledger; PR #17 targets main and remains draft/unmerged.
+- Registration trims names, normalizes email, rejects passwords equal to normalized email, rejects a small common-password list, and translates a concurrent unique-email insert race to the same HTTP 409 response as an existing duplicate.
+- DataIntegrityViolationException is translated only when a follow-up email lookup confirms the duplicate; unrelated integrity failures propagate normally.
+- Security documentation records duplicate-email 409 enumeration trade-off until verified email delivery exists.
+- Added unit tests for password/email match, common passwords, unique-email race mapping and normalized persisted name/email.
+- CI has not yet surfaced for WP-11; local Maven/npm commands are unavailable here.
+- Security surface: no new endpoints, auth weakening, or schema migration. Known coverage gap: the uniqueness race is simulated at repository layer rather than two concurrent MySQL HTTP requests.
+- Rollback: revert WP-11 code and test changes.
+
 ## Per-package completion evidence
 
 Each package must record:
@@ -191,14 +214,3 @@ Each package must record:
 - Risks, rollback and pending owner actions.
 
 Never mark a package MERGED until the owner confirms GitHub merged it. Never mark checks passed without command or CI evidence.
-
-
-### WP-10 package evidence — 2026-11-02
-
-- Existing PR #16 was found diverged from the post-WP-09 main branch (six commits behind and mergeability state dirty). The wp10-public-hardening branch was rebuilt on top of current main commit 4cc2c3598cb751cfd4b360a42cab526fff8cbbd9, preserving the WP-10-only file set and existing PR. No merge was performed.
-- The resulting PR branch is one commit ahead of main, zero commits behind, and GitHub reports it mergeable.
-- Implemented baseline API response headers and hidden Swagger/OpenAPI routes by default; added local/test/CI profile switches; added static-site headers and a report-only CSP to the Render Blueprint. The CSP is report-only, not enforcing.
-- CI run 41442109697: Maven verification with MySQL 8 integration passed; backend container build passed; frontend unit tests passed; production build passed.
-- Local backend Maven verify and frontend test/build commands were not executable in this runtime because there is no mounted checkout and GitHub DNS resolution failed. No local success is claimed.
-- Security: docs routes return a generic 404 unless the owner explicitly enables the flag in a trusted profile. No auth matcher was weakened, no DB migration was added, and no live Render settings were changed.
-- Owner action: inspect actual browser CSP reports on the deployed frontend before considering an enforcing CSP. Roll back by reverting the WP-10 files/commit; no DB rollback is needed.
