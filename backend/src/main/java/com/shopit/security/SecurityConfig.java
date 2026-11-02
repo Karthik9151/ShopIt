@@ -1,5 +1,6 @@
 package com.shopit.security;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -36,9 +38,9 @@ public class SecurityConfig {
             ApiSurfaceFilter apiSurfaceFilter,
             RequestLogFilter requestLogFilter,
             AuthenticationProvider provider) throws Exception {
-        // API authentication is a JWT supplied explicitly in the Authorization header, never a cookie.
-        // Keep Spring CSRF protection enabled for non-API routes; exempt only the stateless JSON API.
-        return http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+        // JWT authentication is accepted only from an explicit Authorization: Bearer header.
+        // Protect state-changing requests unless they are public auth operations or carry a Bearer token.
+        return http.csrf(csrf -> csrf.requireCsrfProtectionMatcher(SecurityConfig::requiresCsrfProtection))
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(provider)
@@ -69,6 +71,24 @@ public class SecurityConfig {
                 .addFilterAfter(rateLimitFilter, JwtAuthFilter.class)
                 .addFilterAfter(apiSurfaceFilter, RateLimitFilter.class)
                 .build();
+    }
+
+
+    private static boolean requiresCsrfProtection(HttpServletRequest request) {
+        if (!CsrfFilter.DEFAULT_CSRF_MATCHER.matches(request)) {
+            return false;
+        }
+
+        // Registration/login/logout do not rely on ambient browser credentials or cookies.
+        if (request.getServletPath().startsWith("/api/auth/")) {
+            return false;
+        }
+
+        // The API's only authenticated credential is explicitly supplied by the caller.
+        // Browsers do not attach Authorization headers cross-site, so Bearer requests are
+        // not vulnerable to cookie-based CSRF. Requests without one retain CSRF checks.
+        String authorization = request.getHeader("Authorization");
+        return authorization == null || !authorization.startsWith("Bearer ");
     }
 
     @Bean
