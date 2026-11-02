@@ -19,12 +19,15 @@ public class OrderService {
     private final CartItemRepository cart;
     private final UserRepository users;
     private final ProductRepository products;
+    private final CouponService coupons;
 
-    public OrderService(OrderRepository orders, CartItemRepository cart, UserRepository users, ProductRepository products) {
+    public OrderService(OrderRepository orders, CartItemRepository cart, UserRepository users, ProductRepository products,
+                        CouponService coupons) {
         this.orders = orders;
         this.cart = cart;
         this.users = users;
         this.products = products;
+        this.coupons = coupons;
     }
 
     public OrderView checkout(String email, CheckoutRequest request) {
@@ -62,11 +65,20 @@ public class OrderService {
             order.addItem(item);
         }
 
-        BigDecimal tax = subtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal discount = BigDecimal.ZERO;
+        if (request.couponCode() != null && !request.couponCode().isBlank()) {
+            CouponApplication coupon = coupons.redeemForCheckout(request.couponCode(), subtotal);
+            discount = coupon.discountAmount();
+            order.setCouponId(coupon.id());
+            order.setCouponCode(coupon.code());
+        }
+        BigDecimal taxableSubtotal = subtotal.subtract(discount).max(BigDecimal.ZERO);
+        BigDecimal tax = taxableSubtotal.multiply(TAX_RATE).setScale(2, RoundingMode.HALF_UP);
         order.setSubtotal(subtotal);
+        order.setDiscountAmount(discount);
         order.setShipping(SHIPPING);
         order.setTax(tax);
-        order.setTotal(subtotal.add(SHIPPING).add(tax).setScale(2, RoundingMode.HALF_UP));
+        order.setTotal(taxableSubtotal.add(SHIPPING).add(tax).setScale(2, RoundingMode.HALF_UP));
 
         CustomerOrder saved = orders.save(order);
         cart.deleteByUser_Id(user.getId());
@@ -143,8 +155,8 @@ public class OrderService {
                 item.getQuantity(),
                 item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))))
             .toList();
-        return new OrderView(order.getId(), order.getStatus(), order.getSubtotal(), order.getShipping(),
-            order.getTax(), order.getTotal(), order.getShippingAddress(), order.getCreatedAt(), lines);
+        return new OrderView(order.getId(), order.getStatus(), order.getSubtotal(), order.getDiscountAmount(), order.getCouponCode(),
+            order.getShipping(), order.getTax(), order.getTotal(), order.getShippingAddress(), order.getCreatedAt(), lines);
     }
 
     private AppUser user(String email) {
