@@ -132,6 +132,7 @@ export function getPageTitle(pathname, isAdmin=false){
  if(pathname==='/admin')return 'Admin dashboard';
  if(pathname==='/admin/inventory')return 'Admin inventory';
  if(pathname==='/admin/coupons')return 'Admin coupons';
+ if(pathname.startsWith('/admin/customers/'))return 'Admin customer details';
  if(pathname.startsWith('/admin'))return isAdmin?'Admin console':'Admin access required';
  return 'Page not found';
 }
@@ -156,7 +157,7 @@ function Layout(){
  <button className="mobile-menu" aria-label="Toggle navigation" aria-controls="primary-navigation" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>{open?<X/>:<Menu/>}</button></header>
  <main id="main-content" tabIndex={-1}><Routes>
  <Route index element={<Home/>}/><Route path="/products" element={<Products/>}/><Route path="/products/:id" element={<ProductDetails/>}/><Route path="/login" element={<AuthPage/>}/><Route path="/register" element={<AuthPage register/>}/>
- <Route path="/cart" element={<Guard><Cart/></Guard>}/><Route path="/checkout" element={<Guard><Checkout/></Guard>}/><Route path="/wishlist" element={<Guard><Wishlist/></Guard>}/><Route path="/orders" element={<Guard><Orders/></Guard>}/><Route path="/orders/:id" element={<Guard><OrderDetails/></Guard>}/><Route path="/profile" element={<Guard><Profile/></Guard>}/><Route path="/offers" element={<Offers/>}/><Route path="/admin" element={<Guard admin><Admin/></Guard>}/><Route path="/admin/inventory" element={<Guard admin><AdminInventory/></Guard>}/><Route path="/admin/coupons" element={<Guard admin><AdminCoupons/></Guard>}/><Route path="*" element={<NotFound/>}/>
+ <Route path="/cart" element={<Guard><Cart/></Guard>}/><Route path="/checkout" element={<Guard><Checkout/></Guard>}/><Route path="/wishlist" element={<Guard><Wishlist/></Guard>}/><Route path="/orders" element={<Guard><Orders/></Guard>}/><Route path="/orders/:id" element={<Guard><OrderDetails/></Guard>}/><Route path="/profile" element={<Guard><Profile/></Guard>}/><Route path="/offers" element={<Offers/>}/><Route path="/admin" element={<Guard admin><Admin/></Guard>}/><Route path="/admin/customers/:id" element={<Guard admin><AdminCustomerDetail/></Guard>}/><Route path="/admin/inventory" element={<Guard admin><AdminInventory/></Guard>}/><Route path="/admin/coupons" element={<Guard admin><AdminCoupons/></Guard>}/><Route path="*" element={<NotFound/>}/>
  </Routes></main><footer className="footer"><div><Link to="/" className="brand"><span className="brand-mark">s.</span> shopit</Link><p>Good things for everyday life.</p></div><div><b>Explore</b><Link to="/products">All products</Link><Link to="/orders">Your orders</Link></div><div><b>Help</b><a href="mailto:hello@shopit.local">Contact support</a><span>Secure checkout · Easy returns</span></div><small>© {new Date().getFullYear()} ShopIt. Built with care.</small></footer></>;
 }
 function ProductCard({product}){
@@ -271,6 +272,54 @@ function Profile(){
  <form className="form address-form" onSubmit={addAddress}><h2>Add a delivery address</h2><div className="address-fields">{addressField('label','Label')}{addressField('recipientName','Recipient name')}{addressField('phone','Phone')}{addressField('addressLine1','Address line 1')}{addressField('addressLine2','Address line 2',false)}{addressField('city','City')}{addressField('state','State')}{addressField('postalCode','PIN / postal code')}{addressField('country','Country')}</div><label className="checkline"><input type="checkbox" checked={address.defaultAddress} onChange={e=>setAddress({...address,defaultAddress:e.target.checked})}/> Set as default address</label><button className="primary" disabled={busy}>Save address</button></form></div>
  <div className="profile-links"><Link to="/orders">Order history →</Link><Link to="/wishlist">Wishlist →</Link><Link to="/cart">Shopping bag →</Link></div></section>;
 }
+function AdminAnalytics({data}){
+ const sales=data?.salesByDay||[];
+ const maxSales=Math.max(1,...sales.map(item=>Number(item.verifiedSales||0)));
+ const statuses=data?.statusBreakdown||[];
+ const topProducts=data?.topProducts||[];
+ const lowStock=data?.lowStockItems||[];
+ const recentOrders=data?.recentOrders||[];
+ return <div className="admin-analytics">
+  <section className="summary">
+   <h2>Verified sales · last 30 days</h2>
+   {sales.length?sales.map(item=><div className="analytics-bar-row" key={item.day}>
+    <span>{item.day}</span>
+    <div className="analytics-bar-track" role="img" aria-label={item.day+" verified sales "+formatCurrency(item.verifiedSales)}>
+     <span style={{width:Math.max(0,Math.min(100,Number(item.verifiedSales||0)/maxSales*100))+'%'}}/>
+    </div>
+    <b>{formatCurrency(item.verifiedSales)}</b>
+   </div>):<p className="muted">No verified sales in the last 30 days.</p>}
+   <p className="muted">Simulated payments are excluded from this verified-sales chart.</p>
+  </section>
+  <section className="summary">
+   <h2>Orders by status</h2>
+   {statuses.length?statuses.map(item=><div className="analytics-list-row" key={item.status}>
+    <span>{item.status.replaceAll('_',' ')}</span><b>{item.count}</b>
+   </div>):<p className="muted">No orders have been recorded.</p>}
+  </section>
+  <section className="summary">
+   <h2>Top products</h2>
+   {topProducts.length?topProducts.map(item=><div className="analytics-list-row" key={item.productName}>
+    <span>{item.productName}<small>{item.quantitySold} units sold</small></span><b>{formatCurrency(item.grossSales)}</b>
+   </div>):<p className="muted">No successfully paid product sales yet.</p>}
+  </section>
+  <section className="summary">
+   <h2>Low stock · 5 or fewer</h2>
+   {lowStock.length?lowStock.map(item=><div className="analytics-list-row" key={item.id}>
+    <span>{item.name}</span><b>{item.stock} left</b>
+   </div>):<p className="muted">No active products are at the low-stock threshold.</p>}
+   <Link className="text-link" to="/admin/inventory">Open inventory →</Link>
+  </section>
+  <section className="summary admin-analytics-wide">
+   <h2>Recent orders</h2>
+   {recentOrders.length?recentOrders.map(item=><div className="analytics-list-row" key={item.id}>
+    <span>#{item.id} · {item.customerName} <small>{item.customerEmail} · {formatDate(item.createdAt)}</small></span>
+    <b>{formatCurrency(item.total)} · {item.status.replaceAll('_',' ')}</b>
+   </div>):<p className="muted">No orders have been placed yet.</p>}
+  </section>
+ </div>;
+}
+
 function Admin(){
  const {user}=useAuth();
  const emptyProduct=()=>({id:null,name:'',description:'',price:'',costPrice:'0',stock:0,imageUrl:'',categoryId:''});
@@ -296,12 +345,70 @@ function Admin(){
  const changeCustomer=async customer=>{try{await api.put('/admin/customers/'+customer.id+'/status',{enabled:!customer.enabled});await refresh();}catch(e){setError(e.response?.data?.message||'Customer status update failed.');}};
  return <section className="section admin"><span className="eyebrow">Owner workspace · ShopIt operations</span><h1>Store dashboard</h1><div className="admin-shortcuts"><Link className="secondary" to="/admin/inventory">Inventory & budget</Link><Link className="secondary" to="/admin/coupons">Discount coupons</Link><Link className="secondary" to="/offers">Customer offers page</Link></div>{error&&<div className="error" role="alert">{error}</div>}
  {data&&<><div className="stats">{[['Customers',data.customers],['Active products',data.products],['Orders',data.orders],['Successful payments',data.paidPayments],['Verified sales',formatCurrency(data.verifiedSales)],['Simulated payment value',formatCurrency(data.simulatedPaymentValue)],['Pending orders',data.pendingOrders],['Low-stock products',data.lowStockProducts]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}</div><div className="stats budget-stats">{[['Inventory cost budget',formatCurrency(data.inventoryCostBudget)],['Potential retail value',formatCurrency(data.potentialRetailValue)],['Estimated gross margin potential',formatCurrency(data.estimatedGrossMargin)]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}</div><p className="muted">Inventory estimates use your saved unit cost × current stock and selling price × current stock. They are not realized sales or net profit.</p></>}
+ <AdminAnalytics data={data}/>
  <div className="admin-grid"><form className="summary form" onSubmit={saveProduct}><h2>{form.id?'Edit product':'Add your product'}</h2><label>Product name<input required maxLength="180" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Description<textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label><label>Selling price (INR)<input required type="number" min="0" step=".01" value={form.price} onChange={e=>setForm({...form,price:e.target.value})}/></label><label>Your purchase / unit cost (INR)<input type="number" min="0" step=".01" value={form.costPrice} onChange={e=>setForm({...form,costPrice:e.target.value})}/><small>Private owner-only figure. Customers never receive this value.</small></label><label>Available stock<input type="number" min="0" value={form.stock} onChange={e=>setForm({...form,stock:e.target.value})}/></label><label>Product image URL<input value={form.imageUrl} onChange={e=>setForm({...form,imageUrl:e.target.value})}/></label><label>Category<select value={form.categoryId} onChange={e=>setForm({...form,categoryId:e.target.value})}><option value="">None</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><button className="primary">{form.id?'Save product changes':'Publish product'}</button>{form.id&&<button type="button" className="secondary" onClick={()=>setForm(emptyProduct())}>Cancel edit</button>}</form>
  <div className="summary"><form className="form" onSubmit={saveCategory}><h2>{categoryForm.id?'Edit category':'Create category'}</h2><label>Category name<input required maxLength="100" value={categoryForm.name} onChange={e=>setCategoryForm({...categoryForm,name:e.target.value})}/></label><label>Description<textarea maxLength="500" value={categoryForm.description} onChange={e=>setCategoryForm({...categoryForm,description:e.target.value})}/></label><button className="secondary">{categoryForm.id?'Save category':'Create category'}</button>{categoryForm.id&&<button type="button" className="text-link" onClick={()=>setCategoryForm({id:null,name:'',description:''})}>Cancel edit</button>}</form><h2 className="subhead">Categories</h2>{categories.map(c=><div className="admin-row" key={c.id}><span>{c.name}</span><div className="row-actions"><button className="text-link" onClick={()=>editCategory(c)}>Edit</button><button className="text-link" onClick={()=>deactivateCategory(c.id)}>Deactivate</button></div></div>)}</div></div>
  <div className="summary admin-orders"><h2>My product catalogue</h2><div className="admin-pagination-filters"><input aria-label="Search admin products" placeholder="Search products" value={productQuery} onChange={e=>{setProductQuery(e.target.value);setProductPage(0);}}/><select aria-label="Filter product publication" value={productActive} onChange={e=>{setProductActive(e.target.value);setProductPage(0);}}><option value="">All publication states</option><option value="true">Active</option><option value="false">Inactive</option></select></div>{products.map(p=><div className="admin-row" key={p.id}><span>{p.name} · Sell {formatCurrency(p.price)} · Cost {formatCurrency(p.costPrice??0)} · {p.stock} units</span><div className="row-actions"><button className="text-link" onClick={()=>editProduct(p)}>Edit</button><button className="text-link" onClick={()=>deactivateProduct(p.id)}>Deactivate</button></div></div>)}<div className="pagination-controls"><button className="secondary" disabled={productPage<=0} onClick={()=>setProductPage(value=>value-1)}>Previous products</button><span>Page {productPages?productPage+1:0} of {productPages}</span><button className="secondary" disabled={productPage+1>=productPages} onClick={()=>setProductPage(value=>value+1)}>Next products</button></div></div>
- <div className="summary admin-orders"><h2>Customers</h2>{customers.map(c=><div className="admin-row" key={c.id}><span>{c.name} · {c.email} · {c.phone||'No phone'} <small>{c.enabled?'Active':'Disabled'}</small></span><button className="text-link" onClick={()=>changeCustomer(c)}>{c.enabled?'Disable':'Enable'}</button></div>)}</div>
+ <div className="summary admin-orders"><h2>Customers</h2>{customers.map(c=><div className="admin-row" key={c.id}><span>{c.name} · {c.email} · {c.phone||'No phone'} <small>{c.enabled?'Active':'Disabled'}</small></span><div className="row-actions"><Link className="text-link" to={'/admin/customers/'+c.id}>View details</Link><button className="text-link" onClick={()=>changeCustomer(c)}>{c.enabled?'Disable':'Enable'}</button></div></div>)}</div>
  <div className="summary admin-orders"><h2>Recent orders</h2><select aria-label="Filter order status" value={orderStatus} onChange={e=>{setOrderStatus(e.target.value);setOrderPage(0);}}><option value="">All statuses</option>{['PENDING_PAYMENT','CONFIRMED','PROCESSING','SHIPPED','DELIVERED','CANCELLED'].map(value=><option key={value} value={value}>{value}</option>)}</select>{orders.map(o=><div className="admin-row" key={o.id}><span>#{o.id} · {formatDate(o.createdAt)} · {formatCurrency(o.total)} · {o.status}</span><select aria-label={'Status for order '+o.id} value={o.status} onChange={e=>changeStatus(o.id,e.target.value)}>{getOrderStatusOptions(o).map(status=><option key={status} value={status}>{status}</option>)}</select><details><summary>Timeline</summary>{(o.timeline||[]).map((event,index)=><small className="muted" key={index}>{event.newStatus.replaceAll('_',' ')} · {event.actor} · {new Date(event.changedAt).toLocaleString()}</small>)}</details></div>)}<div className="pagination-controls"><button className="secondary" disabled={orderPage<=0} onClick={()=>setOrderPage(value=>value-1)}>Previous orders</button><span>Page {orderPages?orderPage+1:0} of {orderPages}</span><button className="secondary" disabled={orderPage+1>=orderPages} onClick={()=>setOrderPage(value=>value+1)}>Next orders</button></div></div></section>;
 }
+function AdminCustomerDetail(){
+ const {id}=useParams();
+ const [customer,setCustomer]=useState(null),[history,setHistory]=useState(null),[page,setPage]=useState(0);
+ const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState('');
+ const load=async()=>{
+  setLoading(true);setError('');
+  try{
+   const [customerResult,historyResult]=await Promise.all([
+    api.get('/admin/customers/'+id),
+    api.get('/admin/customers/'+id+'/orders',{params:{page,size:20}})
+   ]);
+   setCustomer(customerResult.data);setHistory(historyResult.data);
+  }catch(e){setError(e.response?.data?.message||'Could not load this customer.');}
+  finally{setLoading(false);}
+ };
+ useEffect(()=>{load();},[id,page]);
+ const toggleStatus=async()=>{
+  if(!customer)return;
+  setSaving(true);setError('');
+  try{
+   const result=await api.put('/admin/customers/'+id+'/status',{enabled:!customer.enabled});
+   setCustomer(result.data);
+  }catch(e){setError(e.response?.data?.message||'Could not update customer access.');}
+  finally{setSaving(false);}
+ };
+ return <section className="section admin">
+  <Link className="back" to="/admin">← Owner dashboard</Link>
+  <span className="eyebrow">Customer account</span>
+  <h1>{customer?.name||'Customer details'}</h1>
+  {error&&<div className="error" role="alert">{error}</div>}
+  {loading?<div className="loading" role="status">Loading customer details…</div>:customer&&<>
+   <div className="summary customer-detail-summary">
+    <div><b>{customer.email}</b><span>{customer.phone||'No phone number saved'}</span><small>Joined {formatDate(customer.createdAt)}</small></div>
+    <div><span className={'status '+(customer.enabled?'confirmed':'cancelled')}>{customer.enabled?'Enabled':'Disabled'}</span>
+     <button className="secondary" disabled={saving} onClick={toggleStatus}>{saving?'Saving…':customer.enabled?'Disable account':'Enable account'}</button>
+    </div>
+   </div>
+   <div className="summary admin-orders">
+    <h2>Order history</h2>
+    {history?.content?.length?history.content.map(order=><article className="customer-order-row" key={order.id}>
+     <div><b>Order #{order.id}</b><small>{formatDate(order.createdAt)} · {order.status.replaceAll('_',' ')}</small></div>
+     <b>{formatCurrency(order.total)}</b>
+     <details><summary>Items and timeline</summary>
+      {(order.items||[]).map((item,index)=><small key={index}>{item.productName} × {item.quantity} · {formatCurrency(item.lineTotal)}</small>)}
+      {(order.timeline||[]).map((event,index)=><small key={'timeline-'+index}>{event.newStatus.replaceAll('_',' ')} · {event.actor} · {new Date(event.changedAt).toLocaleString()}</small>)}
+     </details>
+    </article>):<p className="muted">This customer has not placed any orders.</p>}
+    <div className="pagination-controls">
+     <button className="secondary" disabled={!history||page<=0} onClick={()=>setPage(value=>value-1)}>Previous orders</button>
+     <span>Page {history?.totalPages?page+1:0} of {history?.totalPages||0}</span>
+     <button className="secondary" disabled={!history||page+1>=history.totalPages} onClick={()=>setPage(value=>value+1)}>Next orders</button>
+    </div>
+   </div>
+  </>}
+ </section>;
+}
+
 function Offers(){
  const [offers,setOffers]=useState([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  useEffect(()=>{api.get('/coupons').then(r=>setOffers(r.data||[])).catch(()=>setError('Current offers are temporarily unavailable.')).finally(()=>setLoading(false));},[]);
