@@ -106,6 +106,18 @@ public class AdminController {
         return products.adminList(q, active, pageable);
     }
 
+    @GetMapping("/products/{id}")
+    public AdminProductView getProduct(@PathVariable Long id) {
+        return products.adminGet(id);
+    }
+
+    @PatchMapping("/products/{id}/status")
+    public AdminProductView updateProductStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductStatusRequest request) {
+        return products.setActive(id, request.active());
+    }
+
     @PostMapping("/products")
     public ResponseEntity<AdminProductView> createProduct(@Valid @RequestBody ProductRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(products.createAdmin(request));
@@ -166,6 +178,11 @@ public class AdminController {
         Pageable pageable = adminPage(page, size);
         return orders.adminList(status, orderId, email, from, to, pageable);
     }
+    @GetMapping("/orders/{id}")
+    public OrderView getOrder(@PathVariable Long id) {
+        return orders.adminGet(id);
+    }
+
     @GetMapping(value = "/orders/export.csv", produces = "text/csv")
     public ResponseEntity<byte[]> exportOrders(
             @RequestParam(required = false) String status,
