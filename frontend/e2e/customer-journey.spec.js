@@ -118,7 +118,7 @@ test('customer can register, add a product, place an order and review order hist
   await expect(page.getByRole('heading', { name: 'The collection' })).toBeVisible();
   expect(registered).toBe(true);
   await page.getByRole('button', { name: 'Add' }).click();
-  await expect(page.getByRole('status')).toContainText('Added to your bag');
+  await expect(page.getByText('Added to your bag', { exact: true })).toBeVisible();
 
   await page.getByRole('link', { name: 'Shopping bag' }).click();
   await expect(page.getByRole('heading', { name: 'Your bag' })).toBeVisible();

@@ -6,7 +6,7 @@ export default [
     ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
   },
   {
-    files: ['src/admin/**/*.{js,jsx}', 'src/components/ui/**/*.{js,jsx}'],
+    files: ['src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

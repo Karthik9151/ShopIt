@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest",
-    "lint": "eslint src/admin src/components/ui",
+    "lint": "eslint src",
     "format": "prettier --write \"src/**/*.{js,jsx}\"",
     "test:e2e": "playwright test"
   },
