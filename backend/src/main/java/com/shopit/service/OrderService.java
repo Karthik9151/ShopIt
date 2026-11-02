@@ -107,6 +107,7 @@ public class OrderService {
         }
         order.setStatus("CANCELLED");
         restoreStock(order);
+        coupons.releaseUsage(order.getCouponId());
         return view(order);
     }
 
@@ -129,6 +130,7 @@ public class OrderService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Refund handling is required before cancellation");
             }
             restoreStock(order);
+            coupons.releaseUsage(order.getCouponId());
         }
         order.setStatus(next);
         return view(order);
