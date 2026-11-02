@@ -401,7 +401,7 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 
 ### PR #47 continuation — final CI verification — 2026-11-02
 
-- Continued the existing `shopit-improvements` branch and draft PR #47; no new branch or PR was created and no merge was performed.
+- Continued the existing `shopit-improvements` branch and PR #47; no new branch or PR was created and no merge was performed.
 - Finished the frontend test-runner separation by excluding `frontend/e2e/**` from Vitest. Pinned the frontend CI job to Ubuntu 24.04 so the selected Playwright browser package is supported.
 - Hardened the stateless Bearer API CSRF boundary: CSRF is not disabled globally and is not blanket-exempted for `/api/**`. Public stateless auth routes and explicit Bearer requests use a narrow matcher; state-changing requests without Bearer credentials retain CSRF protection. Added regression coverage and corrected the anonymous mutation expectation to reflect CSRF filter ordering.
 - Added an early demo-profile datasource guard. It permits only loopback MySQL URLs and rejects remote/private-network/H2/invalid datasource URLs before normal datasource/Flyway initialization. Added unit coverage.
@@ -412,4 +412,4 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 - CodeQL run `41480588575` passed both Java/Kotlin and JavaScript/TypeScript analyses. Dependency review run `41480588654` passed.
 - No local Maven/npm command was claimed; verification evidence is the GitHub Actions result attached to the exact PR head. No Render, TiDB, production site, live database, real payment processor, or customer data was accessed.
 - Remaining owner/runtime tasks are the committed frontend lockfile plus `npm ci`, full storefront-lifecycle E2E coverage, full App.jsx architecture modularization, target-equivalent 512 MB JVM measurement, isolated TiDB verification and Render staging smoke test.
-- PR #47 remains open and draft. Owner merge decision remains separate from this implementation/verification work.
+- PR #47 remains open, ready for review, and unmerged. Owner merge decision remains separate from this implementation/verification work.

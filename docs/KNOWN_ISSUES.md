@@ -56,7 +56,7 @@ Verified on PR head `9fe2c58594502f96feea580b9041a808934e8346`:
 | CodeQL Java/Kotlin and JavaScript/TypeScript | Both passed | CodeQL run `41480588575` |
 | Dependency review | Passed | Dependency review run `41480588654` |
 
-The tested PR head was 137 commits ahead of `main` and 0 commits behind at the time of verification. No migration files were changed. PR #47 remains a draft and has not been merged.
+The tested PR head was 137 commits ahead of `main` and 0 commits behind at the time of verification. No migration files were changed. PR #47 is open, ready for review (not draft), and has not been merged.
 
 ## Owner/runtime actions still required
 
