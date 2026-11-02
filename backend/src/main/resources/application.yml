@@ -27,7 +27,8 @@ management:
         include: health,info
 app:
   jwt:
-    secret-base64: ${JWT_SECRET_BASE64:U2hvcEl0LWRldi1zZWNyZXQtcmVwbGFjZS1pbi1wcm9kdWN0aW9uLTAxMjM0NTY3ODkw}
+    # Fail closed when no real random secret is configured; never ship a known fallback.
+    secret-base64: ${JWT_SECRET_BASE64:}
     expiration-ms: ${JWT_EXPIRATION_MS:900000}
   cors:
     origins: ${APP_CORS_ORIGINS:http://localhost:5173}
