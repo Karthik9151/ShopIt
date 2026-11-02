@@ -9,7 +9,8 @@ permissions:
 jobs:
   frontend:
     name: Frontend tests and production build
-    runs-on: ubuntu-latest
+    # Pin to a Playwright-supported LTS runner; ubuntu-latest can move ahead of the pinned browser package.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
