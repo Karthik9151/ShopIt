@@ -11,29 +11,29 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 
 | WP id | Review findings | Status | Branch | PR link | Checks run | Owner actions pending |
 |---|---|---|---|---|---|---|
-| WP-00 | F1-F17, N1-N6 | PR OPEN | `wp00-ledger` | Pending creation | Main CI baseline: backend 7/7; frontend 1/1; build and Docker build passed in GitHub Actions. Local commands unavailable. | Confirm backup branch location; provide local checkout or authorize remote-only Git workflow |
-| WP-01 | F1 | NOT STARTED | `wp01-admin-bootstrap` | — | — | Decide whether to use one-deploy admin takeover switch or database correction |
-| WP-02 | F2, F14 | NOT STARTED | `wp02-pricing` | — | — | Confirm none; D1/D2 apply |
-| WP-03 | F4 | NOT STARTED | `wp03-error-handling` | — | — | Confirm trace-id correlation design is acceptable |
-| WP-04 | F5 | NOT STARTED | `wp04-session-expiry` | — | — | — |
-| WP-05 | F6, F17 | NOT STARTED | `wp05-order-history` | — | — | Approve/verify additive V5 actor migration effect and rollback before migration |
-| WP-06 | F7 | NOT STARTED | `wp06-auto-cancel` | — | — | Acknowledge Render free-service scheduled-job sleep limitation |
-| WP-07 | F9 | NOT STARTED | `wp07-cart-availability` | — | — | — |
-| WP-08 | F3 | NOT STARTED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
-| WP-09 | F8 | NOT STARTED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
-| WP-10 | F12 | NOT STARTED | `wp10-public-hardening` | — | — | Verify report-only CSP on live site before enforcement |
-| WP-11 | F11 | NOT STARTED | `wp11-registration-hardening` | — | — | Accept documented email-enumeration trade-off until email verification exists |
-| WP-12 | F13 | NOT STARTED | `wp12-stock-exposure` | — | — | Review public ProductView API contract change |
-| WP-13 | F10, F15 | NOT STARTED | `wp13-cold-start-jvm` | — | — | Optional uptime monitor intentionally not enabled; no Render settings changes |
-| WP-14 | F16 | NOT STARTED | `wp14-admin-pagination` | — | — | Review paginated admin API contract |
-| WP-15 | Operations | NOT STARTED | `wp15-operations` | — | — | Provide/verify operational recovery and database backup procedures |
-| WP-16 | Test coverage, N5 | NOT STARTED | `wp16-e2e-testing` | — | — | — |
-| WP-17 | CI security, N6 | NOT STARTED | `wp17-ci-security` | — | — | Enable secret scanning/push protection, Dependabot alerts and main branch protection in GitHub settings |
-| WP-18 | TiDB verification | NOT STARTED | `wp18-tidb-ci` | — | — | Run scripts/verify-tidb.sh on staging and verify flyway_schema_history; no staging DB access performed |
-| WP-19 | Readability | NOT STARTED | `wp19-readability` | — | — | — |
-| WP-20 | Documentation | NOT STARTED | `wp20-docs-accuracy` | — | — | Confirm logout route documentation choice; default is document current public behavior |
-| WP-21 | Accessibility and SEO | NOT STARTED | `wp21-accessibility` | — | — | — |
-| WP-22 | Demo profile | NOT STARTED | `wp22-demo-profile` | — | — | Keep demo profile local-only; no Render configuration changes |
+| WP-00 | F1-F17, N1-N6 | PR OPEN | `wp00-ledger` | https://github.com/Karthik9151/ShopIt/pull/6 | PR run 41430477537: frontend tests and build passed; backend Maven job still running at last check. Main baseline run 41421412026: backend 7/7; frontend 1/1; Docker build passed. Local commands unavailable. | Confirm backup branch location; provide local checkout or authorize remote-only Git workflow |
+| WP-01 | F1 | BLOCKED | `wp01-admin-bootstrap` | — | — | Decide whether to use one-deploy admin takeover switch or database correction |
+| WP-02 | F2, F14 | BLOCKED | `wp02-pricing` | — | — | Confirm none; D1/D2 apply |
+| WP-03 | F4 | BLOCKED | `wp03-error-handling` | — | — | Confirm trace-id correlation design is acceptable |
+| WP-04 | F5 | BLOCKED | `wp04-session-expiry` | — | — | — |
+| WP-05 | F6, F17 | BLOCKED | `wp05-order-history` | — | — | Approve/verify additive V5 actor migration effect and rollback before migration |
+| WP-06 | F7 | BLOCKED | `wp06-auto-cancel` | — | — | Acknowledge Render free-service scheduled-job sleep limitation |
+| WP-07 | F9 | BLOCKED | `wp07-cart-availability` | — | — | — |
+| WP-08 | F3 | BLOCKED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
+| WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
+| WP-10 | F12 | BLOCKED | `wp10-public-hardening` | — | — | Verify report-only CSP on live site before enforcement |
+| WP-11 | F11 | BLOCKED | `wp11-registration-hardening` | — | — | Accept documented email-enumeration trade-off until email verification exists |
+| WP-12 | F13 | BLOCKED | `wp12-stock-exposure` | — | — | Review public ProductView API contract change |
+| WP-13 | F10, F15 | BLOCKED | `wp13-cold-start-jvm` | — | — | Optional uptime monitor intentionally not enabled; no Render settings changes |
+| WP-14 | F16 | BLOCKED | `wp14-admin-pagination` | — | — | Review paginated admin API contract |
+| WP-15 | Operations | BLOCKED | `wp15-operations` | — | — | Provide/verify operational recovery and database backup procedures |
+| WP-16 | Test coverage, N5 | BLOCKED | `wp16-e2e-testing` | — | — | — |
+| WP-17 | CI security, N6 | BLOCKED | `wp17-ci-security` | — | — | Enable secret scanning/push protection, Dependabot alerts and main branch protection in GitHub settings |
+| WP-18 | TiDB verification | BLOCKED | `wp18-tidb-ci` | — | — | Run scripts/verify-tidb.sh on staging and verify flyway_schema_history; no staging DB access performed |
+| WP-19 | Readability | BLOCKED | `wp19-readability` | — | — | — |
+| WP-20 | Documentation | BLOCKED | `wp20-docs-accuracy` | — | — | Confirm logout route documentation choice; default is document current public behavior |
+| WP-21 | Accessibility and SEO | BLOCKED | `wp21-accessibility` | — | — | — |
+| WP-22 | Demo profile | BLOCKED | `wp22-demo-profile` | — | — | Keep demo profile local-only; no Render configuration changes |
 | WP-23 | Optional features (23a-23h) | BLOCKED | — | — | — | Owner must select one feature and approve its separate plan |
 
 ## Project goals
@@ -121,6 +121,10 @@ Additional operational choices:
 - Do not enable a 10-minute uptime monitor by default; it would keep a free API service awake most of the month and consume almost all of a 750-hour workspace allowance.
 - For logout documentation, default to accurately documenting the current public /api/auth/logout behavior rather than changing authentication semantics without a specific owner need.
 - WP23 is excluded until the owner selects an optional feature.
+
+## Execution blocker — 2026-11-02
+
+The owner explicitly authorized implementation of WP-00 through WP-22 without waiting for GATE approvals. WP-00 was created via the connected GitHub repository API. WP-01 through WP-22 are BLOCKED before implementation because the active runtime cannot resolve github.com or codeload.github.com for a local checkout (two clone attempts failed with DNS resolution errors), and therefore the mandatory local commands `git branch --show-current`, `git status --short`, `git log -1 --oneline`, `cd backend && mvn -B verify`, and `cd frontend && npm test -- --run && npm run build` cannot be executed against the real repository. The GitHub connector can read/write remote repository content but does not provide an executable checkout. No implementation branch was created for the blocked WPs, and no test result is claimed for them. Resume when a local checkout or repository execution environment is available; then re-check branch state before any edits.
 
 ## Per-package completion evidence
 
