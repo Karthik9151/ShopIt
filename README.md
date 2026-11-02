@@ -71,3 +71,18 @@ OpenAPI and Swagger UI are disabled by default in deployed environments. Enable 
 ## Authentication lifecycle
 
 Logout clears the browser's `sessionStorage` token and user state. The API logout endpoint is stateless and does not revoke a copied JWT; previously issued tokens remain usable until expiry unless the account is disabled or the signing key is rotated. Password changes do not yet revoke existing access tokens. See `docs/API_DOCUMENTATION.md` and `docs/SECURITY.md` for this current limitation.
+
+## Test an admin page in 5 minutes
+
+This is a local-only smoke path. It uses the local MySQL database and a test administrator; do not point it at production.
+
+1. Start the API after setting a local `JWT_SECRET_BASE64`, `APP_ADMIN_EMAIL`, and `APP_ADMIN_PASSWORD` (at least 12 characters).
+2. Start the frontend with `cd frontend && npm run dev`.
+3. Sign in using the configured local administrator account.
+4. Open the owner console at `/admin`; browse products, categories, customers, orders, coupons, and inventory.
+5. Verify the backend owner endpoints with the same admin token: `GET /api/admin/dashboard`, `GET /api/admin/products?page=0&size=20`, `GET /api/admin/categories`, and `GET /api/admin/customers?page=0&size=20`.
+6. Create a disposable product and change its stock with `PATCH /api/admin/products/{id}/stock` using a JSON body such as `{"stock":12}`. Stock is bounded from 0 through 1,000,000.
+7. Register a separate customer account and confirm it receives 403 when it calls an `/api/admin/**` endpoint.
+8. Delete the disposable product/category or deactivate them after testing.
+
+A customer must not be redirected into an admin route. A successful HTTP response from an admin endpoint is not a replacement for checking the visible UI, keyboard navigation, and mobile layout.

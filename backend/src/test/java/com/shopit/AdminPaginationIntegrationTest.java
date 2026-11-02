@@ -41,7 +41,33 @@ class AdminPaginationIntegrationTest {
                 .andExpect(jsonPath("$.number").value(0));
 
         mvc.perform(get("/api/admin/orders?size=101")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/admin/orders")
+                        .param("orderId", "999999")
+                        .param("email", "seed")
+                        .param("from", "2026-01-01T00:00:00Z")
+                        .param("to", "2027-01-01T00:00:00Z"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/admin/orders")
+                        .param("from", "2027-01-01T00:00:00Z")
+                        .param("to", "2026-01-01T00:00:00Z"))
+                .andExpect(status().isBadRequest());
         mvc.perform(get("/api/admin/products?size=101")).andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/admin/categories/paged?page=0&size=20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.number").value(0));
+        mvc.perform(get("/api/admin/categories/paged?size=101"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/admin/coupons/paged?bucket=ACTIVE&page=0&size=20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.number").value(0));
+        mvc.perform(get("/api/admin/coupons/paged?bucket=UNKNOWN"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/admin/coupons/paged?size=101"))
+                .andExpect(status().isBadRequest());
         mvc.perform(get("/api/admin/products?page=-1")).andExpect(status().isBadRequest());
     }
 }

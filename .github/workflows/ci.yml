@@ -9,7 +9,8 @@ permissions:
 jobs:
   frontend:
     name: Frontend tests and production build
-    runs-on: ubuntu-latest
+    # Pin to a Playwright-supported LTS runner; ubuntu-latest can move ahead of the pinned browser package.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,12 +21,24 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm install --no-audit --no-fund
+      - name: ESLint
+        working-directory: frontend
+        run: npm run lint
+      - name: Dependency audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
       - name: Unit tests
         working-directory: frontend
         run: npm test -- --run
       - name: Production build
         working-directory: frontend
         run: npm run build
+      - name: Install Chromium for browser tests
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Administrator browser smoke tests
+        working-directory: frontend
+        run: npm run test:e2e
 
   backend:
     name: Maven tests with MySQL 8 integration

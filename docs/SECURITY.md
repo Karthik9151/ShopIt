@@ -41,3 +41,10 @@ The initial browser client stores its short-lived bearer access token in `sessio
 - Perform a security review and end-to-end tests before accepting real customer data or payments.
 
 This is a development application, not a completed compliance assessment or penetration-tested production service.
+
+- Public catalogue search and direct product detail both hide active products assigned to inactive categories; uncategorized products remain public. Admin category management can inspect inactive categories, see product counts, and reactivate categories.
+- Admin stock changes use a dedicated bounded PATCH DTO; only ADMIN can call the endpoint. Customer search is constrained to CUSTOMER records, and customer detail returns an explicit DTO rather than an entity.
+- Request logs include method, path without query string, status, duration, numeric user ID where available, and trace ID. Request bodies, query values, headers, bearer tokens, passwords, and email addresses are not logged.
+- Startup configuration logging emits only operational switches and non-secret pricing/expiry settings; database connection values and administrator identities are not included.
+
+- Admin exports are protected by the same `/api/admin/**` role rule. CSV string cells are quoted and spreadsheet formula prefixes (=, +, -, @, including after leading whitespace) are prefixed with an apostrophe. Exports reject result sets above 5,000 rows rather than silently truncating.

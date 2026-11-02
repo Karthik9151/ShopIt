@@ -3,6 +3,8 @@ package com.shopit.service;
 import com.shopit.dto.ApiDtos.*;
 import com.shopit.entity.*;
 import com.shopit.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,19 @@ public class CouponService {
     @Transactional(readOnly = true)
     public List<CouponView> allForAdmin() {
         return coupons.findAllByOrderByCreatedAtDesc().stream().map(this::view).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CouponView> adminPage(String bucket, Pageable pageable) {
+        Instant now = Instant.now();
+        Page<Coupon> page = switch (bucket == null ? "ACTIVE" : bucket.trim().toUpperCase(Locale.ROOT)) {
+            case "ACTIVE" -> coupons.findCurrentlyActive(now, pageable);
+            case "SCHEDULED" -> coupons.findScheduled(now, pageable);
+            case "EXPIRED" -> coupons.findExpired(now, pageable);
+            case "PAUSED" -> coupons.findByActiveFalse(pageable);
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown coupon tab");
+        };
+        return page.map(this::view);
     }
 
     @Transactional

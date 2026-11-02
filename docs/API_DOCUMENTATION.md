@@ -76,3 +76,50 @@ Interactive OpenAPI/Swagger endpoints (`/swagger-ui/index.html`, `/v3/api-docs`)
 - Customer-owned resources are scoped to the authenticated principal. Admin routes require ADMIN.
 - Payment is simulated only; no real money or card data is processed.
 - Unpaid orders expire after the configured TTL (default 30 minutes). There is no refund/returns workflow; paid-order cancellation is blocked.
+
+### Additional owner-console endpoints
+
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| GET | `/api/admin/categories` | ADMIN | All categories, including inactive, with product counts |
+| PATCH | `/api/admin/categories/{id}/status` | ADMIN | Set category active state; reactivating makes its active products public again |
+| PATCH | `/api/admin/products/{id}/stock` | ADMIN | Update exact stock; request body requires `stock` from 0 to 1,000,000 |
+| GET | `/api/admin/customers?q={search}&page=0&size=20` | ADMIN | Search customers by name, email, or phone; admin accounts are excluded |
+| GET | `/api/admin/customers/{id}` | ADMIN | Read one customer DTO; non-customer accounts return 404 |
+
+The customer search query is limited to 120 characters. Existing category create/update/deactivate routes remain unchanged.
+
+### Order search and exports
+
+`GET /api/admin/orders?page=0&size=20` also accepts optional `status`, `orderId`, partial `email`, `from`, and `to` parameters. The date values are ISO-8601 timestamps; when both are supplied, `to` must be later than `from`.
+
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| GET | `/api/admin/orders/export.csv` | ADMIN | CSV export using the same status, order ID, email and date filters; maximum 5,000 rows |
+| GET | `/api/admin/inventory/export.csv` | ADMIN | Inventory CSV; optional `threshold` stock ceiling and `sort=name|stock|price|createdAt`, `direction=asc|desc` |
+
+Both export routes return UTF-8 CSV, neutralize spreadsheet formula prefixes in text cells, and return 400 when the result would exceed 5,000 rows. Inventory threshold must be from 0 through 1,000,000.
+
+
+## Owner-console detail, reporting and paginated workspaces
+
+All routes in this section require the ADMIN role.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | /api/admin/dashboard | Retains the existing summary and valuation fields and adds salesByDay, statusBreakdown, topProducts, lowStockItems and recentOrders collections |
+| GET | /api/admin/orders/{id} | Read one order with item and status-history details |
+| GET | /api/admin/customers/{id}/orders?page=0&size=20 | Paginated order history for a customer, including order timelines |
+| GET | /api/admin/products/{id} | Read one product, including owner-only fields |
+| PATCH | /api/admin/products/{id}/status | Set product active state using an active boolean |
+| GET | /api/admin/inventory?page=0&size=20&threshold=5&sort=stock&direction=asc | Paginated inventory with optional low-stock threshold and safe sort/direction selection |
+| GET | /api/admin/categories/paged?page=0&size=20 | Paginated categories with deterministic name ordering |
+| GET | /api/admin/coupons/paged?bucket=ACTIVE&page=0&size=20 | Paginated campaign buckets: ACTIVE, SCHEDULED, EXPIRED or PAUSED |
+
+The dashboard sales series uses verified/successful payment data. Top products are derived from successfully paid orders rather than simulated payment attempts. Low-stock and recent-order collections are bounded for dashboard display; the headline counts and valuation fields continue to describe the full dataset.
+
+Page-number parameters are zero-based. Page size defaults to 20 and is bounded to 1–100. The customer order-history endpoint verifies that the requested account is a CUSTOMER; non-customer or missing IDs return 404.
+
+## Browser authentication and CSRF boundary
+
+The frontend sends its JWT explicitly in the Authorization: Bearer header; the backend JWT filter does not read authentication cookies, and the CORS configuration does not allow credentialed browser requests. CSRF checks remain enabled for state-changing requests that do not carry a Bearer header, apart from the public stateless /api/auth operations. This is not cookie-based authentication. Do not move JWTs into automatically attached cookies without redesigning the CSRF policy and tests.
