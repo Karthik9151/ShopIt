@@ -1,4 +1,3 @@
-import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
@@ -28,7 +27,6 @@ export default [
       },
     },
     plugins: {
-      react,
       'react-hooks': reactHooks,
     },
     settings: {
@@ -37,11 +35,10 @@ export default [
       },
     },
     rules: {
+      'no-undef': 'error',
+      'no-duplicate-imports': 'error',
       'no-constant-condition': 'error',
       'no-unreachable': 'error',
-      'react/jsx-uses-react': 'off',
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
     },
