@@ -26,9 +26,32 @@ jobs:
       - name: Production build
         working-directory: frontend
         run: npm run build
+
   backend:
-    name: Backend verification
+    name: Maven tests with MySQL 8 integration
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: shopit
+          MYSQL_USER: shopit
+          MYSQL_PASSWORD: shopit
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      DB_URL: jdbc:mysql://127.0.0.1:3306/shopit?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: shopit
+      DB_PASSWORD: shopit
+      JWT_SECRET_BASE64: U2hvcEl0LWNpLWludGVncmF0aW9uLXNlY3JldC1mb3ItdGVzdGluZy0zMi1ieXRlcw==
+      APP_ADMIN_EMAIL: admin@shopit.test
+      APP_ADMIN_PASSWORD: ShopIt-Admin-Test-2026!
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -36,6 +59,6 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - name: Maven verification
+      - name: Maven verification (H2 unit/context and MySQL integration)
         working-directory: backend
         run: mvn --batch-mode verify
