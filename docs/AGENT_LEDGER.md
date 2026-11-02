@@ -31,7 +31,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-17 | CI security, N6 | PR OPEN — BLOCKED | `wp17-ci-security` | https://github.com/Karthik9151/ShopIt/pull/23 | Dependabot/CodeQL added; dependency-review CI 41443918784 failed because Dependency Graph is disabled; npm lockfile generation failed twice (registry timeout; offline ENOTCACHED). | Owner enable Dependency Graph/Dependabot alerts/secret scanning/push protection/branch protection; generate valid lockfile in network-enabled checkout then use npm ci |
 | WP-18 | TiDB verification | PR OPEN — BLOCKED (OWNER STAGING CHECK) | `wp18-tidb-verification` | https://github.com/Karthik9151/ShopIt/pull/24 | Docs only; baseline scripts/verify-tidb.sh not found; no TiDB access or script run. | Owner verify TLS, Flyway history, schema, transactions and locking on isolated TiDB staging cluster |
 | WP-19 | Readability | PR OPEN — CHECKS PENDING | `wp19-readability` | https://github.com/Karthik9151/ShopIt/pull/25 | CI pending: Maven/MySQL verify and frontend tests/build. | Stacked on unmerged WP-14; merge WP-14 first |
-| WP-20 | Documentation | PR OPEN — CHECKS PENDING | `wp20-docs-accuracy` | https://github.com/Karthik9151/ShopIt/pull/26 | CI pending: Maven/MySQL verify and frontend tests/build; documentation-only. | Stacked on WP-19/WP-14; merge WP-14 then WP-19 before WP-20 |
+| WP-20 | Documentation | PR OPEN — CHECKS PASS | `wp20-docs-accuracy` | https://github.com/Karthik9151/ShopIt/pull/26 | CI 41445039629 passed Maven/MySQL verify + backend container build and frontend tests/production build. | Stacked on WP-19/WP-14; merge WP-14 then WP-19 before WP-20 |
 | WP-21 | Accessibility and SEO | BLOCKED | `wp21-accessibility` | — | — | — |
 | WP-22 | Demo profile | BLOCKED | `wp22-demo-profile` | — | — | Keep demo profile local-only; no Render configuration changes |
 | WP-23 | Optional features (23a-23h) | BLOCKED | — | — | — | Owner must select one feature and approve its separate plan |
@@ -273,3 +273,8 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 - Refreshed testing docs for the actual current Vitest, MySQL integration, route-guard, retry and pagination coverage; recorded exact local backend/frontend commands and the uncommitted npm lockfile limitation.
 - Brought in the owner operations and TiDB verification guide documents and linked them from deployment docs. WP-15 and WP-18 retain their separate package PRs.
 - Branch is stacked on WP-19 and inherits WP-14; dependency/merge order is stated in PR. No PR merged. Docs only; no API/schema/Flyway/Render/TiDB/GitHub settings change, no secrets.
+
+
+### WP-20 CI result — 2026-11-02
+
+- Documentation PR CI run 41445039629 passed Maven/MySQL verification and backend container build plus frontend tests/production build. It does not validate the live Render/TiDB deployment.
