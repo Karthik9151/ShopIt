@@ -108,7 +108,7 @@ public class OrderService {
 
     public OrderView cancel(String email, Long id) {
         AppUser user = user(email);
-        CustomerOrder order = orders.findByIdAndUser_Id(id, user.getId())
+        CustomerOrder order = orders.findByIdAndUser_IdForUpdate(id, user.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
         if (!"PENDING_PAYMENT".equals(order.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Only unpaid orders can be cancelled by the customer");
@@ -131,7 +131,7 @@ public class OrderService {
     }
 
     public OrderView updateStatus(Long id, String next) {
-        CustomerOrder order = orders.findById(id)
+        CustomerOrder order = orders.findByIdForUpdate(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
         boolean successfulPayment = payments.findByOrder_IdAndStatus(id, "SUCCESS").isPresent();
         if ("CANCELLED".equals(next) && successfulPayment) {

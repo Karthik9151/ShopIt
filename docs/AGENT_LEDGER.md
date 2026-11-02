@@ -1,6 +1,6 @@
 # ShopIt Agent Work Ledger
 
-Last updated: 2026-11-02
+Last updated: 2026-11-02 11:25 UTC
 Repository: https://github.com/Karthik9151/ShopIt
 Baseline branch: `main`
 Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
@@ -11,13 +11,13 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 
 | WP id | Review findings | Status | Branch | PR link | Checks run | Owner actions pending |
 |---|---|---|---|---|---|---|
-| WP-00 | F1-F17, N1-N6 | PR OPEN | `wp00-ledger` | https://github.com/Karthik9151/ShopIt/pull/6 | PR run 41430477537: frontend tests and build passed; backend Maven job still running at last check. Main baseline run 41421412026: backend 7/7; frontend 1/1; Docker build passed. Local commands unavailable. | Confirm backup branch location; provide local checkout or authorize remote-only Git workflow |
-| WP-01 | F1 | PR OPEN | `wp01-admin-bootstrap` | https://github.com/Karthik9151/ShopIt/pull/7 | PR run 41431237299: backend 13/13 passed; frontend 1/1 passed; frontend build and Docker build passed. First two CI attempts failed due test syntax; corrected on third run. | Optional one-deploy APP_ADMIN_TAKE_OVER_EXISTING=true if choosing controlled takeover; unset afterward |
-| WP-02 | F2, F14 | BLOCKED | `wp02-pricing` | — | — | Confirm none; D1/D2 apply |
-| WP-03 | F4 | BLOCKED | `wp03-error-handling` | — | — | Confirm trace-id correlation design is acceptable |
-| WP-04 | F5 | BLOCKED | `wp04-session-expiry` | — | — | — |
-| WP-05 | F6, F17 | BLOCKED | `wp05-order-history` | — | — | Approve/verify additive V5 actor migration effect and rollback before migration |
-| WP-06 | F7 | BLOCKED | `wp06-auto-cancel` | — | — | Acknowledge Render free-service scheduled-job sleep limitation |
+| WP-00 | F1-F17, N1-N6 | MERGED | `wp00-ledger` | https://github.com/Karthik9151/ShopIt/pull/6 | PR CI run 41430681265: Maven/MySQL, frontend tests and production build all passed. | None; backup branch not found remotely and was not touched |
+| WP-01 | F1 | MERGED | `wp01-admin-bootstrap` | https://github.com/Karthik9151/ShopIt/pull/7 | PR CI run 41431237299: Maven/MySQL, frontend tests, production build and Docker build all passed. | Optional owner-only APP_ADMIN_TAKE_OVER_EXISTING one-deploy use; default remains false |
+| WP-02 | F2, F14 | MERGED | `wp02-pricing` | https://github.com/Karthik9151/ShopIt/pull/8 | PR CI run 41432755002: Maven/MySQL, frontend tests and production build all passed. | Keep backend and frontend free-shipping thresholds aligned when owner changes config |
+| WP-03 | F4 | MERGED | `wp03-error-handling` | https://github.com/Karthik9151/ShopIt/pull/9 | PR CI run 41433524474: Maven/MySQL, frontend tests and production build all passed. | None |
+| WP-04 | F5 | MERGED | `wp04-session-expiry` | https://github.com/Karthik9151/ShopIt/pull/10 | PR CI run 41434567635: Maven/MySQL, frontend tests and production build all passed. | None |
+| WP-05 | F6, F17 | MERGED | `wp05-order-history` | https://github.com/Karthik9151/ShopIt/pull/11 | PR CI run 41434916735: Maven/MySQL, frontend tests and production build all passed. | Verify Flyway V5 on staging and preserve actor attribution during any rollback; TiDB remains unverified |
+| WP-06 | F7 | PR OPEN — DRAFT | `wp06-auto-cancel` | https://github.com/Karthik9151/ShopIt/pull/12 | PR CI run 41436416649 in progress at last check; local Maven/npm commands unavailable in this runtime. | Render free service only sweeps while awake; startup sweep catches up after wake |
 | WP-07 | F9 | BLOCKED | `wp07-cart-availability` | — | — | — |
 | WP-08 | F3 | BLOCKED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
@@ -125,6 +125,17 @@ Additional operational choices:
 ## Execution blocker — 2026-11-02
 
 The owner explicitly authorized WP-00 through WP-22 without waiting for GATE approvals. This runtime cannot resolve github.com or codeload.github.com for a local checkout (two clone attempts failed with DNS resolution errors), so local `git branch`, `git status`, `git log`, Maven and npm commands are unavailable. WP-00 through WP-02 have been implemented using the connected GitHub API and are being verified with PR CI. For each subsequent package, remote branch ancestry is checked against the preceding WP branch and PR CI is used as the available executable verification. Local command outputs are not represented as having run.
+
+
+### WP-06 package evidence — 2026-11-02
+
+- Branch: `wp06-auto-cancel`, based on merged main commit `fe02eac1cf59fb630007e8cd8dd45f9cb451af53`; PR #12 is open as draft and unmerged.
+- Changes: unpaid-order expiry TTL defaults to 30 minutes; startup and five-minute scheduled sweeps; order-level `REQUIRES_NEW` transactions; inventory and coupon usage restoration; SYSTEM history event; order-row locks coordinate expiry with payment, customer cancellation and admin transitions; injectable UTC Clock.
+- New unit tests cover overdue expiry and restoration, not-yet-expired orders and successful-payment exclusion.
+- CI run `41436416649` was in progress when this ledger revision was recorded. The run executes Maven `verify` with MySQL 8.4 and frontend Vitest/build; no local command output is claimed.
+- Security: no new endpoint or permission change; simulated payment behavior remains unchanged.
+- Coverage gap: no explicit concurrent payment/expiry integration stress test or missing-product restoration test. Order row locks and per-order transaction rollback are implemented, but those cases still need direct regression coverage.
+- Rollback: revert WP-06 application changes; no DB migration exists. Render sleep can delay scheduled execution; startup sweep catches expired orders after wake.
 
 ## Per-package completion evidence
 
