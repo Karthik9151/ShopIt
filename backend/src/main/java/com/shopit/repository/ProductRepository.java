@@ -40,7 +40,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("active") Boolean active,
             Pageable pageable);
 
-    long countByActiveTrue();
+    long countByActiveTrue();\n\n    long countByCategory_Id(Long categoryId);
 
     java.util.List<Product> findByActiveTrue();
 
