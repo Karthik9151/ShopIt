@@ -12,7 +12,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP id | Review findings | Status | Branch | PR link | Checks run | Owner actions pending |
 |---|---|---|---|---|---|---|
 | WP-00 | F1-F17, N1-N6 | PR OPEN | `wp00-ledger` | https://github.com/Karthik9151/ShopIt/pull/6 | PR run 41430477537: frontend tests and build passed; backend Maven job still running at last check. Main baseline run 41421412026: backend 7/7; frontend 1/1; Docker build passed. Local commands unavailable. | Confirm backup branch location; provide local checkout or authorize remote-only Git workflow |
-| WP-01 | F1 | PR OPEN | `wp01-admin-bootstrap` | https://github.com/Karthik9151/ShopIt/pull/7 | CI pending; local backend/frontend commands unavailable. New AdminBootstrap unit tests and reserved-email integration test added. | Optional one-deploy APP_ADMIN_TAKE_OVER_EXISTING=true if choosing controlled takeover; unset afterward |
+| WP-01 | F1 | PR OPEN | `wp01-admin-bootstrap` | https://github.com/Karthik9151/ShopIt/pull/7 | PR run 41431237299: backend 13/13 passed; frontend 1/1 passed; frontend build and Docker build passed. First two CI attempts failed due test syntax; corrected on third run. | Optional one-deploy APP_ADMIN_TAKE_OVER_EXISTING=true if choosing controlled takeover; unset afterward |
 | WP-02 | F2, F14 | BLOCKED | `wp02-pricing` | — | — | Confirm none; D1/D2 apply |
 | WP-03 | F4 | BLOCKED | `wp03-error-handling` | — | — | Confirm trace-id correlation design is acceptable |
 | WP-04 | F5 | BLOCKED | `wp04-session-expiry` | — | — | — |
@@ -124,7 +124,7 @@ Additional operational choices:
 
 ## Execution blocker — 2026-11-02
 
-The owner explicitly authorized implementation of WP-00 through WP-22 without waiting for GATE approvals. WP-00 was created via the connected GitHub repository API. WP-01 through WP-22 are BLOCKED before implementation because the active runtime cannot resolve github.com or codeload.github.com for a local checkout (two clone attempts failed with DNS resolution errors), and therefore the mandatory local commands `git branch --show-current`, `git status --short`, `git log -1 --oneline`, `cd backend && mvn -B verify`, and `cd frontend && npm test -- --run && npm run build` cannot be executed against the real repository. The GitHub connector can read/write remote repository content but does not provide an executable checkout. No implementation branch was created for the blocked WPs, and no test result is claimed for them. Resume when a local checkout or repository execution environment is available; then re-check branch state before any edits.
+The owner explicitly authorized WP-00 through WP-22 without waiting for GATE approvals. This runtime cannot resolve github.com or codeload.github.com for a local checkout (two clone attempts failed with DNS resolution errors), so local `git branch`, `git status`, `git log`, Maven and npm commands are unavailable. WP-00 through WP-02 have been implemented using the connected GitHub API and are being verified with PR CI. For each subsequent package, remote branch ancestry is checked against the preceding WP branch and PR CI is used as the available executable verification. Local command outputs are not represented as having run.
 
 ## Per-package completion evidence
 
