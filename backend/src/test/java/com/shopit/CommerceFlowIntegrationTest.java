@@ -242,4 +242,65 @@ class CommerceFlowIntegrationTest {
             .andExpect(jsonPath("$.user.role").value("ADMIN"));
     }
 
+
+    @Test
+    void inactiveProductsRemainRemovableButCannotBeCheckedOutOrMovedFromWishlist() throws Exception {
+        String admin = adminToken();
+        String productName = "Availability test " + UUID.randomUUID();
+        String productBody = mapper.createObjectNode()
+            .put("name", productName)
+            .put("description", "Product availability regression")
+            .put("price", 125.00)
+            .put("stock", 2)
+            .put("active", true)
+            .toString();
+        MvcResult created = mvc.perform(post("/api/admin/products")
+                .header("Authorization", "Bearer " + admin)
+                .contentType(MediaType.APPLICATION_JSON).content(productBody))
+            .andExpect(status().isCreated()).andReturn();
+        long productId = mapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+
+        Customer customer = register();
+        mvc.perform(post("/api/cart/items")
+                .header("Authorization", "Bearer " + customer.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.createObjectNode().put("productId", productId).put("quantity", 1).toString()))
+            .andExpect(status().isOk());
+        mvc.perform(post("/api/wishlist/items/" + productId)
+                .header("Authorization", "Bearer " + customer.token()))
+            .andExpect(status().isOk());
+
+        mvc.perform(delete("/api/admin/products/" + productId)
+                .header("Authorization", "Bearer " + admin))
+            .andExpect(status().isNoContent());
+
+        mvc.perform(get("/api/cart")
+                .header("Authorization", "Bearer " + customer.token()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].available").value(false))
+            .andExpect(jsonPath("$.items[0].unavailableReason").value("This product is no longer available"));
+
+        mvc.perform(get("/api/wishlist")
+                .header("Authorization", "Bearer " + customer.token()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].available").value(false))
+            .andExpect(jsonPath("$[0].unavailableReason").value("This product is no longer available"));
+
+        String checkout = mapper.createObjectNode()
+            .put("shippingAddress", "12 Test Street, Hyderabad, Telangana, 500001")
+            .put("requestId", UUID.randomUUID().toString())
+            .toString();
+        MvcResult rejected = mvc.perform(post("/api/orders")
+                .header("Authorization", "Bearer " + customer.token())
+                .contentType(MediaType.APPLICATION_JSON).content(checkout))
+            .andExpect(status().isConflict()).andReturn();
+        assertThat(rejected.getResponse().getContentAsString()).contains(productName);
+
+        mvc.perform(delete("/api/cart/items/" + mapper.readTree(
+                mvc.perform(get("/api/cart").header("Authorization", "Bearer " + customer.token()))
+                    .andReturn().getResponse().getContentAsString()).get("items").get(0).get("id").asLong())
+                .header("Authorization", "Bearer " + customer.token()))
+            .andExpect(status().isOk());
+    }
+
 }
