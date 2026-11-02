@@ -18,7 +18,7 @@ import org.springframework.web.cors.*;
 import java.util.*;
 @Configuration @EnableWebSecurity @EnableMethodSecurity
 public class SecurityConfig{
- @Bean SecurityFilterChain filterChain(HttpSecurity http,JwtAuthFilter jwtFilter,RateLimitFilter rateLimitFilter,AuthenticationProvider provider)throws Exception{
+ @Bean SecurityFilterChain filterChain(HttpSecurity http,JwtAuthFilter jwtFilter,RateLimitFilter rateLimitFilter,ApiSurfaceFilter apiSurfaceFilter,AuthenticationProvider provider)throws Exception{
   return http.csrf(csrf->csrf.disable()).cors(Customizer.withDefaults())
    .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authenticationProvider(provider)
    .authorizeHttpRequests(a->a.requestMatchers("/api/auth/**","/api/products/**","/api/categories/**","/api/coupons").permitAll()
@@ -26,7 +26,8 @@ public class SecurityConfig{
     .requestMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated())
    .exceptionHandling(e->e.authenticationEntryPoint((req,res,ex)->res.sendError(401,"Authentication required")).accessDeniedHandler((req,res,ex)->res.sendError(403,"Access denied")))
    .addFilterBefore(jwtFilter,UsernamePasswordAuthenticationFilter.class)
-   .addFilterAfter(rateLimitFilter,JwtAuthFilter.class).build();
+   .addFilterAfter(rateLimitFilter,JwtAuthFilter.class)
+   .addFilterAfter(apiSurfaceFilter,RateLimitFilter.class).build();
  }
 
  @Bean RateLimitFilter rateLimitFilter(
@@ -37,6 +38,15 @@ public class SecurityConfig{
  }
  @Bean FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {
   FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(filter);
+  registration.setEnabled(false);
+  return registration;
+ }
+ @Bean ApiSurfaceFilter apiSurfaceFilter(
+  @Value("${app.api-docs.enabled:false}") boolean apiDocsEnabled) {
+  return new ApiSurfaceFilter(apiDocsEnabled);
+ }
+ @Bean FilterRegistrationBean<ApiSurfaceFilter> apiSurfaceFilterRegistration(ApiSurfaceFilter filter) {
+  FilterRegistrationBean<ApiSurfaceFilter> registration = new FilterRegistrationBean<>(filter);
   registration.setEnabled(false);
   return registration;
  }

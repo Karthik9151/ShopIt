@@ -61,3 +61,8 @@ Frontend: `cd frontend && npm install && npm test -- --run && npm run build`
 Backend: `cd backend && mvn -B verify`
 
 See `docs/` for architecture, requirements, database design, endpoints, security notes, and manual integration checks.
+
+
+## API documentation
+
+OpenAPI and Swagger UI are disabled by default in deployed environments. Enable `APP_API_DOCS_ENABLED=true` only in a trusted local or test profile when interactive API documentation is needed. The frontend Render Blueprint uses a report-only CSP during observation; review browser violations before any enforcement.
