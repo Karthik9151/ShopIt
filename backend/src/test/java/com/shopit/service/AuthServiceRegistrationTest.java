@@ -65,7 +65,7 @@ class AuthServiceRegistrationTest {
                         " Customer ", " Customer@Example.test ", "Safe-Unique-Password-2026!", null)),
                 HttpStatus.CONFLICT);
 
-        verify(users).existsByEmailIgnoreCase("customer@example.test");
+        verify(users, times(2)).existsByEmailIgnoreCase("customer@example.test");
         verify(users).save(any(AppUser.class));
     }
 
