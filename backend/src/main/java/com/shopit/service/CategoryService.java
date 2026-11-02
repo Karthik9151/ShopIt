@@ -9,6 +9,8 @@ import com.shopit.repository.ProductRepository;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,14 +33,23 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public List<AdminCategoryView> adminList() {
         return categories.findAllByOrderByNameAsc().stream()
-                .map(category -> new AdminCategoryView(
-                        category.getId(),
-                        category.getName(),
-                        category.getSlug(),
-                        category.getDescription(),
-                        category.isActive(),
-                        products.countByCategory_Id(category.getId())))
+                .map(this::adminView)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AdminCategoryView> adminPage(Pageable pageable) {
+        return categories.findAllByOrderByNameAsc(pageable).map(this::adminView);
+    }
+
+    private AdminCategoryView adminView(Category category) {
+        return new AdminCategoryView(
+                category.getId(),
+                category.getName(),
+                category.getSlug(),
+                category.getDescription(),
+                category.isActive(),
+                products.countByCategory_Id(category.getId()));
     }
 
     @Transactional
