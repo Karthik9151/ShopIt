@@ -1,24 +1,75 @@
 import React,{createContext,useContext,useEffect,useMemo,useState} from 'react';
 import {BrowserRouter,Routes,Route,Link,NavLink,useNavigate,useParams,useSearchParams,Navigate,useLocation} from 'react-router-dom';
 import {ArrowRight,ArrowUpRight,Heart,ShoppingBag,UserRound,Search,Menu,X,LogOut,Minus,Plus,Trash2,Sparkles,PackageCheck,Leaf,ShieldCheck} from 'lucide-react';
-import api from './services/api';
+import api,{resetSessionExpiry} from './services/api';
 import {formatCurrency,formatDate} from './utils';
 import {getFreeShippingMessage,getFreeShippingThreshold,getShippingLabel} from './pricing';
 
 const FREE_SHIPPING_THRESHOLD=getFreeShippingThreshold();
 const AuthContext=createContext(null);
+const SESSION_EXPIRED_EVENT='shopit:session-expired';
+
 function AuthProvider({children}){
  const [user,setUser]=useState(()=>{try{return JSON.parse(sessionStorage.getItem('shopit_user')||'null')}catch{return null}});
  const [token,setToken]=useState(()=>sessionStorage.getItem('shopit_access_token'));
- const save=d=>{sessionStorage.setItem('shopit_access_token',d.token);sessionStorage.setItem('shopit_user',JSON.stringify(d.user));setToken(d.token);setUser(d.user);};
+ const [sessionExpired,setSessionExpired]=useState(false);
+ const [expiredFrom,setExpiredFrom]=useState('/');
+
+ useEffect(()=>{
+  const handleSessionExpired=()=>{
+   const currentPath=window.location.pathname;
+   sessionStorage.removeItem('shopit_access_token');
+   sessionStorage.removeItem('shopit_user');
+   setToken(null);
+   setUser(null);
+   setExpiredFrom(currentPath);
+   setSessionExpired(true);
+  };
+  window.addEventListener(SESSION_EXPIRED_EVENT,handleSessionExpired);
+  return ()=>window.removeEventListener(SESSION_EXPIRED_EVENT,handleSessionExpired);
+ },[]);
+
+ const save=d=>{
+  sessionStorage.setItem('shopit_access_token',d.token);
+  sessionStorage.setItem('shopit_user',JSON.stringify(d.user));
+  setToken(d.token);
+  setUser(d.user);
+  setSessionExpired(false);
+  setExpiredFrom('/');
+  resetSessionExpiry();
+ };
  const login=async(email,password)=>{const r=await api.post('/auth/login',{email,password});save(r.data);return r.data.user;};
  const register=async form=>{const r=await api.post('/auth/register',form);save(r.data);return r.data.user;};
- const logout=()=>{sessionStorage.removeItem('shopit_access_token');sessionStorage.removeItem('shopit_user');setToken(null);setUser(null);};
+ const logout=()=>{
+  sessionStorage.removeItem('shopit_access_token');
+  sessionStorage.removeItem('shopit_user');
+  setToken(null);
+  setUser(null);
+  setSessionExpired(false);
+  setExpiredFrom('/');
+  resetSessionExpiry();
+ };
+ const clearSessionExpired=()=>setSessionExpired(false);
  const updateUser=next=>{sessionStorage.setItem('shopit_user',JSON.stringify(next));setUser(next);};
- const value=useMemo(()=>({user,token,login,register,logout,updateUser,isAdmin:user?.role==='ADMIN'}),[user,token]);
+ const value=useMemo(()=>({
+  user,token,login,register,logout,updateUser,isAdmin:user?.role==='ADMIN',
+  sessionExpired,expiredFrom,clearSessionExpired
+ }),[user,token,sessionExpired,expiredFrom]);
  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 const useAuth=()=>useContext(AuthContext);
+
+function SessionExpiryRedirect(){
+ const {sessionExpired,expiredFrom,clearSessionExpired}=useAuth();
+ const navigate=useNavigate();
+ useEffect(()=>{
+  if(!sessionExpired)return;
+  navigate('/login',{replace:true,state:{from:expiredFrom,reason:'expired'}});
+  clearSessionExpired();
+ },[sessionExpired,expiredFrom,clearSessionExpired,navigate]);
+ return null;
+}
+
 function Guard({children,admin=false}){const {user}=useAuth(),loc=useLocation();if(!user)return <Navigate to="/login" replace state={{from:loc.pathname}}/>;if(admin&&user.role!=='ADMIN')return <Navigate to="/" replace/>;return children;}
 function Layout(){
  const {user,logout,isAdmin}=useAuth(),[query,setQuery]=useState(''),[open,setOpen]=useState(false),navigate=useNavigate();
@@ -67,7 +118,7 @@ function AuthPage({register=false}){
  const {login,register:signUp}=useAuth(),navigate=useNavigate(),location=useLocation();const [form,setForm]=useState({name:'',email:'',password:'',phone:''}),[error,setError]=useState(''),[busy,setBusy]=useState(false);
  const change=e=>setForm({...form,[e.target.name]:e.target.value});
  const submit=async e=>{e.preventDefault();setBusy(true);setError('');try{const u=register?await signUp(form):await login(form.email,form.password);navigate(location.state?.from||(u.role==='ADMIN'?'/admin':'/products'),{replace:true});}catch(e){setError(e.response?.data?.message||'We could not complete the request. Check your details and try again.');}finally{setBusy(false);}};
- return <section className="auth-wrap"><div className="auth-card"><span className="eyebrow">Welcome to ShopIt</span><h1>{register?'Make yourself at home.':'Good to see you again.'}</h1><p>{register?'Create an account and keep your favourites close.':'Sign in to continue where you left off.'}</p><form className="form" onSubmit={submit}>{register&&<label>Your name<input name="name" value={form.name} onChange={change} required maxLength="120"/></label>}<label>Email address<input name="email" type="email" value={form.email} onChange={change} required autoComplete="email"/></label>{register&&<label>Phone (optional)<input name="phone" value={form.phone} onChange={change} maxLength="30"/></label>}<label>Password<input name="password" type="password" value={form.password} onChange={change} required minLength={register?10:1} autoComplete={register?'new-password':'current-password'}/>{register&&<small>Use at least 10 characters.</small>}</label>{error&&<div className="error" role="alert">{error}</div>}<button className="primary full" disabled={busy}>{busy?'Please wait…':register?'Create account':'Sign in'}</button></form><div className="switch">{register?'Already have an account?':'New to ShopIt?'} <Link to={register?'/login':'/register'}>{register?'Sign in':'Create an account'}</Link></div></div></section>;
+ return <section className="auth-wrap"><div className="auth-card"><span className="eyebrow">Welcome to ShopIt</span><h1>{register?'Make yourself at home.':'Good to see you again.'}</h1><p>{register?'Create an account and keep your favourites close.':'Sign in to continue where you left off.'}</p>{!register&&location.state?.reason==='expired'&&<div className="notice" role="status">Your session expired. Please sign in again.</div>}<form className="form" onSubmit={submit}>{register&&<label>Your name<input name="name" value={form.name} onChange={change} required maxLength="120"/></label>}<label>Email address<input name="email" type="email" value={form.email} onChange={change} required autoComplete="email"/></label>{register&&<label>Phone (optional)<input name="phone" value={form.phone} onChange={change} maxLength="30"/></label>}<label>Password<input name="password" type="password" value={form.password} onChange={change} required minLength={register?10:1} autoComplete={register?'new-password':'current-password'}/>{register&&<small>Use at least 10 characters.</small>}</label>{error&&<div className="error" role="alert">{error}</div>}<button className="primary full" disabled={busy}>{busy?'Please wait…':register?'Create account':'Sign in'}</button></form><div className="switch">{register?'Already have an account?':'New to ShopIt?'} <Link to={register?'/login':'/register'}>{register?'Sign in':'Create an account'}</Link></div></div></section>;
 }
 function Empty({title,body,link}){return <div className="empty"><h3>{title}</h3><p>{body}</p><Link className="primary" to={link}>Explore the shop</Link></div>;}
 function Summary({title,children}){return <aside className="summary"><h2>{title}</h2>{children}</aside>;}
@@ -147,10 +198,11 @@ function Profile(){
  <div className="profile-links"><Link to="/orders">Order history →</Link><Link to="/wishlist">Wishlist →</Link><Link to="/cart">Shopping bag →</Link></div></section>;
 }
 function Admin(){
+ const {user}=useAuth();
  const emptyProduct=()=>({id:null,name:'',description:'',price:'',costPrice:'0',stock:0,imageUrl:'',categoryId:''});
  const [data,setData]=useState(null),[orders,setOrders]=useState([]),[products,setProducts]=useState([]),[categories,setCategories]=useState([]),[customers,setCustomers]=useState([]),[error,setError]=useState('');
  const [form,setForm]=useState(emptyProduct),[categoryForm,setCategoryForm]=useState({id:null,name:'',description:''});
- const refresh=async()=>{try{const r=await Promise.all([api.get('/admin/dashboard'),api.get('/admin/orders'),api.get('/admin/products'),api.get('/categories'),api.get('/admin/customers?size=100')]);setData(r[0].data);setOrders(r[1].data);setProducts(r[2].data||[]);setCategories(r[3].data);setCustomers(r[4].data.content||[]);}catch{setError('Administrator access is required.');}};
+ const refresh=async()=>{try{const r=await Promise.all([api.get('/admin/dashboard'),api.get('/admin/orders'),api.get('/admin/products'),api.get('/categories'),api.get('/admin/customers?size=100')]);setData(r[0].data);setOrders(r[1].data);setProducts(r[2].data||[]);setCategories(r[3].data);setCustomers(r[4].data.content||[]);}catch{setError(user?.role==='ADMIN'?'Could not load administrator data.':'Administrator access is required.');}};
  useEffect(()=>{refresh();},[]);
  const saveProduct=async e=>{e.preventDefault();setError('');try{const payload={...form,price:Number(form.price),costPrice:Number(form.costPrice||0),stock:Number(form.stock),categoryId:form.categoryId?Number(form.categoryId):null};if(form.id)await api.put('/admin/products/'+form.id,payload);else await api.post('/admin/products',payload);setForm(emptyProduct());await refresh();}catch(e){setError(e.response?.data?.message||'Could not save product.');}};
  const editProduct=p=>setForm({id:p.id,name:p.name,description:p.description||'',price:String(p.price),costPrice:String(p.costPrice??0),stock:p.stock,imageUrl:p.imageUrl||'',categoryId:p.categoryId?String(p.categoryId):''});
@@ -184,9 +236,10 @@ function AdminCoupons(){
  return <section className="section admin"><Link className="back" to="/admin">← Owner dashboard</Link><span className="eyebrow">Promotions and campaigns</span><h1>Discount coupons</h1><p className="muted">Only administrator accounts can create, edit, activate or pause coupon codes. Customers can see published offers and apply them at checkout.</p>{error&&<div className="error" role="alert">{error}</div>}{message&&<div className="notice" role="status">{message}</div>}<div className="coupon-admin-layout"><form className="summary form" onSubmit={submit}><h2>{form.id?'Edit coupon':'Create a coupon'}</h2><label>Coupon code<input required maxLength="40" pattern="[A-Za-z0-9_-]{3,40}" value={form.code} onChange={e=>setForm({...form,code:e.target.value.toUpperCase()})} placeholder="WELCOME10"/></label><label>Customer-facing description<input maxLength="240" value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="10% off your first order"/></label><label>Discount type<select value={form.discountType} onChange={e=>setForm({...form,discountType:e.target.value})}><option value="PERCENT">Percentage discount</option><option value="FIXED">Fixed amount discount</option></select></label><label>Discount value<input required type="number" min=".01" max={form.discountType==='PERCENT'?100:undefined} step=".01" value={form.discountValue} onChange={e=>setForm({...form,discountValue:e.target.value})}/></label><label>Minimum cart value (INR)<input type="number" min="0" step=".01" value={form.minimumOrderAmount} onChange={e=>setForm({...form,minimumOrderAmount:e.target.value})}/></label><label>Maximum discount cap (INR, optional)<input type="number" min=".01" step=".01" value={form.maximumDiscount} onChange={e=>setForm({...form,maximumDiscount:e.target.value})}/></label><label>Starts at<input required type="datetime-local" value={form.startsAt} onChange={e=>setForm({...form,startsAt:e.target.value})}/></label><label>Expires at<input required type="datetime-local" value={form.endsAt} onChange={e=>setForm({...form,endsAt:e.target.value})}/></label><label>Maximum total redemptions (blank = unlimited)<input type="number" min="1" step="1" value={form.usageLimit} onChange={e=>setForm({...form,usageLimit:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Saving…':form.id?'Save coupon':'Publish coupon'}</button>{form.id&&<button type="button" className="secondary" onClick={()=>setForm(blank())}>Cancel edit</button>}</form><div className="summary"><h2>Coupon register</h2>{coupons.length?coupons.map(o=><div className="coupon-row" key={o.id}><div><b>{o.code}</b><small>{o.discountType==='PERCENT'?o.discountValue+'% off':formatCurrency(o.discountValue)+' off'} · {o.usageCount}{o.usageLimit?' / '+o.usageLimit:' uses'}</small><small>{formatDate(o.startsAt)} – {formatDate(o.endsAt)}</small><span className={'status '+(!o.active||!o.available?'pending_payment':'')}>{!o.active?'Paused':o.available?'Available':'Scheduled / expired / used up'}</span></div><div className="row-actions"><button className="text-link" onClick={()=>edit(o)}>Edit</button><button className="text-link" onClick={()=>toggle(o)}>{o.active?'Pause':'Activate'}</button></div></div>):<p className="muted">No coupons have been created yet.</p>}</div></div></section>;
 }
 function AdminInventory(){
+ const {user}=useAuth();
  const [data,setData]=useState(null),[products,setProducts]=useState([]),[error,setError]=useState('');
- useEffect(()=>{Promise.all([api.get('/admin/dashboard'),api.get('/admin/products')]).then(([d,p])=>{setData(d.data);setProducts(p.data||[]);}).catch(()=>setError('Administrator access is required to view inventory cost and valuation.'));},[]);
+ useEffect(()=>{Promise.all([api.get('/admin/dashboard'),api.get('/admin/products')]).then(([d,p])=>{setData(d.data);setProducts(p.data||[]);}).catch(()=>setError(user?.role==='ADMIN'?'Could not load inventory data.':'Administrator access is required to view inventory cost and valuation.'));},[user?.role]);
  return <section className="section admin"><Link className="back" to="/admin">← Owner dashboard</Link><span className="eyebrow">Stock valuation</span><h1>Inventory & budget</h1><p className="muted">Unit cost is private owner data. It is excluded from public product responses and storefront pages.</p>{error&&<div className="error">{error}</div>}{data&&<div className="stats budget-stats">{[['Inventory cost budget',formatCurrency(data.inventoryCostBudget)],['Potential retail value',formatCurrency(data.potentialRetailValue)],['Estimated gross margin potential',formatCurrency(data.estimatedGrossMargin)]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}</div>}<div className="summary admin-orders"><h2>Inventory breakdown</h2>{products.map(p=><div className="inventory-row" key={p.id}><div><b>{p.name}</b><small>{p.stock} units · {p.active?'Active':'Inactive'}</small></div><div><small>Unit cost</small><b>{formatCurrency(p.costPrice??0)}</b></div><div><small>Unit selling price</small><b>{formatCurrency(p.price)}</b></div><div><small>Cost value in stock</small><b>{formatCurrency(Number(p.costPrice??0)*p.stock)}</b></div><div><small>Potential margin</small><b>{formatCurrency((Number(p.price)-Number(p.costPrice??0))*p.stock)}</b></div></div>)}{!products.length&&!error&&<p className="muted">No inventory records found.</p>}</div><p className="muted">Potential margin assumes all current stock sells at its present list price. It excludes coupons, tax, shipping subsidies, payment fees, returns, and operating expenses; it is not accounting profit.</p></section>;
 }
 function NotFound(){return <div className="empty not-found"><span className="eyebrow">404 · Off the map</span><h1>This page wandered off.</h1><p>Let's get you back to the good stuff.</p><Link to="/" className="primary">Go home</Link></div>;}
-export default function App(){return <AuthProvider><BrowserRouter><Layout/></BrowserRouter></AuthProvider>;}
+export default function App(){return <BrowserRouter><AuthProvider><SessionExpiryRedirect/><Layout/></AuthProvider></BrowserRouter>;}
