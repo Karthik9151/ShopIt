@@ -1,9 +1,34 @@
 {
-  "name":"shopit-frontend",
-  "private":true,
-  "version":"1.0.0",
-  "type":"module",
-  "scripts":{"dev":"vite --host 0.0.0.0","build":"vite build","preview":"vite preview --host 0.0.0.0","test":"vitest"},
-  "dependencies":{"axios":"1.13.2","lucide-react":"0.563.0","react":"19.2.0","react-dom":"19.2.0","react-router-dom":"7.9.5"},
-  "devDependencies":{"@testing-library/jest-dom":"6.9.1","@testing-library/react":"16.3.0","@vitejs/plugin-react":"6.1.2","jsdom":"27.1.0","vite":"8.3.5","vitest":"4.1.0"}
+  "name": "shopit-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest",
+    "lint": "eslint src/admin src/components/ui",
+    "format": "prettier --write \"src/**/*.{js,jsx}\""
+  },
+  "dependencies": {
+    "axios": "1.13.2",
+    "lucide-react": "0.563.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-router-dom": "7.9.5"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "jsdom": "27.1.0",
+    "vite": "8.3.5",
+    "vitest": "4.1.0",
+    "eslint": "10.14.0",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "prettier": "3.9.10"
+  }
 }
