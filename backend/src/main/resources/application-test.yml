@@ -18,3 +18,7 @@ app:
   admin:
     email:
     password:
+  api-docs:
+    enabled: true
+  rate-limit:
+    enabled: false

@@ -16,9 +16,11 @@ app:
   cors:
     origins: http://localhost:5173
   admin:
-    email: ${APP_ADMIN_EMAIL:admin@shopit.test}
+    email: ${APP_ADMIN_EMAIL:}
     password: ${APP_ADMIN_PASSWORD:}
 
+  api-docs:
+    enabled: ${APP_API_DOCS_ENABLED:true}
   rate-limit:
     enabled: ${APP_RATE_LIMIT_ENABLED:false}
     trust-forwarded-for: false
