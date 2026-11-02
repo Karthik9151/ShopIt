@@ -19,8 +19,19 @@ public interface OrderRepository extends JpaRepository<CustomerOrder,Long> {
     @Query("""
         select o from CustomerOrder o
         where (:status is null or o.status = :status)
+          and (:orderId is null or o.id = :orderId)
+          and (:customerEmail is null
+               or lower(o.user.email) like lower(concat('%', :customerEmail, '%')))
+          and (:createdFrom is null or o.createdAt >= :createdFrom)
+          and (:createdBefore is null or o.createdAt < :createdBefore)
         """)
-    Page<CustomerOrder> searchForAdmin(@Param("status") String status, Pageable pageable);
+    Page<CustomerOrder> searchForAdmin(
+            @Param("status") String status,
+            @Param("orderId") Long orderId,
+            @Param("customerEmail") String customerEmail,
+            @Param("createdFrom") Instant createdFrom,
+            @Param("createdBefore") Instant createdBefore,
+            Pageable pageable);
 
     long countByStatus(String status);
 
