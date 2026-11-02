@@ -29,7 +29,7 @@ public class OrderService {
                         ProductRepository products, CouponService coupons, PricingService pricing,
                         PaymentRepository payments, OrderStatusHistoryService statusHistory,
                         OrderStatusTransitions transitions,
-                        @Value(\"\${app.payments.simulated-enabled:false}\") boolean simulatedPaymentsEnabled) {
+                        @Value("${app.payments.simulated-enabled:false}") boolean simulatedPaymentsEnabled) {
         this.orders = orders;
         this.cart = cart;
         this.users = users;
