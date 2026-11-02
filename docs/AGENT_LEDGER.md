@@ -22,8 +22,9 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-07 | F9 | PR OPEN — DRAFT | `wp07-cart-availability` | https://github.com/Karthik9151/ShopIt/pull/13 | CI run 41437052277: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | None; remove unavailable product rows before checkout |
 | WP-08 | F3 | BLOCKED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
 | WP-08 | F3 | PR OPEN — DRAFT | `wp08-payment-switch` | https://github.com/Karthik9151/ShopIt/pull/14 | CI run 41437483366: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging only if demo payments are required; never in production |
-| WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First run 41438195716 failed compile; corrected. Retry 41438476868 and latest ledger run 41438543941 passed Maven/MySQL, frontend tests/build and backend container build. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
-| WP-10 | F12 | PR OPEN — DRAFT | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | Corrected CI run 41438484902 and latest ledger run 41438550884 passed Maven/MySQL, frontend tests/build and backend Docker build. | Owner to inspect live report-only CSP violations; no HSTS or enforced CSP |
+| WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
+| WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First CI run 41438195716 failed at compile (static decision factory call); corrected in b94284c and validation run 41438476868 queued. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
+| WP-10 | F12 | PR OPEN — CHECKS PASS | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | CI run 41442109697: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. Local commands unavailable in this runtime. | Owner must inspect deployed report-only CSP violations before considering enforcement; no Render settings changed |
 | WP-11 | F11 | PR OPEN — DRAFT | `wp11-registration-hardening` | https://github.com/Karthik9151/ShopIt/pull/17 | First CI 41438913897 failed only Mockito verify count; corrected in ff7a8de. Retry 41439144995 passed Maven/MySQL verify, backend Docker build, frontend tests and production build. | Accept documented email-enumeration trade-off until email verification exists |
 | WP-12 | F13 | PR OPEN — DRAFT | `wp12-public-stock` | https://github.com/Karthik9151/ShopIt/pull/18 | CI 41439282251: Maven/MySQL verification and frontend tests/build passed; backend container build was still in progress at last check. | Low-stock threshold defined as 1–5 units |
 | WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | https://github.com/Karthik9151/ShopIt/pull/19 | CI run 41439602610: Maven/MySQL verification and frontend tests/build passed. JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
@@ -45,7 +46,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-18 | TiDB verification | PR OPEN — CHECKS PASS; STAGING BLOCKED | `wp18-tidb-verification` | https://github.com/Karthik9151/ShopIt/pull/24 | CI 41444371515 passed Maven/MySQL verify + container build and frontend tests/build. No TiDB query/script run; script absent at baseline. | Owner must verify TLS, Flyway history, schema, transactions and locking on isolated TiDB staging cluster |
 | WP-17 | CI security, N6 | PR OPEN — BLOCKED (OWNER SETTINGS + LOCKFILE) | `wp17-ci-security` | https://github.com/Karthik9151/ShopIt/pull/23 | Dependabot/CodeQL/dependency review files added; dependency-review run 41443918784 failed because Dependency Graph is disabled. npm lockfile generation failed twice (registry timeout; offline ENOTCACHED). | Owner enable Dependency Graph/Dependabot alerts, secret scanning/push protection and branch protection; generate real package-lock.json in network-enabled environment then use npm ci |
 | WP-18 | TiDB verification | BLOCKED | `wp18-tidb-ci` | — | — | Run scripts/verify-tidb.sh on staging and verify flyway_schema_history; no staging DB access performed |
-| WP-19 | Readability | BLOCKED | `wp19-readability` | — | — | — |
+| WP-19 | Readability | PR OPEN — CHECKS PASS | `wp19-readability` | https://github.com/Karthik9151/ShopIt/pull/25 | CI 41444506589 passed Maven/MySQL verify + backend container build and frontend tests/production build. | Stacked on unmerged WP-14; merge WP-14 first |
 | WP-20 | Documentation | BLOCKED | `wp20-docs-accuracy` | — | — | Confirm logout route documentation choice; default is document current public behavior |
 | WP-21 | Accessibility and SEO | BLOCKED | `wp21-accessibility` | — | — | — |
 | WP-22 | Demo profile | BLOCKED | `wp22-demo-profile` | — | — | Keep demo profile local-only; no Render configuration changes |
@@ -320,3 +321,16 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 - CI run 41442965512 passed: Maven verification with MySQL 8 integration, backend container build, frontend unit tests, and production build.
 - Local Maven/frontend commands were not run because this runtime has no mounted repository checkout and GitHub DNS resolution failed. No local command success is claimed.
 - No Flyway migration was added or edited. API pagination is additive; no authorization changes. Rollback by reverting WP-14 code/test changes. No live Render/TiDB validation was performed.
+
+
+### WP-19 package evidence — 2026-11-02
+
+- PR #25 improves readability with .editorconfig conventions, focused PricingService helpers, shared frontend locale formatters, and null money/input regression coverage.
+- Pricing behavior preserves discounted subtotal shipping eligibility, 18% tax calculation, HALF_UP rounding and current decision values. Existing pricing tests remain and a null-input case was added.
+- PR branch is stacked on unmerged WP-14 (stated in the PR); merge WP-14 first. No API contract, persistence schema, or Flyway migration change.
+- CI results are pending. Local Maven/npm commands were not run because there is no local repository checkout and package registry access timed out.
+
+
+### WP-19 CI result — 2026-11-02
+
+- CI run 41444506589 on the latest WP-19 implementation commit passed Maven/MySQL verification and backend container build, together with frontend tests and production build. Local commands were not run in this runtime.
