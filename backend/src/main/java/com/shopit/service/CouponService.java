@@ -89,6 +89,14 @@ public class CouponService {
         return new CouponApplication(coupon.getId(), coupon.getCode(), discount);
     }
 
+    @Transactional
+    public void releaseUsage(Long couponId) {
+        if (couponId == null) return;
+        coupons.findByIdForUpdate(couponId).ifPresent(coupon -> {
+            if (coupon.getUsageCount() > 0) coupon.setUsageCount(coupon.getUsageCount() - 1);
+        });
+    }
+
     private BigDecimal validateAndCalculate(Coupon coupon, BigDecimal subtotal, Instant now) {
         if (!coupon.isActive() || !isWithinWindow(coupon, now) || !hasUsesRemaining(coupon)) {
             throw invalidCoupon();
@@ -101,10 +109,10 @@ public class CouponService {
         BigDecimal discount;
         if ("PERCENT".equals(coupon.getDiscountType())) {
             discount = subtotal.multiply(coupon.getDiscountValue()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-            if (coupon.getMaximumDiscount() != null) discount = discount.min(coupon.getMaximumDiscount());
         } else {
             discount = coupon.getDiscountValue().min(subtotal);
         }
+        if (coupon.getMaximumDiscount() != null) discount = discount.min(coupon.getMaximumDiscount());
         return discount.max(BigDecimal.ZERO).min(subtotal).setScale(2, RoundingMode.HALF_UP);
     }
 
