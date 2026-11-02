@@ -84,6 +84,17 @@ public class ProductService {
     }
 
     @Transactional
+    public AdminProductView updateStock(Long id, int stock) {
+        if (stock < 0 || stock > 1_000_000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stock must be between 0 and 1,000,000");
+        }
+        Product product = products.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        product.setStock(stock);
+        return adminView(products.save(product));
+    }
+
+    @Transactional
     public void deactivate(Long id) {
         Product product = products.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
