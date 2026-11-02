@@ -100,7 +100,7 @@ VITE_API_BASE_URL=https://<render-backend-domain>/api
 
 7. Create the Static Site and copy its exact `https://<name>.onrender.com` origin.
 
-The `render.yaml` Blueprint contains the React Router fallback rewrite to `/index.html). If you create the Static Site manually rather than applying the Blueprint, add a Render Static Site rewrite rule with source `/*` and destination `/index.html`.
+The `render.yaml` Blueprint contains the React Router fallback rewrite to `/index.html`. If you create the Static Site manually rather than applying the Blueprint, add a Render Static Site rewrite rule with source `/*` and destination `/index.html`.
 
 ## 7. Finish CORS and redeploy
 
