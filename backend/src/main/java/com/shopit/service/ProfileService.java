@@ -44,7 +44,7 @@ public class ProfileService {
     }
 
     private UserView view(AppUser user) {
-        return new UserView(user.getId(), user.getName(), user.getEmail(), user.getRole());
+        return new UserView(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getPhone());
     }
 
     private AppUser user(String email) {

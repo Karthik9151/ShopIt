@@ -76,6 +76,6 @@ public class AdminController {
                                     @RequestParam(defaultValue = "20") int size) {
         if (page < 0 || size < 1 || size > 100) throw new IllegalArgumentException("Invalid pagination");
         return users.findByRole("CUSTOMER", PageRequest.of(page, size, Sort.by("createdAt").descending()))
-            .map(user -> new UserView(user.getId(), user.getName(), user.getEmail(), user.getRole()));
+            .map(user -> new UserView(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getPhone()));
     }
 }
