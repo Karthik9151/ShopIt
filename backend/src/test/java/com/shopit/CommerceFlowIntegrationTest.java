@@ -166,7 +166,7 @@ class CommerceFlowIntegrationTest {
     void configuredAdministratorEmailIsReservedAndAdminLoginReturnsAdminRole() throws Exception {
         String registration = mapper.createObjectNode()
             .put("name", "Reserved Email")
-            .put("email", " ADMIN@SHOPIT.TEST ")
+            .put("email", ADMIN@SHOPIT.TEST)
             .put("password", "Customer-Password-2026!")
             .toString();
 
