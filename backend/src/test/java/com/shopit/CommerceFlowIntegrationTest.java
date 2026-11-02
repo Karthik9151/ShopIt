@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
+import java.util.Locale;
 import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
@@ -223,7 +224,7 @@ class CommerceFlowIntegrationTest {
     void configuredAdministratorEmailIsReservedAndAdminLoginReturnsAdminRole() throws Exception {
         String registration = mapper.createObjectNode()
             .put("name", "Reserved Email")
-            .put("email", "ADMIN@SHOPIT.TEST")
+            .put("email", TestAdminCredentials.email().toUpperCase(Locale.ROOT))
             .put("password", "Customer-Password-2026!")
             .toString();
 
@@ -233,7 +234,7 @@ class CommerceFlowIntegrationTest {
             .andExpect(jsonPath("$.message").value("An account with this email already exists"));
 
         String login = mapper.createObjectNode()
-            .put("email", "ADMIN@SHOPIT.TEST")
+            .put("email", TestAdminCredentials.email().toUpperCase(Locale.ROOT))
             .put("password", TestAdminCredentials.password())
             .toString();
 
