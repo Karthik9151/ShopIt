@@ -81,6 +81,26 @@ class AdminManagementDetailIntegrationTest {
                         .header("Authorization", "Bearer " + customerToken))
                 .andExpect(status().isForbidden());
 
+        mvc.perform(patch("/api/admin/products/" + productId + "/stock")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"stock\":4}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stock").value(4));
+
+        mvc.perform(get("/api/admin/inventory")
+                        .param("threshold", "4")
+                        .param("sort", "stock")
+                        .param("direction", "asc")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
+
+        mvc.perform(get("/api/admin/inventory")
+                        .param("sort", "passwordHash")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isBadRequest());
+
         mvc.perform(patch("/api/admin/products/" + productId + "/status")
                         .header("Authorization", "Bearer " + customerToken)
                         .contentType(MediaType.APPLICATION_JSON)
