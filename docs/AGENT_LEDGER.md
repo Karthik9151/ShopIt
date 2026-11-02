@@ -32,7 +32,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-18 | TiDB verification | PR OPEN — BLOCKED (OWNER STAGING CHECK) | `wp18-tidb-verification` | https://github.com/Karthik9151/ShopIt/pull/24 | Docs only; baseline scripts/verify-tidb.sh not found; no TiDB access or script run. | Owner verify TLS, Flyway history, schema, transactions and locking on isolated TiDB staging cluster |
 | WP-19 | Readability | PR OPEN — CHECKS PENDING | `wp19-readability` | https://github.com/Karthik9151/ShopIt/pull/25 | CI pending Maven/MySQL verification and frontend tests/build. | Stacked on unmerged WP-14; merge WP-14 first |
 | WP-20 | Documentation | PR OPEN — CHECKS PENDING | `wp20-docs-accuracy` | https://github.com/Karthik9151/ShopIt/pull/26 | CI pending Maven/MySQL verification and frontend tests/build; docs only. | Stacked on WP-19/WP-14; merge WP-14 then WP-19 before WP-20 |
-| WP-21 | Accessibility and SEO | PR OPEN — CHECKS PENDING | `wp21-accessibility` | pending PR | CI pending: Maven/MySQL verification and frontend tests/build. | Stacked on unmerged WP-14; merge WP-14 first |
+| WP-21 | Accessibility and SEO | PR OPEN — CHECKS PASS | `wp21-accessibility` | https://github.com/Karthik9151/ShopIt/pull/27 | CI 41445293967 passed Maven/MySQL verify + backend container build and frontend tests/production build. | Stacked on unmerged WP-14; merge WP-14 first |
 | WP-22 | Demo profile | BLOCKED | `wp22-demo-profile` | — | — | Keep demo profile local-only; no Render configuration changes |
 | WP-23 | Optional features (23a-23h) | BLOCKED | — | — | — | Owner must select one feature and approve its separate plan |
 
@@ -265,3 +265,8 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 - Added Open Graph/Twitter title and description metadata plus application name; no canonical production URL was invented.
 - Added Vitest coverage for skip navigation, landmark naming, main target and mobile menu expanded state.
 - Branch is based on unmerged WP-14 and depends on it; no API/schema/Flyway changes or Render/GitHub settings changes. CI pending.
+
+
+### WP-21 CI result — 2026-11-02
+
+- CI run 41445293967 passed frontend accessibility Vitest tests and production build, plus backend Maven/MySQL verification and backend container build.
