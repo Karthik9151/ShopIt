@@ -41,6 +41,8 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-14 | F16 | BLOCKED | `wp14-admin-pagination` | — | — | Review paginated admin API contract |
 | WP-15 | Operations | PR OPEN — CHECKS PASS | `wp15-operations` | https://github.com/Karthik9151/ShopIt/pull/21 | CI run 41442859399: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | Owner must configure backups/PITR and complete isolated restore rehearsal; no live DB/Render/TiDB action performed |
 | WP-16 | Test coverage, N5 | BLOCKED | `wp16-e2e-testing` | — | — | — |
+| WP-17 | CI security, N6 | BLOCKED | `wp17-ci-security` | — | — | Enable secret scanning/push protection, Dependabot alerts and main branch protection in GitHub settings |
+| WP-18 | TiDB verification | PR OPEN — CHECKS PASS; STAGING BLOCKED | `wp18-tidb-verification` | https://github.com/Karthik9151/ShopIt/pull/24 | CI 41444371515 passed Maven/MySQL verify + container build and frontend tests/build. No TiDB query/script run; script absent at baseline. | Owner must verify TLS, Flyway history, schema, transactions and locking on isolated TiDB staging cluster |
 | WP-17 | CI security, N6 | PR OPEN — BLOCKED (OWNER SETTINGS + LOCKFILE) | `wp17-ci-security` | https://github.com/Karthik9151/ShopIt/pull/23 | Dependabot/CodeQL/dependency review files added; dependency-review run 41443918784 failed because Dependency Graph is disabled. npm lockfile generation failed twice (registry timeout; offline ENOTCACHED). | Owner enable Dependency Graph/Dependabot alerts, secret scanning/push protection and branch protection; generate real package-lock.json in network-enabled environment then use npm ci |
 | WP-18 | TiDB verification | BLOCKED | `wp18-tidb-ci` | — | — | Run scripts/verify-tidb.sh on staging and verify flyway_schema_history; no staging DB access performed |
 | WP-19 | Readability | BLOCKED | `wp19-readability` | — | — | — |
@@ -261,6 +263,20 @@ Each package must record:
 Never mark a package MERGED until the owner confirms GitHub merged it. Never mark checks passed without command or CI evidence.
 
 
+### WP-18 package evidence — 2026-11-02
+
+- Added docs/TIDB_VERIFICATION.md and linked it from docs/DEPLOYMENT.md. It specifies owner-side TLS/connectivity, Flyway history/checksum, schema validation, transaction/locking/concurrency and cleanup checks for an isolated staging database.
+- The repository baseline path scripts/verify-tidb.sh returns NOT_FOUND. Per instruction, the script was not run and no TiDB access was attempted.
+- This package remains BLOCKED pending owner-run staging verification. MySQL 8.4 CI passing does not prove TiDB behavior.
+- No Render/TiDB settings, database rows, schema, or Flyway migrations were changed. V1–V4 untouched; no migration added.
+
+
+### WP-18 CI result — 2026-11-02
+
+- Documentation PR CI run 41444371515 passed Maven/MySQL verification and backend container build plus frontend tests/production build. This validates repository checks only; it does not verify TiDB compatibility.
+- No staging TiDB endpoint was accessed and `scripts/verify-tidb.sh` was not run. The baseline repository path was not found.
+
+### WP-10 package evidence — 2026-11-02
 ### WP-17 package evidence — 2026-11-02
 
 - PR #23 adds weekly Dependabot update configuration for Maven, npm, and GitHub Actions; CodeQL analysis for Java and JavaScript/TypeScript; and a dependency-review workflow.
