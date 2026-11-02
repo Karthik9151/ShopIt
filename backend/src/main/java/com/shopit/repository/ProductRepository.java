@@ -40,6 +40,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("active") Boolean active,
             Pageable pageable);
 
+    @Query("""
+        select p from Product p
+        where (:stockThreshold is null or p.stock <= :stockThreshold)
+        """)
+    Page<Product> searchInventory(
+            @Param("stockThreshold") Integer stockThreshold,
+            Pageable pageable);
+
     long countByActiveTrue();\n\n    long countByCategory_Id(Long categoryId);
 
     java.util.List<Product> findByActiveTrue();
