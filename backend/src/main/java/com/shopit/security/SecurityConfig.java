@@ -80,7 +80,12 @@ public class SecurityConfig {
         }
 
         // Registration/login/logout do not rely on ambient browser credentials or cookies.
-        if (request.getServletPath().startsWith("/api/auth/")) {
+        String contextPath = request.getContextPath();
+        String requestPath = request.getRequestURI();
+        if (contextPath != null && !contextPath.isEmpty() && requestPath.startsWith(contextPath)) {
+            requestPath = requestPath.substring(contextPath.length());
+        }
+        if (requestPath.startsWith("/api/auth/")) {
             return false;
         }
 
