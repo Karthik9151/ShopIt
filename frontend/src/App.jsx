@@ -71,6 +71,26 @@ function SessionExpiryRedirect(){
  return null;
 }
 
+
+function ApiPendingBanner(){
+ const [pending,setPending]=useState(0),[visible,setVisible]=useState(false);
+ useEffect(()=>{
+  const update=event=>setPending(Number(event.detail?.pending)||0);
+  window.addEventListener('shopit:api-pending',update);
+  return ()=>window.removeEventListener('shopit:api-pending',update);
+ },[]);
+ const active=pending>0;
+ useEffect(()=>{
+  if(!active){setVisible(false);return;}
+  const timer=window.setTimeout(()=>setVisible(true),5000);
+  return ()=>window.clearTimeout(timer);
+ },[active]);
+ if(!visible||!active)return null;
+ return <div className="api-pending-banner" role="status" aria-live="polite">
+  The server is taking longer than usual to respond. Your request is still in progress.
+ </div>;
+}
+
 function Guard({children,admin=false}){const {user}=useAuth(),loc=useLocation();if(!user)return <Navigate to="/login" replace state={{from:loc.pathname}}/>;if(admin&&user.role!=='ADMIN')return <Navigate to="/" replace/>;return children;}
 function Layout(){
  const {user,logout,isAdmin}=useAuth(),[query,setQuery]=useState(''),[open,setOpen]=useState(false),navigate=useNavigate();
@@ -243,4 +263,4 @@ function AdminInventory(){
  return <section className="section admin"><Link className="back" to="/admin">← Owner dashboard</Link><span className="eyebrow">Stock valuation</span><h1>Inventory & budget</h1><p className="muted">Unit cost is private owner data. It is excluded from public product responses and storefront pages.</p>{error&&<div className="error">{error}</div>}{data&&<div className="stats budget-stats">{[['Inventory cost budget',formatCurrency(data.inventoryCostBudget)],['Potential retail value',formatCurrency(data.potentialRetailValue)],['Estimated gross margin potential',formatCurrency(data.estimatedGrossMargin)]].map(([label,value])=><div className="stat" key={label}><span>{label}</span><b>{value}</b></div>)}</div>}<div className="summary admin-orders"><h2>Inventory breakdown</h2>{products.map(p=><div className="inventory-row" key={p.id}><div><b>{p.name}</b><small>{p.stock} units · {p.active?'Active':'Inactive'}</small></div><div><small>Unit cost</small><b>{formatCurrency(p.costPrice??0)}</b></div><div><small>Unit selling price</small><b>{formatCurrency(p.price)}</b></div><div><small>Cost value in stock</small><b>{formatCurrency(Number(p.costPrice??0)*p.stock)}</b></div><div><small>Potential margin</small><b>{formatCurrency((Number(p.price)-Number(p.costPrice??0))*p.stock)}</b></div></div>)}{!products.length&&!error&&<p className="muted">No inventory records found.</p>}</div><p className="muted">Potential margin assumes all current stock sells at its present list price. It excludes coupons, tax, shipping subsidies, payment fees, returns, and operating expenses; it is not accounting profit.</p></section>;
 }
 function NotFound(){return <div className="empty not-found"><span className="eyebrow">404 · Off the map</span><h1>This page wandered off.</h1><p>Let's get you back to the good stuff.</p><Link to="/" className="primary">Go home</Link></div>;}
-export default function App(){return <BrowserRouter><AuthProvider><SessionExpiryRedirect/><Layout/></AuthProvider></BrowserRouter>;}
+export default function App(){return <BrowserRouter><AuthProvider><SessionExpiryRedirect/><ApiPendingBanner/><Layout/></AuthProvider></BrowserRouter>;}
