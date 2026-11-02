@@ -186,8 +186,9 @@ export function AdminProductFormPage(){
 }
 
 export function AdminCategoriesPage(){
- const [categories,setCategories]=useState([]),[form,setForm]=useState({id:null,name:'',description:''}),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState('');
- const load=useCallback(async()=>{setLoading(true);setError('');try{const response=await api.get('/admin/categories');setCategories(response.data||[]);}catch(e){setError(e.response?.data?.message||'Could not load categories.');}finally{setLoading(false);}},[]);
+ const [result,setResult]=useState(null),[page,setPage]=useState(0),[form,setForm]=useState({id:null,name:'',description:''}),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const categories=result?.content||[];
+ const load=useCallback(async()=>{setLoading(true);setError('');try{const response=await api.get('/admin/categories/paged',{params:{page,size:20}});setResult(response.data);}catch(e){setError(e.response?.data?.message||'Could not load categories.');}finally{setLoading(false);}},[page]);
  useEffect(()=>{load();},[load]);
  const submit=async event=>{
   event.preventDefault();setBusy(true);setError('');
@@ -213,6 +214,7 @@ export function AdminCategoriesPage(){
     <div><b>{category.name}</b><small>{category.productCount} products · {category.active?'Active':'Inactive'}</small><small>{category.slug}</small></div>
     <div className="row-actions"><button className="text-link" onClick={()=>setForm({id:category.id,name:category.name,description:category.description||''})}>Rename</button><button className="text-link" onClick={()=>toggle(category)}>{category.active?'Deactivate':'Reactivate'}</button></div>
    </article>):<p className="muted">No categories have been created.</p>}
+   <Pagination page={page} setPage={setPage} totalPages={result?.totalPages||0} totalElements={result?.totalElements||0}/>
   </div></div>
  </section>;
 }
