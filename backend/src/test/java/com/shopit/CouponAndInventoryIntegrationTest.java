@@ -162,5 +162,29 @@ class CouponAndInventoryIntegrationTest {
                     .put("couponCode", code)
                     .toString()))
             .andExpect(status().isBadRequest());
+
+        // Cancelling the unpaid order releases both stock and the coupon's single redemption slot.
+        mvc.perform(post("/api/orders/" + order.get("id").asLong() + "/cancel")
+                .header("Authorization", "Bearer " + first.token()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        Customer third = registerCustomer();
+        mvc.perform(post("/api/cart/items")
+                .header("Authorization", "Bearer " + third.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.createObjectNode().put("productId", productId).put("quantity", 1).toString()))
+            .andExpect(status().isOk());
+
+        mvc.perform(post("/api/orders")
+                .header("Authorization", "Bearer " + third.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.createObjectNode()
+                    .put("shippingAddress", "12 Test Street, Hyderabad, Telangana, 500001")
+                    .put("requestId", UUID.randomUUID().toString())
+                    .put("couponCode", code)
+                    .toString()))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.discountAmount").value(10.0));
     }
 }
