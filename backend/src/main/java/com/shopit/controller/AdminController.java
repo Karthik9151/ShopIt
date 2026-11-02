@@ -6,6 +6,8 @@ import com.shopit.entity.Product;
 import com.shopit.repository.*;
 import com.shopit.service.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.data.domain.*;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
+@Validated
 public class AdminController {
     private final ProductService products;
     private final CategoryService categories;
@@ -113,11 +116,21 @@ public class AdminController {
         return orders.updateStatus(id, request.status().toUpperCase(java.util.Locale.ROOT));
     }
     @GetMapping("/customers")
-    public Page<CustomerView> customers(@RequestParam(defaultValue = "0") int page,
-                                        @RequestParam(defaultValue = "20") int size) {
-        if (page < 0 || size < 1 || size > 100) throw new IllegalArgumentException("Invalid pagination");
-        return users.findByRole("CUSTOMER", PageRequest.of(page, size, Sort.by("createdAt").descending()))
-            .map(this::customerView);
+    public Page<CustomerView> customers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) @Size(max = 120) String q) {
+        Pageable pageable = adminPage(page, size);
+        String searchText = q == null || q.isBlank() ? null : q.trim();
+        return users.searchCustomers(searchText, pageable).map(this::customerView);
+    }
+
+    @GetMapping("/customers/{id}")
+    public CustomerView customerDetail(@PathVariable Long id) {
+        AppUser customer = users.findById(id)
+                .filter(user -> "CUSTOMER".equals(user.getRole()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        return customerView(customer);
     }
     @PutMapping("/customers/{id}/status")
     public CustomerView updateCustomerStatus(@PathVariable Long id, @Valid @RequestBody CustomerStatusRequest request) {
