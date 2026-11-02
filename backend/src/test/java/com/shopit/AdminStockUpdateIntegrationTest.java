@@ -69,7 +69,8 @@ class AdminStockUpdateIntegrationTest {
         mvc.perform(patch("/api/admin/products/" + productId + "/stock")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"stock\": 12}"))
-                .andExpect(status().isUnauthorized());
+                // CSRF runs before authorization for state-changing requests without a Bearer token.
+                .andExpect(status().isForbidden());
 
         mvc.perform(patch("/api/admin/products/" + productId + "/stock")
                         .header("Authorization", "Bearer " + customerToken)
