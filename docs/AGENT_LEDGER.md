@@ -35,6 +35,26 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-18 | TiDB verification | PR OPEN — BLOCKED (OWNER STAGING CHECK) | `wp18-tidb-verification` | https://github.com/Karthik9151/ShopIt/pull/24 | Docs only; baseline scripts/verify-tidb.sh not found; no TiDB access or script run. | Owner verify TLS, Flyway history, schema, transactions and locking on isolated TiDB staging cluster |
 | WP-19 | Readability | PR OPEN — CHECKS PENDING | `wp19-readability` | https://github.com/Karthik9151/ShopIt/pull/25 | CI pending: Maven/MySQL verify and frontend tests/build. | Stacked on unmerged WP-14; merge WP-14 first |
 | WP-20 | Documentation | PR OPEN — CHECKS PASS | `wp20-docs-accuracy` | https://github.com/Karthik9151/ShopIt/pull/26 | CI 41445039629 passed Maven/MySQL verify + backend container build and frontend tests/production build. | Stacked on WP-19/WP-14; merge WP-14 then WP-19 before WP-20 |
+| WP-14 | F16 | PR OPEN — DRAFT | `wp14-admin-pagination` | https://github.com/Karthik9151/ShopIt/pull/20 | CI pending; no local checkout. Admin orders/products paginated, filtered; inventory and dashboard aggregates stay full-table. | Ensure dashboard valuation remains full inventory; not page-limited |
+| WP-15 | Operations | BLOCKED | `wp15-operations` | — | — | Provide/verify operational recovery and database backup procedures |
+| WP-16 | Test coverage, N5 | PR OPEN — CHECKS PASS | `wp16-e2e-testing` | https://github.com/Karthik9151/ShopIt/pull/22 | CI run 41443710648: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | Stacked on unmerged WP-14; merge WP-14 before WP-16 |
+| WP-14 | F16 | PR OPEN — CHECKS PASS | `wp14-admin-pagination` | https://github.com/Karthik9151/ShopIt/pull/20 | CI run 41442965512: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | None for code; no live Render/TiDB action performed |
+| WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | TBD | GET 60-second timeout, safe single GET retry and five-second slow-request banner implemented; JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
+| WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
+| WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First CI run 41438195716 failed at compile (static decision factory call); corrected in b94284c and validation run 41438476868 queued. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
+| WP-10 | F12 | PR OPEN — CHECKS PASS | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | CI run 41442109697: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. Local commands unavailable in this runtime. | Owner must inspect deployed report-only CSP violations before considering enforcement; no Render settings changed |
+| WP-11 | F11 | PR OPEN — CHECKS PASS | `wp11-registration-hardening` | https://github.com/Karthik9151/ShopIt/pull/17 | CI 41439144995: Maven/MySQL verify, backend container build, frontend unit tests and production build passed. | Accept the documented duplicate-email 409 enumeration trade-off until verified email delivery exists |
+| WP-12 | F13 | BLOCKED | `wp12-stock-exposure` | — | — | Review public ProductView API contract change |
+| WP-13 | F10, F15 | BLOCKED | `wp13-cold-start-jvm` | — | — | Optional uptime monitor intentionally not enabled; no Render settings changes |
+| WP-14 | F16 | BLOCKED | `wp14-admin-pagination` | — | — | Review paginated admin API contract |
+| WP-15 | Operations | PR OPEN — CHECKS PASS | `wp15-operations` | https://github.com/Karthik9151/ShopIt/pull/21 | CI run 41442859399: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | Owner must configure backups/PITR and complete isolated restore rehearsal; no live DB/Render/TiDB action performed |
+| WP-16 | Test coverage, N5 | BLOCKED | `wp16-e2e-testing` | — | — | — |
+| WP-17 | CI security, N6 | BLOCKED | `wp17-ci-security` | — | — | Enable secret scanning/push protection, Dependabot alerts and main branch protection in GitHub settings |
+| WP-18 | TiDB verification | PR OPEN — CHECKS PASS; STAGING BLOCKED | `wp18-tidb-verification` | https://github.com/Karthik9151/ShopIt/pull/24 | CI 41444371515 passed Maven/MySQL verify + container build and frontend tests/build. No TiDB query/script run; script absent at baseline. | Owner must verify TLS, Flyway history, schema, transactions and locking on isolated TiDB staging cluster |
+| WP-17 | CI security, N6 | PR OPEN — BLOCKED (OWNER SETTINGS + LOCKFILE) | `wp17-ci-security` | https://github.com/Karthik9151/ShopIt/pull/23 | Dependabot/CodeQL/dependency review files added; dependency-review run 41443918784 failed because Dependency Graph is disabled. npm lockfile generation failed twice (registry timeout; offline ENOTCACHED). | Owner enable Dependency Graph/Dependabot alerts, secret scanning/push protection and branch protection; generate real package-lock.json in network-enabled environment then use npm ci |
+| WP-18 | TiDB verification | BLOCKED | `wp18-tidb-ci` | — | — | Run scripts/verify-tidb.sh on staging and verify flyway_schema_history; no staging DB access performed |
+| WP-19 | Readability | PR OPEN — CHECKS PASS | `wp19-readability` | https://github.com/Karthik9151/ShopIt/pull/25 | CI 41444506589 passed Maven/MySQL verify + backend container build and frontend tests/production build. | Stacked on unmerged WP-14; merge WP-14 first |
+| WP-20 | Documentation | BLOCKED | `wp20-docs-accuracy` | — | — | Confirm logout route documentation choice; default is document current public behavior |
 | WP-21 | Accessibility and SEO | BLOCKED | `wp21-accessibility` | — | — | — |
 | WP-22 | Demo profile | BLOCKED | `wp22-demo-profile` | — | — | Keep demo profile local-only; no Render configuration changes |
 | WP-23 | Optional features (23a-23h) | BLOCKED | — | — | — | Owner must select one feature and approve its separate plan |
@@ -251,6 +271,55 @@ Each package must record:
 Never mark a package MERGED until the owner confirms GitHub merged it. Never mark checks passed without command or CI evidence.
 
 
+### WP-18 package evidence — 2026-11-02
+
+- Added docs/TIDB_VERIFICATION.md and linked it from docs/DEPLOYMENT.md. It specifies owner-side TLS/connectivity, Flyway history/checksum, schema validation, transaction/locking/concurrency and cleanup checks for an isolated staging database.
+- The repository baseline path scripts/verify-tidb.sh returns NOT_FOUND. Per instruction, the script was not run and no TiDB access was attempted.
+- This package remains BLOCKED pending owner-run staging verification. MySQL 8.4 CI passing does not prove TiDB behavior.
+- No Render/TiDB settings, database rows, schema, or Flyway migrations were changed. V1–V4 untouched; no migration added.
+
+
+### WP-18 CI result — 2026-11-02
+
+- Documentation PR CI run 41444371515 passed Maven/MySQL verification and backend container build plus frontend tests/production build. This validates repository checks only; it does not verify TiDB compatibility.
+- No staging TiDB endpoint was accessed and `scripts/verify-tidb.sh` was not run. The baseline repository path was not found.
+
+### WP-10 package evidence — 2026-11-02
+### WP-17 package evidence — 2026-11-02
+
+- PR #23 adds weekly Dependabot update configuration for Maven, npm, and GitHub Actions; CodeQL analysis for Java and JavaScript/TypeScript; and a dependency-review workflow.
+- CI run 41443918784 failed in Dependency Review because GitHub reports the Dependency Graph is not enabled/supported on this repository. No GitHub settings were changed (owner-only action).
+- The frontend lockfile remains absent. Attempt 1 to retrieve npm registry metadata timed out. Attempt 2, offline lockfile generation, failed with ENOTCACHED because package metadata is not present in the local npm cache. No fake lockfile was committed and CI was not switched to npm ci.
+- WP-17 is therefore BLOCKED as a full package, although the Dependabot and CodeQL configuration files are present in the PR. Required owner actions: enable Dependency Graph, alerts, secret scanning/push protection and branch protection; create a valid lockfile in a network-enabled environment and change the install to npm ci.
+- Local Maven/frontend commands are unavailable because this execution environment has no mounted checkout and npm registry DNS/network access failed. No secrets are present in committed files.
+### WP-16 package evidence — 2026-11-02
+
+- PR #22 is stacked on the unmerged wp14-admin-pagination branch; this dependency is stated in the PR description. The PR is not merged.
+- Replaced duplicated CI admin email/password literals in CommerceFlowIntegrationTest, CouponAndInventoryIntegrationTest, and PublicStockDisclosureIntegrationTest with a shared environment-backed test helper. The CI workflow generates a new test-only admin identity and JWT signing key per run without echoing values.
+- Added frontend Vitest interaction coverage for unauthenticated admin-route redirection and navigation from sign-in to account creation.
+- No real secrets or production account details were added. No Flyway migration changed. CI outcomes are pending; local Maven/npm commands were unavailable in this runtime.
+- Failure modes addressed: duplicated test credentials drifting between test classes/workflow; unauthenticated access to protected admin routes; broken auth-page navigation. Further full browser/E2E checkout testing remains a coverage gap.
+
+
+### WP-16 verification update — 2026-11-02
+
+- The first CI attempt 41443311352 failed on the duplicate sign-up link rendered across tests and the static uppercase admin email not matching the generated CI administrator. Fixed cleanup between renders and made the admin reservation test use the uppercase form of the generated APP_ADMIN_EMAIL.
+- The second CI attempt 41443710648 passed both jobs: Maven/MySQL 8 integration verification plus backend container build, and frontend Vitest plus production build.
+- WP-16 branch depends on unmerged WP-14 and its PR description explicitly requires WP-14 to merge first. Neither PR has been merged.
+### WP-15 package evidence — 2026-11-02
+
+- PR #21 adds docs/OPERATIONS.md and links it from docs/DEPLOYMENT.md. Scope covers release checks, provider-managed backup/PITR policy, isolated restore rehearsal, incident response, application rollback, and forward-only migration recovery.
+- Procedures are documented only: no live backup, restore, production DB inspection, Render action, TiDB action, or GitHub settings change was performed.
+- No application behavior, authorization, API contract, or Flyway migration changed. V1–V4 remain untouched.
+- Local backend/frontend commands were unavailable because this execution runtime has no mounted checkout and GitHub DNS resolution failed. PR CI results are pending and will be recorded from the actual workflow run.
+- Owner actions: configure provider backups/PITR, approve RPO/RTO, perform an isolated restore rehearsal, and verify provider-specific logical-dump compatibility.
+
+
+### WP-15 verification update — 2026-11-02
+
+- PR CI run 41442859399 completed successfully: Maven verification with MySQL 8 integration and backend container build passed; frontend tests and production build passed. No local Maven/npm commands were executed.
+
+### WP-10 package evidence — 2026-11-02
 ### WP-14 package evidence — 2026-11-02
 
 - Existing PR #20 (wp14-admin-pagination) was six commits behind main and initially dirty. The branch was rebased using a two-parent reconciliation commit so current merged WP-09 main is the first parent while the existing WP-13 work ancestry is retained. The PR now has no base divergence and GitHub reports it mergeable. No PR was merged.
@@ -281,3 +350,6 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 ### WP-20 CI result — 2026-11-02
 
 - Documentation PR CI run 41445039629 passed Maven/MySQL verification and backend container build plus frontend tests/production build. It does not validate the live Render/TiDB deployment.
+### WP-19 CI result — 2026-11-02
+
+- CI run 41444506589 on the latest WP-19 implementation commit passed Maven/MySQL verification and backend container build, together with frontend tests and production build. Local commands were not run in this runtime.

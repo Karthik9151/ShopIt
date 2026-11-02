@@ -162,3 +162,9 @@ See [docs/OPERATIONS.md](OPERATIONS.md) for owner-operated backup/PITR, restore 
 ## TiDB staging verification
 
 See [docs/TIDB_VERIFICATION.md](TIDB_VERIFICATION.md) for the isolated staging verification matrix. MySQL CI alone does not establish compatibility with the TiDB distribution.
+## TiDB staging verification
+
+See [docs/TIDB_VERIFICATION.md](TIDB_VERIFICATION.md) for the MySQL 8.4 vs TiDB compatibility checks that must be completed in an isolated staging database. The repository baseline reviewed for this package does not contain `scripts/verify-tidb.sh`; no TiDB connection or verification was performed.
+## Operations and recovery
+
+See [docs/OPERATIONS.md](docs/OPERATIONS.md) for owner-operated backup, restore rehearsal, incident response, and recovery procedures. The runbook distinguishes documented procedures from live backup/restore verification.

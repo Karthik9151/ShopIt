@@ -2,6 +2,7 @@ package com.shopit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shopit.support.TestAdminCredentials;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
+import java.util.Locale;
 import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
@@ -45,8 +47,8 @@ class CommerceFlowIntegrationTest {
 
     private String adminToken() throws Exception {
         String body = mapper.createObjectNode()
-            .put("email", "admin@shopit.test")
-            .put("password", "ShopIt-Admin-Test-2026!")
+            .put("email", TestAdminCredentials.email())
+            .put("password", TestAdminCredentials.password())
             .toString();
         MvcResult result = mvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON).content(body))
@@ -222,7 +224,7 @@ class CommerceFlowIntegrationTest {
     void configuredAdministratorEmailIsReservedAndAdminLoginReturnsAdminRole() throws Exception {
         String registration = mapper.createObjectNode()
             .put("name", "Reserved Email")
-            .put("email", "ADMIN@SHOPIT.TEST")
+            .put("email", TestAdminCredentials.email().toUpperCase(Locale.ROOT))
             .put("password", "Customer-Password-2026!")
             .toString();
 
@@ -232,8 +234,8 @@ class CommerceFlowIntegrationTest {
             .andExpect(jsonPath("$.message").value("An account with this email already exists"));
 
         String login = mapper.createObjectNode()
-            .put("email", "ADMIN@SHOPIT.TEST")
-            .put("password", "ShopIt-Admin-Test-2026!")
+            .put("email", TestAdminCredentials.email().toUpperCase(Locale.ROOT))
+            .put("password", TestAdminCredentials.password())
             .toString();
 
         mvc.perform(post("/api/auth/login")
