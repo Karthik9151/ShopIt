@@ -20,6 +20,12 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm install --no-audit --no-fund
+      - name: ESLint
+        working-directory: frontend
+        run: npm run lint
+      - name: Dependency audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
       - name: Unit tests
         working-directory: frontend
         run: npm test -- --run
