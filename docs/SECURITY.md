@@ -2,25 +2,31 @@
 
 ## Implemented
 - BCrypt password hashing (cost 12).
-- Short-lived signed JWT access tokens; the browser stores tokens in sessionStorage for this initial version.
-- Backend role authorization; all /api/admin endpoints require ADMIN.
-- Customer resources are queried by the authenticated principal's user ID, not by a request-supplied owner ID.
-- DTO validation and entity models are not returned directly.
-- Server-side product price, tax, shipping, totals and stock calculations.
-- Pessimistic product row locks and transaction boundaries during checkout.
-- Simulated payment stores no card number, CVV or banking credentials.
-- Secrets and database credentials are environment-configured; .env is ignored.
+- Short-lived signed JWT access tokens (15 minutes by default).
+- No committed/default production JWT secret: backend startup fails if `JWT_SECRET_BASE64` is absent or too short.
+- Backend role authorization; all `/api/admin/**` endpoints require ADMIN.
+- Customer resources are queried by authenticated principal ID, not a request-supplied owner ID. This includes cart, wishlist, orders, payments, profile, and saved addresses.
+- DTO validation; JPA entities and password hashes are not returned by APIs.
+- Server-side product price, tax, shipping, totals, and stock calculations.
+- Pessimistic product row locks and transactions during checkout; product IDs are locked in deterministic order.
+- Unpaid cancellations restore stock; paid orders cannot be cancelled through the unpaid-cancellation path.
+- Simulated payment stores no card number, CVV, or banking credentials; its value is excluded from real verified sales.
+- Customer accounts can be disabled by an administrator.
+- Database credentials and secrets are environment-configured; `.env` is ignored by Git.
+
+## Authentication notes
+The initial browser client stores its short-lived bearer access token in `sessionStorage`. This is acceptable for local demonstration only; any same-origin script execution can access it. Password changes do not yet revoke already-issued tokens, which remain valid until expiry. Logout clears the browser token but does not maintain a server-side token denylist.
 
 ## Before public production deployment
-- Replace the development JWT fallback with a random secret of at least 256 bits stored in a managed secret store.
-- Serve exclusively over HTTPS and configure trusted CORS origins.
+- Store a generated 256-bit-or-stronger JWT key in a managed secret store and rotate it safely.
+- Serve exclusively over HTTPS and configure exact trusted CORS origins.
 - Add a strict Content Security Policy and security headers.
-- Move access-token handling to an HttpOnly, Secure, SameSite cookie architecture with CSRF protection, or equivalent BFF.
-- Implement rate limits for authentication, checkout, password reset and payment endpoints.
-- Add account verification and secure reset-token workflows.
-- Integrate a real payment provider with server-verified signatures, replay protection and idempotent webhook processing.
-- Implement cancellation/refund policy and reconcile payment/order states.
+- Move access-token handling to an HttpOnly, Secure, SameSite cookie architecture with CSRF protection, or use a backend-for-frontend.
+- Add rate limits for authentication, checkout, password changes, password reset, and payments.
+- Implement verified email delivery and single-use, expiring password-reset tokens.
+- Integrate a real payment provider with server-verified signatures, replay protection, idempotent webhook processing, refunds, and reconciliation.
 - Add audit events, monitoring, alerting, backups, and dependency/security scanning.
-- Review product image URL handling or implement controlled object storage and content validation.
+- Review external image URLs or implement controlled object storage and content validation.
+- Perform a security review and end-to-end tests before accepting real customer data or payments.
 
-This code is a development foundation, not a completed compliance or penetration-tested production system.
+This is a development application, not a completed compliance assessment or penetration-tested production service.
