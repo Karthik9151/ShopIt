@@ -1,102 +1,146 @@
-# ShopIt staging deployment (mobile-browser workflow)
+# ShopIt staging deployment on Render
 
-This runbook deploys the React/Vite frontend to Vercel and the Spring Boot API plus MySQL 8.4 to Railway. Use a staging environment first. The current payment flow is simulated only.
+This runbook uses Render for the ShopIt frontend and Spring Boot API, while preserving the existing MySQL-based application through TiDB Cloud Starter (MySQL-compatible). Use this as a staging environment first. The payment workflow is simulated only.
 
-## 1. Railway project and MySQL
+## 1. Hosting architecture
 
-1. Sign in to Railway with the GitHub account that can access `Karthik9151/ShopIt`.
-2. Create a project named `ShopIt-Staging`.
-3. Add a MySQL database service and name it exactly `MySQL`.
-4. Keep the database private. The backend and MySQL should be in the same Railway project/environment.
+| Component | Provider | Service |
+|---|---|---|
+| React/Vite frontend | Render | Free Static Site |
+| Java 21 / Spring Boot API | Render | Free Docker Web Service |
+| SQL database | TiDB Cloud | Starter, MySQL-compatible |
 
-Railway's MySQL service provides `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, and `MYSQLDATABASE` variables.
+Render's managed relational database is PostgreSQL, not MySQL. Render Free services cannot attach persistent disks, so running a self-hosted MySQL container on a Free service would not provide durable storage. TiDB Cloud Starter preserves the MySQL protocol/driver path without requiring a paid Render disk.
 
-## 2. Railway backend service
+## 2. Create the MySQL-compatible database
 
-1. Add a service from the GitHub repository `Karthik9151/ShopIt`.
-2. Select branch `main`.
-3. Set the service root directory to `/backend`.
-4. Set Java version by adding `RAILPACK_JDK_VERSION=21`.
-5. Set build command to `mvn -B -DskipTests package`.
-6. Set start command to `java -jar target/shopit-api-1.0.0.jar`.
-7. Set health check path to `/actuator/health`.
-8. Generate a Railway public domain for the API after the first successful deploy.
+1. Open [TiDB Cloud](https://tidbcloud.com/) and sign up.
+2. Create a **TiDB Cloud Starter** instance with MySQL compatibility.
+3. Choose the AWS Singapore region (`ap-southeast-1`) to keep it geographically close to the Render Singapore backend.
+4. Open the instance and select **Connect**. Copy the public hostname, port (normally `4000`), exact generated username, and generated password. The username can contain an instance-specific prefix; copy it exactly rather than replacing it with `root`.
+5. Use the TiDB SQL Editor to create the application database:
 
-## 3. Backend variables
-
-Add these variables to the backend service. The service reference namespace `MySQL` must exactly match the database service name.
-
-```dotenv
-DB_URL=jdbc:mysql://${{MySQL.MYSQLHOST}}:${{MySQL.MYSQLPORT}}/${{MySQL.MYSQLDATABASE}}?serverTimezone=UTC
-DB_USERNAME=${{MySQL.MYSQLUSER}}
-DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
-JWT_SECRET_BASE64=<base64 encoding of at least 32 cryptographically random bytes>
-JWT_EXPIRATION_MS=900000
-APP_ADMIN_EMAIL=<dedicated administrator email>
-APP_ADMIN_PASSWORD=<unique strong password of at least 12 characters>
-APP_CORS_ORIGINS=<exact Vercel production origin, added after the frontend deploy>
+```sql
+CREATE DATABASE shopit;
 ```
 
-Generate the JWT key locally, for example on Android Termux:
+6. Keep the endpoint protected by TLS. TiDB Cloud Starter requires TLS; Java uses the system root CA store, so the backend JDBC URL below uses certificate and hostname verification.
+7. In the TiDB Cloud Starter firewall/network settings, restrict access to the outbound IP ranges of the Render backend service after that service has been created. Do not allowlist your phone's current IP; the database connection originates from Render.
+
+TiDB Starter is MySQL-protocol compatible, but it is not the MySQL server distribution. ShopIt's CI currently verifies migrations and integration behavior against MySQL 8.4. Therefore, staging must verify that Flyway migrations and checkout/locking behavior also work against TiDB before using it for anything beyond testing. Stay within the free quota shown in the TiDB dashboard; read/write access can be throttled when a free quota is exhausted.
+
+## 3. Deploy the backend on Render
+
+1. Open [Render Dashboard](https://dashboard.render.com/).
+2. Select **New → Web Service**.
+3. Connect the GitHub repository `Karthik9151/ShopIt`.
+4. Select the `main` branch.
+5. Set **Language** to **Docker**.
+6. Set **Dockerfile Path** to `./backend/Dockerfile`.
+7. Set **Docker Build Context Directory** to `./backend`.
+8. Choose the **Free** instance type.
+9. Choose the **Singapore** region.
+10. Set the health check path to `/actuator/health`.
+11. Create the service. Render injects the `PORT` environment variable; the Spring configuration already reads it.
+
+The Dockerfile uses a multi-stage Maven/JDK 21 build and runs the packaged Spring Boot JAR as a non-root user.
+
+## 4. Configure backend environment variables
+
+In Render → backend service → **Environment**, add:
+
+| Key | Value |
+|---|---|
+| `DB_URL` | `jdbc:mysql://<TiDB-host>:4000/shopit?sslMode=VERIFY_IDENTITY&serverTimezone=UTC` |
+| `DB_USERNAME` | Exact username copied from TiDB's Connect dialog |
+| `DB_PASSWORD` | Generated TiDB database password |
+| `JWT_SECRET_BASE64` | Newly generated Base64 secret representing at least 32 random bytes |
+| `JWT_EXPIRATION_MS` | `900000` |
+| `APP_ADMIN_EMAIL` | Dedicated administrator email address |
+| `APP_ADMIN_PASSWORD` | Unique strong administrator password (at least 12 characters) |
+| `APP_CORS_ORIGINS` | Fill in the exact Render frontend origin after the frontend is deployed |
+
+Generate the JWT key locally, for example in Android Termux:
 
 ```bash
 openssl rand -base64 32
 ```
 
-Copy the output directly into Railway's secret variable editor. Never commit it or paste it into chat. Do not use the example/test JWT keys from source control or CI.
+Copy its output directly into the Render Environment editor. Do not commit it, share it in chat, or use the test secret from GitHub Actions.
 
-Railway supplies `PORT`; do not hard-code a production port. The Spring configuration already reads it.
+Set `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD` before the first backend deployment. Do not first register that email as an ordinary customer. The bootstrap does not overwrite an existing account. After administrator access is confirmed, change the password through the account workflow and remove `APP_ADMIN_PASSWORD` from Render's environment variables.
 
-Set `APP_ADMIN_EMAIL` and `APP_ADMIN_PASSWORD` before the first backend deployment so the bootstrap process can create the administrator. Do not register that email first as a customer. After confirming administrator login, change the password in the account and remove `APP_ADMIN_PASSWORD` from the Railway service variables. The bootstrap does not overwrite existing accounts.
+Save the variables and trigger a deploy. Confirm that the deploy completes and that `https://<render-backend-domain>/actuator/health` reports healthy.
 
-## 4. Vercel frontend
+## 5. Restrict TiDB network access to Render
 
-1. Sign in to Vercel and import `Karthik9151/ShopIt` from GitHub.
-2. Set the project root directory to `frontend`.
-3. Select Vite as the framework preset.
-4. Set Node.js to 22.x.
-5. Build command: `npm run build`.
-6. Output directory: `dist`.
-7. Install command: `npm install`.
-8. Add the production environment variable:
+After the backend service exists:
 
-```dotenv
-VITE_API_BASE_URL=https://<railway-api-domain>/api
-```
+1. Open the backend service in Render.
+2. Open **Connect → Outbound** and copy every displayed CIDR range for the Singapore region.
+3. Open the TiDB Cloud Starter instance's firewall settings.
+4. Add the Render backend's outbound CIDR ranges.
+5. Remove any broad test rule that permits all IP addresses, once the Render rules have been verified.
+6. Keep TLS enabled. Do not expose database credentials in the frontend.
 
-Use the HTTPS Railway API domain generated in step 2. This is a public frontend configuration value, not a secret. Do not put database credentials, JWT secrets, or admin passwords in Vercel.
+Render's outbound IP ranges are shared by services in the same region. If the service's region changes, re-check the ranges and update TiDB's firewall.
 
-Deploy the frontend and note its exact production origin, for example `https://shopit-example.vercel.app`.
+## 6. Deploy the frontend on Render
 
-The `frontend/vercel.json` file in this repository configures the SPA fallback required by React Router so direct navigation or refresh on routes such as `/products`, `/orders`, and `/admin` serves `index.html`.
-
-## 5. Finish CORS configuration
-
-Return to Railway → backend → Variables and set:
+1. In Render, select **New → Static Site**.
+2. Connect the same repository `Karthik9151/ShopIt`.
+3. Select the `main` branch.
+4. Build command: `cd frontend && npm ci && npm run build`.
+5. Publish directory: `./frontend/dist`.
+6. Add the build-time environment variable:
 
 ```dotenv
-APP_CORS_ORIGINS=https://<exact-vercel-production-origin>
+VITE_API_BASE_URL=https://<render-backend-domain>/api
 ```
 
-Use only the origin (scheme + hostname), with no trailing path or `/api`. For multiple trusted origins, separate them with commas. Do not use `*`.
+7. Create the Static Site and copy its exact `https://<name>.onrender.com` origin.
 
-Redeploy the backend after saving the variable. If Vercel's project domain changes, update this value.
+The `render.yaml` Blueprint contains the React Router fallback rewrite to `/index.html). If you create the Static Site manually rather than applying the Blueprint, add a Render Static Site rewrite rule with source `/*` and destination `/index.html`.
 
-## 6. Smoke tests
+## 7. Finish CORS and redeploy
 
-1. Open `https://<railway-api-domain>/actuator/health`; expect a healthy response.
-2. Open the Vercel website on mobile and confirm the home page and product catalogue load.
-3. Register a separate ordinary customer account.
-4. Sign in as the administrator and confirm the admin dashboard loads.
-5. As administrator, create/edit/deactivate a category and product; verify the public catalogue changes.
-6. As administrator, verify customer listing and enable/disable controls.
-7. As customer, test profile update, password change, saved address, cart, wishlist, and logout/login.
-8. Place a test order. Confirm totals are server-calculated, inventory is decremented, and the cart is cleared.
-9. Use only the explicitly labelled simulated-payment workflow; verify the UI says no real money was charged.
-10. Confirm a customer cannot access another customer's profile, address, cart, wishlist, or order.
-11. Test direct URL refresh on `/products`, `/login`, `/orders`, and `/admin`.
-12. Review Railway deploy logs and GitHub Actions checks for errors.
+Return to Render → backend service → Environment and set:
 
-## 7. Before real production use
+```dotenv
+APP_CORS_ORIGINS=https://<exact-render-frontend-domain>
+```
 
-Do not treat this staging launch as approval for live sales. The current application does not integrate a real payment gateway. Before public production, complete the security items in `docs/SECURITY.md`, including safer token handling (HttpOnly/Secure cookies with CSRF protection or a backend-for-frontend), strict CSP/security headers, rate limiting, account verification and password reset, backups/restore testing, audit/monitoring, and end-to-end testing. Add verified payment-provider webhooks, refunds, and reconciliation before accepting real payments.
+Use only the frontend origin (scheme and hostname), without `/api`, a trailing slash, or wildcard. Save and redeploy the backend.
+
+If the frontend's domain changes, update CORS. If the backend URL changes, update `VITE_API_BASE_URL` on the frontend Static Site and redeploy the frontend.
+
+## 8. Smoke tests from a mobile browser
+
+1. Open `https://<render-backend-domain>/actuator/health`; expect a healthy response.
+2. Open the Render frontend URL and verify the home page, product catalogue, and product detail pages.
+3. Refresh direct routes such as `/products`, `/login`, `/register`, `/orders`, and `/admin`; each should load the React application.
+4. Register a normal customer account and sign in.
+5. Sign in separately with the administrator credentials and confirm the admin dashboard and inventory load.
+6. As an admin, create/edit/deactivate a category and product; verify the public catalogue updates.
+7. Verify the admin customer list and enable/disable controls.
+8. As a customer, test profile update, password change, saved address, cart, wishlist, logout, and login.
+9. Place a test order. Verify server-calculated totals, stock decrement, and cart clearing.
+10. Run the simulated payment flow only; verify the UI states that no real money was charged.
+11. Confirm a second customer cannot access the first customer's orders, profile, addresses, cart, or wishlist.
+12. Check Render deploy logs, health checks, TiDB usage, and GitHub Actions.
+
+## 9. Render Free plan limitations
+
+- A Free Render web service spins down after 15 minutes without incoming traffic. Its first request after sleeping can take about one minute to become available.
+- Free web services have limited CPU and memory and can restart.
+- Free web services cannot attach persistent disks. Never use their local filesystem for database files or uploaded product images.
+- Render Free Postgres databases expire after 30 days; this runbook deliberately does not use one.
+- Free instance hours, bandwidth, and build minutes are subject to the workspace's current included usage.
+
+This is suitable for learning, staging, and demonstrations, not a dependable production store.
+
+## 10. Before real production
+
+The current payment integration is simulated only. Do not accept real payments until a real provider, verified server-side webhooks, refunds, and reconciliation are implemented and tested.
+
+Before public production, also complete the security work in `docs/SECURITY.md`: safer token handling (HttpOnly/Secure cookies with CSRF protection or a backend-for-frontend), strict CSP/security headers, rate limits, email verification and password reset, audit/monitoring, database backups and restore tests, and end-to-end testing. Confirm a durable paid database plan and operational recovery process before storing real customer/order data.
