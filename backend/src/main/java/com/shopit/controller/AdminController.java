@@ -74,6 +74,13 @@ public class AdminController {
         return products.updateAdmin(id, request);
     }
 
+    @PatchMapping("/products/{id}/stock")
+    public AdminProductView updateProductStock(
+            @PathVariable Long id,
+            @Valid @RequestBody StockUpdateRequest request) {
+        return products.updateStock(id, request.stock());
+    }
+
     @DeleteMapping("/products/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         products.deactivate(id);
