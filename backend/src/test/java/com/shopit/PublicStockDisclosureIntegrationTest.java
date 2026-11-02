@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shopit.support.TestAdminCredentials;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,8 @@ class PublicStockDisclosureIntegrationTest {
     @Autowired ObjectMapper mapper;
 
     private String adminToken() throws Exception {
-        String body = mapper.createObjectNode().put("email", "admin@shopit.test")
-                .put("password", "ShopIt-Admin-Test-2026!").toString();
+        String body = mapper.createObjectNode().put("email", TestAdminCredentials.email())
+                .put("password", TestAdminCredentials.password()).toString();
         MvcResult result = mvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk()).andReturn();
