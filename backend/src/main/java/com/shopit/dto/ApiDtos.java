@@ -17,8 +17,9 @@ public final class ApiDtos {
                                  @NotNull @DecimalMin("0.00") @Digits(integer=10,fraction=2) BigDecimal price,
                                  @Min(0) @Max(1000000) int stock, @Size(max=1000) String imageUrl, Long categoryId,
                                  Boolean active, @DecimalMin("0.00") @Digits(integer=10,fraction=2) BigDecimal costPrice) {}
-    public record ProductView(Long id, String name, String description, BigDecimal price, int stock,
-                              String imageUrl, Long categoryId, String categoryName, boolean active, Instant createdAt) {}
+    public record ProductView(Long id, String name, String description, BigDecimal price,
+                              boolean inStock, boolean lowStock, String imageUrl, Long categoryId,
+                              String categoryName, boolean active, Instant createdAt) {}
     public record AdminProductView(Long id, String name, String description, BigDecimal price, BigDecimal costPrice,
                                    int stock, String imageUrl, Long categoryId, String categoryName,
                                    boolean active, Instant createdAt) {}

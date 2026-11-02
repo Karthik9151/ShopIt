@@ -22,6 +22,8 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-07 | F9 | PR OPEN — DRAFT | `wp07-cart-availability` | https://github.com/Karthik9151/ShopIt/pull/13 | CI run 41437052277: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | None; remove unavailable product rows before checkout |
 | WP-08 | F3 | BLOCKED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
 | WP-08 | F3 | PR OPEN — DRAFT | `wp08-payment-switch` | https://github.com/Karthik9151/ShopIt/pull/14 | CI run 41437483366: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging only if demo payments are required; never in production |
+| WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First run 41438195716 failed compile; corrected. Retry 41438476868 and latest ledger run 41438543941 passed Maven/MySQL, frontend tests/build and backend container build. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
+| WP-10 | F12 | PR OPEN — DRAFT | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | Corrected CI run 41438484902 and latest ledger run 41438550884 passed Maven/MySQL, frontend tests/build and backend Docker build. | Owner to inspect live report-only CSP violations; no HSTS or enforced CSP |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
 | WP-09 | F8 | PR OPEN — DRAFT | `wp09-rate-limiting` | https://github.com/Karthik9151/ShopIt/pull/15 | First CI run 41438195716 failed at compile (static decision factory call); corrected in b94284c and validation run 41438476868 queued. | Confirm trusted proxy overwrites X-Forwarded-For before enabling APP_RATE_LIMIT_TRUST_FORWARDED_FOR |
 | WP-10 | F12 | PR OPEN — CHECKS PASS | `wp10-public-hardening` | https://github.com/Karthik9151/ShopIt/pull/16 | CI run 41442109697: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. Local commands unavailable in this runtime. | Owner must inspect deployed report-only CSP violations before considering enforcement; no Render settings changed |
@@ -201,6 +203,17 @@ The owner explicitly authorized WP-00 through WP-22 without waiting for GATE app
 - CI has not yet surfaced for WP-11; local Maven/npm commands are unavailable here.
 - Security surface: no new endpoints, auth weakening, or schema migration. Known coverage gap: the uniqueness race is simulated at repository layer rather than two concurrent MySQL HTTP requests.
 - Rollback: revert WP-11 code and test changes.
+
+
+### WP-12 package evidence — 2026-11-02
+
+- Branch: `wp12-public-stock`, stacked on the open WP-11 branch to preserve the package sequence. PR pending creation; changes are cumulative until predecessors merge.
+- Public ProductView no longer exposes exact stock. It now exposes `inStock` (stock greater than zero) and `lowStock` (1–5 units). AdminProductView retains exact stock/cost.
+- CartLine `availableStock` is capped at 100. Product cards/details render In stock / Only a few left / Sold out and disable add-to-bag when sold out.
+- Added MySQL integration test for stock 0, 1, 5 and 6; verifies public exact stock absent and admin exact stock retained.
+- CI not yet queued when ledger updated; local Maven/npm not available.
+- Security: reduces public inventory enumeration. No schema migration.
+- Gaps: no dedicated cart availableStock cap assertion; no automated UI test for stock labels. Rollback by reverting WP-12 DTO/service/frontend/test changes.
 
 ## Per-package completion evidence
 
