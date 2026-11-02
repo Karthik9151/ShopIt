@@ -162,4 +162,28 @@ class CommerceFlowIntegrationTest {
         mvc.perform(get("/api/profile").header("Authorization", "Bearer " + customer.token()))
             .andExpect(status().isUnauthorized());
     }
+    @Test
+    void configuredAdministratorEmailIsReservedAndAdminLoginReturnsAdminRole() throws Exception {
+        String registration = mapper.createObjectNode()
+            .put("name", "Reserved Email")
+            .put("email", " ADMIN@SHOPIT.TEST ")
+            .put("password", "Customer-Password-2026!")
+            .toString();
+
+        mvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON).content(registration))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.message").value("An account with this email already exists"));
+
+        String login = mapper.createObjectNode()
+            .put("email", " ADMIN@SHOPIT.TEST ")
+            .put("password", "ShopIt-Admin-Test-2026!")
+            .toString();
+
+        mvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON).content(login))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.user.role").value("ADMIN"));
+    }
+
 }
