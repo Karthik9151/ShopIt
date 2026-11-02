@@ -45,3 +45,14 @@ Use isolated staging data and test identities; never use production customer rec
 - CI evidence applies only to the exact commit SHA attached to the workflow run.
 - Passing MySQL 8.4 CI does not prove TiDB compatibility; see `docs/TIDB_VERIFICATION.md` for the isolated staging owner matrix.
 - No Render, TiDB or production database action is part of this guide.
+
+## Additional regression coverage on `shopit-improvements`
+
+- `InactiveCategoryVisibilityIntegrationTest`: verifies public catalogue and detail behavior for inactive categories and uncategorized products; verifies oversized product search queries return 400.
+- `AdminStockUpdateIntegrationTest`: verifies anonymous requests return 401, customer tokens return 403, administrators can update stock, and values outside 0–1,000,000 return 400.
+- `AdminCustomerSearchIntegrationTest`: verifies customer-only search, detail access, oversized search rejection, and that admin accounts/password hashes are not exposed.
+- `AdminCategoryManagementIntegrationTest`: verifies category listing, product counts, deactivation hiding products, and reactivation restoring public visibility.
+- `RequestLogFilterTest`: verifies request metadata logging excludes query strings, Authorization headers, and request bodies.
+- `RuntimeConfigurationLoggerTest`: verifies non-secret runtime switches are logged without credential/config secret fields.
+
+These tests are added but have not been executed locally in the authoring environment. Check CI on the exact pull-request head SHA before treating them as passing.
