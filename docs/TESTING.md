@@ -1,24 +1,47 @@
 # Testing
 
-Local checks:
-- Frontend: `cd frontend && npm install && npm test -- --run && npm run build`
-- Backend: `cd backend && mvn verify`
+## Required local commands
 
-The frontend unit test covers INR currency formatting. Backend currently has an application-context smoke test using H2. GitHub Actions runs frontend tests/build and Maven verification on feature-branch pushes and pull requests.
+Install frontend dependencies once from `frontend` with `npm install` (there is currently no committed package-lock file). Then run:
 
-Manual integration:
-1. Start MySQL and configure DB/JWT environment variables. Generate the JWT key with `openssl rand -base64 32`.
-2. Start the backend; confirm `/actuator/health` reports UP.
-3. Register a customer and sign in.
-4. Provision the first admin using APP_ADMIN_EMAIL and APP_ADMIN_PASSWORD.
-5. As an admin, add/edit/deactivate products and categories.
-6. As an admin, verify customer list and enable/disable operations.
-7. As a customer, update profile details, change password, and create a saved delivery address.
-8. Add products to cart and wishlist; verify another account cannot access these records.
-9. Place an order using a saved address; verify server-calculated totals, price snapshots, stock decrement and cart clearing.
-10. Simulate payment; verify the response is labelled SIMULATED, the order status changes, and admin simulated value does not appear in real verified sales.
-11. Verify a customer cannot retrieve another customer's order, payment, profile, address, cart, or wishlist.
-12. Verify customer tokens receive 403 from /api/admin and disabled customer tokens cannot authenticate.
-13. Verify unpaid customer/admin cancellation restores stock; paid-order cancellation is blocked without refund handling.
+```sh
+cd frontend && npm test -- --run && npm run build
+```
 
-A committed test or CI workflow is not evidence that the relevant test passed. Check the workflow run associated with the current commit before reporting success.
+Run backend verification, including unit, context and integration tests:
+
+```sh
+cd backend && mvn -B verify
+```
+
+GitHub Actions also builds the backend Docker image. Verify the workflow run attached to the exact PR head commit before reporting success; a workflow file or an older commit's successful run is not evidence for the current head.
+
+## Automated coverage
+
+- Frontend Vitest: INR/date formatting, GET-only transient retry policy, unauthenticated admin-route redirect, and sign-in-to-registration navigation.
+- Backend unit tests: pricing boundaries/rounding, order-state transitions, payment simulation switch, rate-limit buckets, unpaid-order expiration and application context.
+- MySQL 8.4 integration tests in CI: authentication/admin reservation, customer ownership boundaries, stock disclosure, coupons/redemption, checkout totals, cancellation/status and admin pagination.
+- CI generates ephemeral JWT/admin test values per run. Backend integration tests read the admin identity from environment variables; never embed credentials in source or log them.
+
+## Manual staging smoke test
+
+Use isolated staging data and test identities; never use production customer records, production orders or real payment credentials.
+
+1. Start the API; verify health/readiness.
+2. Register a customer and sign in; confirm the configured administrator email cannot be claimed through customer registration.
+3. As admin, create/edit/deactivate products and categories; verify private purchase cost and exact stock are admin-only.
+4. Verify admin product pagination, search/active filters, Page metadata, page navigation and maximum size 100.
+5. Verify admin order pagination, status filter and invalid page/size handling.
+6. Confirm dashboard valuation includes inactive stock and is independent of the current page.
+7. With two customers, verify cart, wishlist, profile, addresses, payments and orders cannot be accessed across accounts.
+8. Place an order with an idempotency request ID; verify server-calculated subtotal, discount, shipping, tax, total, stock decrement and cart clearing.
+9. Simulate payment only in the explicitly enabled staging environment; confirm it is labelled simulated and excluded from verified-sales totals.
+10. Cancel an unpaid order and verify stock restoration/timeline; confirm paid-order cancellation is rejected.
+11. Verify logout clears browser session state but does not revoke a copied token before expiry; password change also does not revoke existing tokens.
+12. Verify Swagger/OpenAPI routes are 404 by default and enabled only when explicitly turned on in trusted local/test use.
+
+## Evidence boundaries
+
+- CI evidence applies only to the exact commit SHA attached to the workflow run.
+- Passing MySQL 8.4 CI does not prove TiDB compatibility; see `docs/TIDB_VERIFICATION.md` for the isolated staging owner matrix.
+- No Render, TiDB or production database action is part of this guide.
