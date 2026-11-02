@@ -34,6 +34,22 @@ public final class ApiDtos {
     public record PaymentView(Long id, Long orderId, String provider, String status,
                               String reference, BigDecimal amount, Instant paidAt) {}
     public record StatusUpdate(@NotBlank String status) {}
+    public record ProfileUpdateRequest(@NotBlank @Size(max=120) String name, @Size(max=30) String phone) {}
+    public record PasswordChangeRequest(@NotBlank String currentPassword,
+                                        @NotBlank @Size(min=10,max=72) String newPassword) {}
+    public record AddressRequest(@NotBlank @Size(max=60) String label,
+                                 @NotBlank @Size(max=120) String recipientName,
+                                 @NotBlank @Size(max=30) String phone,
+                                 @NotBlank @Size(max=240) String addressLine1,
+                                 @Size(max=240) String addressLine2,
+                                 @NotBlank @Size(max=100) String city,
+                                 @NotBlank @Size(max=100) String state,
+                                 @NotBlank @Size(max=20) String postalCode,
+                                 @NotBlank @Size(max=80) String country,
+                                 boolean defaultAddress) {}
+    public record AddressView(Long id, String label, String recipientName, String phone,
+                              String addressLine1, String addressLine2, String city,
+                              String state, String postalCode, String country, boolean defaultAddress) {}
     public record DashboardView(long customers, long products, long orders, long paidPayments,
                                 BigDecimal verifiedSales, BigDecimal simulatedPaymentValue,
                                 long pendingOrders, long lowStockProducts) {}
