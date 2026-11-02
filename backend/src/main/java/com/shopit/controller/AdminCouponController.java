@@ -7,12 +7,30 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/admin/coupons")
 public class AdminCouponController {
     private final CouponService coupons;
     public AdminCouponController(CouponService coupons) { this.coupons = coupons; }
+
+    @GetMapping("/paged")
+    public Page<CouponView> paged(
+            @RequestParam(defaultValue = "ACTIVE") String bucket,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid pagination");
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return coupons.adminPage(bucket, pageable);
+    }
 
     @GetMapping
     public List<CouponView> all() { return coupons.allForAdmin(); }
