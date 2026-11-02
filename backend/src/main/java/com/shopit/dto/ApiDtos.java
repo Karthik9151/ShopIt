@@ -164,6 +164,22 @@ public final class ApiDtos {
 
     public record CustomerView(Long id, String name, String email, String phone, boolean enabled, Instant createdAt) {}
 
+    public record SalesByDayView(String day, BigDecimal verifiedSales) {}
+
+    public record OrderStatusCountView(String status, long count) {}
+
+    public record TopProductView(String productName, long quantitySold, BigDecimal grossSales) {}
+
+    public record LowStockProductView(Long id, String name, int stock) {}
+
+    public record RecentOrderView(
+            Long id,
+            String customerName,
+            String customerEmail,
+            String status,
+            BigDecimal total,
+            Instant createdAt) {}
+
     public record DashboardView(
             long customers,
             long products,
@@ -175,7 +191,12 @@ public final class ApiDtos {
             long lowStockProducts,
             BigDecimal inventoryCostBudget,
             BigDecimal potentialRetailValue,
-            BigDecimal estimatedGrossMargin) {}
+            BigDecimal estimatedGrossMargin,
+            List<SalesByDayView> salesByDay,
+            List<OrderStatusCountView> statusBreakdown,
+            List<TopProductView> topProducts,
+            List<LowStockProductView> lowStockItems,
+            List<RecentOrderView> recentOrders) {}
 
     public record CouponRequest(
             @NotBlank @Size(max = 40) String code,
