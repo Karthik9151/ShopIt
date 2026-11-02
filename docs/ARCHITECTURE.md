@@ -13,3 +13,11 @@ Trust boundaries:
 - Payment status is simulated only; real gateway callbacks require cryptographic verification.
 
 Checkout reads the authenticated customer's cart, locks each product, validates active status and stock, snapshots current name/price, calculates subtotal/tax/shipping, creates the order, decrements inventory and clears the cart in one transaction.
+
+## Admin and observability boundaries
+
+All owner console routes are under `/api/admin/**` and require the ADMIN role through the central Spring Security chain. Controllers bind validated request DTOs and return explicit view DTOs; entity objects and password hashes are not exposed. Exact product stock and `costPrice` remain in admin-only DTOs.
+
+Public product catalogue queries join categories and suppress products whose assigned category is inactive. Products with no category remain visible if the product itself is active.
+
+The trace filter assigns a trace identifier before the security chain. The request-log filter logs method, path (without query string), response status, duration, numeric user ID when available, and trace ID. It does not read or log request bodies, headers, or credentials. Startup configuration logs only selected non-secret runtime policy values.
