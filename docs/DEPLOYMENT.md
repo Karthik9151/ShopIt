@@ -148,3 +148,7 @@ The API applies in-memory limits to login, registration, checkout, password chan
 The current payment integration is simulated only. Do not accept real payments until a real provider, verified server-side webhooks, refunds, and reconciliation are implemented and tested.
 
 Before public production, also complete the security work in `docs/SECURITY.md`: safer token handling (HttpOnly/Secure cookies with CSRF protection or a backend-for-frontend), strict CSP/security headers, rate limits, email verification and password reset, audit/monitoring, database backups and restore tests, and end-to-end testing. Confirm a durable paid database plan and operational recovery process before storing real customer/order data.
+
+## TiDB staging verification
+
+See [docs/TIDB_VERIFICATION.md](TIDB_VERIFICATION.md) for the MySQL 8.4 vs TiDB compatibility checks that must be completed in an isolated staging database. The repository baseline reviewed for this package does not contain `scripts/verify-tidb.sh`; no TiDB connection or verification was performed.
