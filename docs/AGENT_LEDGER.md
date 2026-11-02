@@ -17,8 +17,9 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-03 | F4 | MERGED | `wp03-error-handling` | https://github.com/Karthik9151/ShopIt/pull/9 | PR CI run 41433524474: Maven/MySQL, frontend tests and production build all passed. | None |
 | WP-04 | F5 | MERGED | `wp04-session-expiry` | https://github.com/Karthik9151/ShopIt/pull/10 | PR CI run 41434567635: Maven/MySQL, frontend tests and production build all passed. | None |
 | WP-05 | F6, F17 | MERGED | `wp05-order-history` | https://github.com/Karthik9151/ShopIt/pull/11 | PR CI run 41434916735: Maven/MySQL, frontend tests and production build all passed. | Verify Flyway V5 on staging and preserve actor attribution during any rollback; TiDB remains unverified |
-| WP-06 | F7 | PR OPEN — DRAFT | `wp06-auto-cancel` | https://github.com/Karthik9151/ShopIt/pull/12 | PR CI run 41436416649 in progress at last check; local Maven/npm commands unavailable in this runtime. | Render free service only sweeps while awake; startup sweep catches up after wake |
+| WP-06 | F7 | PR OPEN — DRAFT | `wp06-auto-cancel` | https://github.com/Karthik9151/ShopIt/pull/12 | CI run 41436577576: Maven/MySQL verify, backend container build, frontend tests and production build all passed. Local commands unavailable. | Render free service only sweeps while awake; startup sweep catches up after wake |
 | WP-07 | F9 | BLOCKED | `wp07-cart-availability` | — | — | — |
+| WP-07 | F9 | PR OPEN — DRAFT | `wp07-cart-availability` | https://github.com/Karthik9151/ShopIt/pull/13 | CI pending; run not yet surfaced. Local Maven/npm commands unavailable. | None; remove unavailable product rows before checkout |
 | WP-08 | F3 | BLOCKED | `wp08-payment-switch` | — | — | Set APP_PAYMENTS_SIMULATED_ENABLED=true on staging if demo payments are required |
 | WP-09 | F8 | BLOCKED | `wp09-rate-limiting` | — | — | Review configured limits and proxy behavior after tests |
 | WP-10 | F12 | BLOCKED | `wp10-public-hardening` | — | — | Verify report-only CSP on live site before enforcement |
@@ -136,6 +137,18 @@ The owner explicitly authorized WP-00 through WP-22 without waiting for GATE app
 - Security: no new endpoint or permission change; simulated payment behavior remains unchanged.
 - Coverage gap: no explicit concurrent payment/expiry integration stress test or missing-product restoration test. Order row locks and per-order transaction rollback are implemented, but those cases still need direct regression coverage.
 - Rollback: revert WP-06 application changes; no DB migration exists. Render sleep can delay scheduled execution; startup sweep catches expired orders after wake.
+
+
+### WP-07 package evidence — 2026-11-02
+
+- Branch: `wp07-cart-availability`, stacked on the open WP-06 branch to preserve ledger and dependency history; PR #13 targets main and remains draft/unmerged.
+- CartLine and WishlistLine now expose additive `available` and `unavailableReason` values. Inactive products remain removable from carts/wishlists, but cannot be incremented, checked out or moved from wishlist to cart.
+- Checkout now accumulates unavailable product names/reasons and returns HTTP 409 before saving an order; transaction rollback restores any in-transaction stock changes.
+- Integration test adds, saves, deactivates, confirms unavailability, verifies a named checkout conflict, and verifies cart removal remains available.
+- CI was not yet surfaced when this ledger update was made; do not regard WP-07 as verified until the PR workflow completes.
+- Security: additive response fields only; no endpoint/authorization changes. No migration required.
+- Adversarial gaps: no direct stock-shortage-only integration test, no multi-unavailable item assertion, no race-condition stress test for a deactivation concurrent with checkout. Checkout locks product rows and rechecks active/stock state.
+- Rollback: revert code/DTO/frontend changes. No DB migration.
 
 ## Per-package completion evidence
 
