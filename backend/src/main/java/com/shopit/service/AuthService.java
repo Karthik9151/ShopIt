@@ -56,6 +56,6 @@ public class AuthService {
 
     private AuthResponse response(AppUser user) {
         return new AuthResponse(jwt.generateToken(user),
-            new UserView(user.getId(), user.getName(), user.getEmail(), user.getRole()), expiry);
+            new UserView(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getPhone()), expiry);
     }
 }
