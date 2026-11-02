@@ -88,3 +88,14 @@ Interactive OpenAPI/Swagger endpoints (`/swagger-ui/index.html`, `/v3/api-docs`)
 | GET | `/api/admin/customers/{id}` | ADMIN | Read one customer DTO; non-customer accounts return 404 |
 
 The customer search query is limited to 120 characters. Existing category create/update/deactivate routes remain unchanged.
+
+### Order search and exports
+
+`GET /api/admin/orders?page=0&size=20` also accepts optional `status`, `orderId`, partial `email`, `from`, and `to` parameters. The date values are ISO-8601 timestamps; when both are supplied, `to` must be later than `from`.
+
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| GET | `/api/admin/orders/export.csv` | ADMIN | CSV export using the same status, order ID, email and date filters; maximum 5,000 rows |
+| GET | `/api/admin/inventory/export.csv` | ADMIN | Inventory CSV; optional `threshold` stock ceiling and `sort=name|stock|price|createdAt`, `direction=asc|desc` |
+
+Both export routes return UTF-8 CSV, neutralize spreadsheet formula prefixes in text cells, and return 400 when the result would exceed 5,000 rows. Inventory threshold must be from 0 through 1,000,000.
