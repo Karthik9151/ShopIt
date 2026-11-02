@@ -10,10 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-@Component
 public class RateLimitFilter extends OncePerRequestFilter {
     private static final Duration ONE_MINUTE = Duration.ofMinutes(1);
     private static final Duration TEN_MINUTES = Duration.ofMinutes(10);
