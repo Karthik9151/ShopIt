@@ -27,7 +27,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-13 | F10, F15 | PARTIAL — PR OPEN | `wp13-cold-start` | https://github.com/Karthik9151/ShopIt/pull/19 | CI run 41439602610: Maven/MySQL verification and frontend tests/build passed. JVM benchmark unavailable without runtime. | Owner must supply start-to-health/first API latency and peak RSS measurements; no uptime monitor on Render Free |
 | WP-14 | F16 | PR OPEN — DRAFT | `wp14-admin-pagination` | https://github.com/Karthik9151/ShopIt/pull/20 | CI pending; no local checkout. Admin orders/products paginated, filtered; inventory and dashboard aggregates stay full-table. | Ensure dashboard valuation remains full inventory; not page-limited |
 | WP-15 | Operations | BLOCKED | `wp15-operations` | — | — | Provide/verify operational recovery and database backup procedures |
-| WP-16 | Test coverage, N5 | PR OPEN — CHECKS PENDING | `wp16-e2e-testing` | https://github.com/Karthik9151/ShopIt/pull/22 | CI pending: Maven/MySQL verify and frontend tests/build. | Stacked on unmerged WP-14; merge WP-14 before WP-16 |
+| WP-16 | Test coverage, N5 | PR OPEN — CHECKS PASS | `wp16-e2e-testing` | https://github.com/Karthik9151/ShopIt/pull/22 | CI run 41443710648: Maven/MySQL verify + backend container build passed; frontend tests + production build passed. | Stacked on unmerged WP-14; merge WP-14 before WP-16 |
 | WP-17 | CI security, N6 | BLOCKED | `wp17-ci-security` | — | — | Enable secret scanning/push protection, Dependabot alerts and main branch protection in GitHub settings |
 | WP-18 | TiDB verification | BLOCKED | `wp18-tidb-ci` | — | — | Run scripts/verify-tidb.sh on staging and verify flyway_schema_history; no staging DB access performed |
 | WP-19 | Readability | BLOCKED | `wp19-readability` | — | — | — |
@@ -255,3 +255,10 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 - Added frontend Vitest interaction coverage for unauthenticated admin-route redirection and navigation from sign-in to account creation.
 - No real secrets or production account details were added. No Flyway migration changed. CI outcomes are pending; local Maven/npm commands were unavailable in this runtime.
 - Failure modes addressed: duplicated test credentials drifting between test classes/workflow; unauthenticated access to protected admin routes; broken auth-page navigation. Further full browser/E2E checkout testing remains a coverage gap.
+
+
+### WP-16 verification update — 2026-11-02
+
+- The first CI attempt 41443311352 failed on the duplicate sign-up link rendered across tests and the static uppercase admin email not matching the generated CI administrator. Fixed cleanup between renders and made the admin reservation test use the uppercase form of the generated APP_ADMIN_EMAIL.
+- The second CI attempt 41443710648 passed both jobs: Maven/MySQL 8 integration verification plus backend container build, and frontend Vitest plus production build.
+- WP-16 branch depends on unmerged WP-14 and its PR description explicitly requires WP-14 to merge first. Neither PR has been merged.
