@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.data.domain.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.Instant;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -119,9 +121,13 @@ public class AdminController {
     public Page<OrderView> allOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long orderId,
+            @RequestParam(required = false) @Size(max = 190) String email,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
         Pageable pageable = adminPage(page, size);
-        return orders.adminList(status, pageable);
+        return orders.adminList(status, orderId, email, from, to, pageable);
     }
     @PutMapping("/orders/{id}/status")
     public OrderView status(@PathVariable Long id, @Valid @RequestBody StatusUpdate request) {
