@@ -52,8 +52,6 @@ public final class ApiDtos {
                               String state, String postalCode, String country, boolean defaultAddress) {}
     public record CustomerStatusRequest(@NotNull Boolean enabled) {}
     public record CustomerView(Long id, String name, String email, String phone, boolean enabled, Instant createdAt) {}
-    public record CustomerStatusRequest(@NotNull Boolean enabled) {}
-    public record CustomerView(Long id, String name, String email, String phone, boolean enabled, Instant createdAt) {}
     public record DashboardView(long customers, long products, long orders, long paidPayments,
                                 BigDecimal verifiedSales, BigDecimal simulatedPaymentValue,
                                 long pendingOrders, long lowStockProducts) {}
