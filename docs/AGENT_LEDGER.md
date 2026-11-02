@@ -398,3 +398,18 @@ Never mark a package MERGED until the owner confirms GitHub merged it. Never mar
 ### WP-19 CI result — 2026-11-02
 
 - CI run 41444506589 on the latest WP-19 implementation commit passed Maven/MySQL verification and backend container build, together with frontend tests and production build. Local commands were not run in this runtime.
+
+### PR #47 continuation — final CI verification — 2026-11-02
+
+- Continued the existing `shopit-improvements` branch and draft PR #47; no new branch or PR was created and no merge was performed.
+- Finished the frontend test-runner separation by excluding `frontend/e2e/**` from Vitest. Pinned the frontend CI job to Ubuntu 24.04 so the selected Playwright browser package is supported.
+- Hardened the stateless Bearer API CSRF boundary: CSRF is not disabled globally and is not blanket-exempted for `/api/**`. Public stateless auth routes and explicit Bearer requests use a narrow matcher; state-changing requests without Bearer credentials retain CSRF protection. Added regression coverage and corrected the anonymous mutation expectation to reflect CSRF filter ordering.
+- Added an early demo-profile datasource guard. It permits only loopback MySQL URLs and rejects remote/private-network/H2/invalid datasource URLs before normal datasource/Flyway initialization. Added unit coverage.
+- Fixed the administrator navigation landmark name by placing the accessible label on the actual `nav` element. All three Playwright smoke tests then passed.
+- Updated `docs/API_DOCUMENTATION.md`, `docs/TRACEABILITY.md`, `docs/TESTING.md` and `docs/KNOWN_ISSUES.md` to document the current admin endpoints, security boundaries, remaining limitations and verification evidence.
+- Verified branch head `9fe2c58594502f96feea580b9041a808934e8346`; PR #47 base is `main`. Comparison at verification: 137 commits ahead, 0 behind. No Flyway migration files changed.
+- ShopIt CI run `41480588542` passed: 73 backend Maven/H2/MySQL 8.4 tests with 0 failures/errors; backend container build; frontend ESLint; npm audit; 39 Vitest tests across 11 files; production build; and 3 Playwright Chromium smoke tests.
+- CodeQL run `41480588575` passed both Java/Kotlin and JavaScript/TypeScript analyses. Dependency review run `41480588654` passed.
+- No local Maven/npm command was claimed; verification evidence is the GitHub Actions result attached to the exact PR head. No Render, TiDB, production site, live database, real payment processor, or customer data was accessed.
+- Remaining owner/runtime tasks are the committed frontend lockfile plus `npm ci`, full storefront-lifecycle E2E coverage, full App.jsx architecture modularization, target-equivalent 512 MB JVM measurement, isolated TiDB verification and Render staging smoke test.
+- PR #47 remains open and draft. Owner merge decision remains separate from this implementation/verification work.

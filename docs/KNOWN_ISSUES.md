@@ -1,55 +1,63 @@
 # ShopIt Known Issues and Audit Record
 
 Audit date: 2026-11-02  
-Audited baseline: main  
-Working remediation branch: shopit-improvements  
+Audited baseline: `main`  
+Working remediation branch: `shopit-improvements`  
 Continuation PR: https://github.com/Karthik9151/ShopIt/pull/47
 
 ## Audit boundary
 
-The audit and implementation use repository source, tests, documentation and GitHub Actions. No live Render service, production site, live database, payment processor or customer data was accessed. Work remains isolated to shopit-improvements; main and backup branches were not modified, and Flyway V1–V4 were not changed.
+The audit and remediation were performed against repository source, tests, documentation and GitHub Actions. No live Render service, production site, live database, payment processor or customer data was accessed. All changes remain on `shopit-improvements`; `main` and backup branches were not modified. No Flyway migration was changed.
 
 ## Implemented on shopit-improvements
 
-- Consolidated admin dashboard analytics: verified daily sales, order status breakdown, top products from successful payments, low-stock items and recent orders. Existing dashboard summary fields remain additive/backward-compatible.
-- Admin order detail and paginated per-customer order history.
-- Admin product detail/status, inventory pagination/filtering, paged categories and paged coupon buckets.
-- Dedicated admin layout and page modules for orders, products, categories and customers; dashboard analytics, inventory and coupon workspaces use the shared admin navigation.
-- Shared UI primitives and route/title/access tests.
-- Playwright browser smoke tests for customer admin-route blocking and administrator navigation.
-- CI frontend lint, npm audit, Vitest, production build and Playwright workflow stages.
-- Frontend Vitest excludes the Playwright e2e directory so the two runners remain separate.
-- CSRF policy no longer uses a blanket /api/** exemption. CSRF remains enabled for state-changing requests without Bearer credentials; public stateless auth endpoints and explicit Bearer requests are handled by a documented matcher with integration regression coverage.
+- Admin dashboard reporting for verified sales by day, order-status counts, top products derived from successful payments, low-stock items and recent orders. Existing dashboard summary fields remain available.
+- Admin order detail, customer detail and paginated per-customer order history with order timelines.
+- Admin product detail/status, inventory pagination/filtering, paged category management and paged coupon buckets.
+- Admin order/customer/product/category/inventory workflows, including bounded filters and formula-safe CSV exports.
+- Shared admin layout, dedicated order/product/category/customer modules, analytics, inventory and coupon screens, plus shared UI primitives.
+- Vitest route and component coverage; Playwright browser smoke tests for non-admin route blocking and administrator navigation across the workspaces.
+- CI frontend stages for ESLint, npm audit, Vitest, production build and Playwright Chromium; backend Maven verification against MySQL 8.4 and backend container build.
+- Vitest excludes the Playwright-only `frontend/e2e` specs. Playwright runs separately on Ubuntu 24.04, which supports the selected browser package.
+- CSRF protection is not broadly disabled or blanket-exempted for `/api/**`. State-changing requests without explicit Bearer credentials retain CSRF checks; public stateless `/api/auth/**` operations and explicit `Authorization: Bearer` requests use the documented matcher. Regression tests cover the boundary.
+- The `demo` Spring profile now rejects non-loopback/non-MySQL datasource URLs during bean-factory initialization, before datasource/Flyway startup. A unit test covers loopback, remote, private-IP, H2 and null cases.
 
 ## Remaining engineering work
 
-### Frontend architecture and browser coverage
-- Admin workspaces are modularized, but App.jsx still contains parts of storefront/auth route composition. A complete application-wide split into feature routes, contexts and hooks remains.
-- Playwright coverage is currently an administrative navigation/access smoke suite. Full end-to-end customer registration, cart, checkout, simulated-payment and order-history journeys remain to be automated.
-- No comprehensive cross-browser, visual-regression or accessibility audit has been performed; perform keyboard/mobile checks in isolated staging.
+### Frontend architecture and end-to-end coverage
+
+- Admin workspaces are modularized, but `frontend/src/App.jsx` still contains parts of storefront/authentication route composition. A complete application-wide split into feature routes, contexts and hooks remains.
+- Current Playwright coverage is an admin access/navigation smoke suite (3 browser tests). Full customer registration, cart, checkout, simulated-payment and order-history journeys are not yet automated.
+- No comprehensive cross-browser, visual-regression or full accessibility audit has been performed. Complete keyboard/mobile checks in isolated staging.
 
 ### Dependency reproducibility
-- frontend/package-lock.json is not committed. CI currently uses npm install; npm ci cannot be used reproducibly until a reviewed lockfile is generated and committed in a network-enabled environment.
+
+- `frontend/package-lock.json` is not committed. CI currently uses `npm install`; reproducible `npm ci` is not available until a reviewed lockfile is generated and committed in a network-enabled environment.
 
 ### Runtime and deployment verification
-- No measured JVM tuning for a 512 MB instance. Collect startup, heap, container RSS and health-readiness measurements on a target-equivalent runtime before selecting flags.
-- MySQL 8.4 integration CI is not TiDB compatibility proof. Complete the isolated verification matrix in docs/TIDB_VERIFICATION.md.
-- Render environment variables, deployed service status and live routing were not inspected or changed. Owner must verify staging configuration and readiness on the actual target environment.
 
-## Existing controls confirmed
+- There is no measured JVM tuning for a 512 MB instance. Collect startup, heap, container RSS and health-readiness measurements on a target-equivalent runtime before selecting flags.
+- MySQL 8.4 CI is not TiDB compatibility proof. Complete the isolated verification matrix in `docs/TIDB_VERIFICATION.md`.
+- Render environment variables, deployed service status and live routing were not inspected or changed. The owner must verify staging configuration and readiness on the target environment.
 
-- Admin bootstrap normalizes the configured email, logs non-secret outcomes and defaults takeover of an existing account to false.
-- Customer registration reserves the configured admin email, normalizes email, handles duplicate-key races and rejects weak/common/email-equal passwords.
-- Pricing is calculated server-side; defaults are INR 49 flat shipping, INR 1,999 free-shipping threshold after discounts and 18% tax.
-- Checkout rejects unavailable products; order transitions and payment confirmation are validated; paid-order cancellation is blocked.
-- Unpaid orders expire on a Clock-based 30-minute default; stock/coupon usage restoration is handled by the expiry flow.
-- Simulated payments default off and are unavailable when the setting is disabled.
-- /api/admin/** requires ADMIN; customer-owned resources are scoped to the authenticated principal.
-- Public product responses expose availability indicators rather than exact stock.
-- Hibernate uses ddl-auto=validate; existing Flyway migrations V1–V4 were not edited.
+## Verified CI results
 
-## Current verification status
+Verified on PR head `9fe2c58594502f96feea580b9041a808934e8346`:
 
-The previous PR head's backend Maven/MySQL verification and Docker build passed, but its frontend Vitest job failed because Vitest discovered the Playwright spec. A Vitest exclusion fix and CSRF-boundary hardening/tests have now been committed; the resulting CI and CodeQL runs are pending. Do not merge until the latest PR head has successful frontend tests, production build, Playwright smoke tests, backend Maven/MySQL verification, dependency review and CodeQL results.
+| Check | Result | Evidence |
+|---|---|---|
+| Frontend ESLint | Passed | ShopIt CI run `41480588542` |
+| Dependency audit (`npm audit --audit-level=high`) | Passed | ShopIt CI run `41480588542` |
+| Vitest | 39 passed across 11 files | ShopIt CI run `41480588542` |
+| Vite production build | Passed | ShopIt CI run `41480588542` |
+| Playwright Chromium smoke tests | 3 passed | ShopIt CI run `41480588542` |
+| Backend Maven/H2/MySQL 8.4 verification | 73 passed, 0 failures/errors | ShopIt CI run `41480588542` |
+| Backend container build | Passed | ShopIt CI run `41480588542` |
+| CodeQL Java/Kotlin and JavaScript/TypeScript | Both passed | CodeQL run `41480588575` |
+| Dependency review | Passed | Dependency review run `41480588654` |
 
-A successful CI run does not replace owner-operated TiDB, Render or target-instance resource verification.
+The tested PR head was 137 commits ahead of `main` and 0 commits behind at the time of verification. No migration files were changed. PR #47 remains a draft and has not been merged.
+
+## Owner/runtime actions still required
+
+Complete the lockfile/reproducible install, broader storefront browser coverage, target-sized JVM measurement, isolated TiDB verification and Render staging smoke test before treating those runtime/operational areas as complete. A successful CI run does not prove production deployment, TiDB compatibility or 512 MB instance performance.

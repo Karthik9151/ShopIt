@@ -1,31 +1,42 @@
 # ShopIt requirements traceability
 
-Status is measured against the requested scope on shopit-improvements. Existing means present on the audited main baseline; Added means implemented on the working branch; Remaining means further implementation or owner/runtime verification is still required.
+Status is measured against the requested scope on `shopit-improvements`. “Existing” means present on the audited `main` baseline; “Added” means implemented on this branch; “Remaining” means implementation or owner/runtime verification is still required.
 
 | Requirement area | Status | Evidence / remaining work |
 |---|---|---|
-| Work on isolated branch; leave main and backup untouched | Added | All continuation work is committed to shopit-improvements and PR #47; no merge performed |
-| Admin bootstrap, reserved admin identity and safe registration | Existing | AdminBootstrap and AuthService; takeover defaults off, registration normalizes identity and rejects conflicts/weak credentials |
+| Work on isolated branch; leave main and backup untouched | Added | All changes are committed to `shopit-improvements` / PR #47; no merge performed |
+| Admin bootstrap, reserved admin identity and safe registration | Existing | AdminBootstrap and AuthService; takeover defaults off, identity normalization and weak/conflicting registration protection |
 | Server-owned pricing and checkout calculations | Existing | Shared PricingService; INR 49 default shipping, INR 1,999 free-shipping threshold after discounts, 18% tax |
 | Cart availability, legal order transitions and unpaid-order expiry | Existing | CartService, OrderStatusTransitions, PaymentService and Clock-based expiration |
-| Simulated-payment guard and schema validation | Existing | Simulated payments default off; Hibernate ddl-auto=validate; Flyway V1–V4 unchanged |
-| Admin role boundary | Existing | /api/admin/** requires ADMIN; integration tests cover anonymous/customer/admin access |
-| Customer/order/product/category/coupon/inventory administration | Added | Paginated/searchable APIs, detail views, status updates, customer history, inventory filters and CSV exports |
-| Dashboard analytics | Added | Verified daily sales, order-status breakdown, top paid products, low-stock items and recent orders; summary fields retained |
-| Public stock and inactive-category disclosure controls | Existing/Added | Public product responses disclose availability indicators, not exact stock; inactive-category products are hidden |
-| Request validation, metadata-only logging and runtime config logging | Added | Bounds, request logging without credentials/body/query secrets, non-secret startup switches |
-| CSRF policy for Bearer API | Added | CSRF remains active; public auth operations and explicit Bearer requests are handled separately; regression coverage added |
-| Admin route layout and dedicated workspaces | Added | Shared AdminLayout, dedicated order/product/category/customer pages, dashboard analytics, inventory and coupon workspaces |
-| Shared UI primitives and route-boundary coverage | Added | Shared Button/Card/Badge/DataTable/Modal/Toast/ConfirmDialog/FormField/Skeleton/PageHeader; customer-to-admin access tests |
-| Browser smoke coverage | Added | Playwright tests cover non-admin route blocking and admin navigation across order/product/category/customer workspaces; full customer checkout/payment journey is not yet covered |
-| Frontend dependency audit and browser-test CI | Added | CI runs ESLint, npm audit, Vitest, Vite production build and Playwright Chromium smoke tests |
-| Frontend lockfile and deterministic npm ci | Remaining | frontend/package-lock.json is not committed; current CI runs npm install |
-| Full application-wide frontend modularization | Remaining | Admin UI is split into modules; App.jsx still contains portions of storefront/auth route composition |
-| 512 MB JVM tuning and before/after measurement | Remaining | No target-sized memory/heap/RSS benchmark; do not claim measured tuning |
-| TiDB compatibility verification | Owner action | MySQL 8.4 CI is not TiDB proof; execute the isolated staging matrix in docs/TIDB_VERIFICATION.md |
+| Simulated-payment guard and schema validation | Existing | Simulated payments default off; Hibernate `ddl-auto=validate`; Flyway V1–V4 unchanged |
+| Admin authorization boundary | Existing | `/api/admin/**` requires ADMIN; integration tests cover anonymous/customer/admin access |
+| Admin dashboard analytics | Added | Verified sales series, status breakdown, top paid products, low-stock products and recent orders |
+| Admin product/order/customer detail and history | Added | Admin order/product/customer detail and paginated customer order history with timeline |
+| Admin inventory/category/coupon workspaces | Added | Paginated inventory filters, paged categories/coupon buckets, product/category state operations |
+| Order/inventory exports and safe CSV handling | Added | Filtered CSV exports with row limits and formula neutralization |
+| Public stock and inactive-category disclosure controls | Existing/Added | Public responses expose availability indicators, not exact stock; inactive-category products are hidden |
+| Request validation/logging and runtime configuration logging | Added | Bounds and metadata-only logs; no credential/body/query secrets in request metadata |
+| CSRF boundary for stateless Bearer API | Added | No blanket CSRF disable or `/api/**` exemption; explicit Bearer/public-auth matcher and regression tests |
+| Local-only demo datasource guard | Added | Demo profile allows only loopback MySQL and rejects other datasource URLs before datasource/Flyway startup |
+| Admin route layout and dedicated workspaces | Added | Shared AdminLayout and dedicated orders/products/categories/customers pages, dashboard analytics, inventory and coupons |
+| Shared UI primitives and route/access regression tests | Added | Button/Card/Badge/DataTable/Modal/Toast/ConfirmDialog/FormField/Skeleton/PageHeader; nested admin access tests |
+| Playwright browser verification | Added | 3 Chromium smoke tests: non-admin boundary and administrator workspace navigation |
+| Frontend dependency audit and browser-test CI | Added | ESLint, npm audit, Vitest, Vite build and Playwright in CI |
+| Frontend lockfile and deterministic `npm ci` | Remaining | `frontend/package-lock.json` is not committed; CI uses `npm install` |
+| Full application-wide frontend modularization | Remaining | Admin views are split; `App.jsx` still contains storefront/auth route composition |
+| Full storefront customer-lifecycle E2E | Remaining | Register/cart/checkout/payment/order-history journeys are not yet automated |
+| 512 MB JVM tuning and before/after measurement | Owner action | No target-sized memory/heap/RSS benchmark |
+| TiDB compatibility verification | Owner action | MySQL 8.4 CI is not TiDB proof; execute `docs/TIDB_VERIFICATION.md` matrix |
 | Render staging/runtime verification | Owner action | No Render service, environment variable, live site or live database was accessed |
-| Current CI and CodeQL clearance | Pending | Check runs attached to the exact latest PR head before merge; older successful runs do not validate newer commits |
 
-## Verification boundary
+## Verification status
 
-The working branch has not been merged. Automated evidence must be read from GitHub Actions for the exact latest PR head SHA. No production deployment, payment transaction, Render setting, live database, customer record or TiDB instance was accessed.
+Latest verified PR head: `9fe2c58594502f96feea580b9041a808934e8346`.
+
+- ShopIt CI run `41480588542`: frontend lint, dependency audit, Vitest (39/39), production build, Playwright (3/3), backend Maven/MySQL 8.4 verification (73 tests, no failures) and backend container build all passed.
+- CodeQL run `41480588575`: Java/Kotlin and JavaScript/TypeScript analyses passed.
+- Dependency review run `41480588654`: passed.
+- Branch comparison: 137 commits ahead of `main`, 0 behind; no Flyway migration files changed.
+- PR #47 remains open/draft and has not been merged.
+
+These results do not replace owner-operated TiDB, Render or target-instance resource verification. No production deployment, payment transaction or live database operation was performed.
