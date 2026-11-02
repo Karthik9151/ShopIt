@@ -65,6 +65,20 @@ class OrderStatusTransitionsTest {
     }
 
     @Test
+    void everyPairInTheOrderStatusMatrixMatchesTheSingleTransitionDefinition() {
+        List<String> statuses = List.of(
+                "PENDING_PAYMENT", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED");
+        for (String current : statuses) {
+            for (String next : statuses) {
+                boolean expected = transitions.allowedNextStatuses(current, true).contains(next);
+                assertThat(transitions.isAllowed(current, next))
+                        .as("%s -> %s", current, next)
+                        .isEqualTo(expected);
+            }
+        }
+    }
+
+    @Test
     void acceptsConfirmationAfterSuccessfulPayment() {
         transitions.validateTransition("PENDING_PAYMENT", "CONFIRMED", true);
     }

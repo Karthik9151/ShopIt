@@ -165,6 +165,15 @@ class CommerceFlowIntegrationTest {
                 .andExpect(jsonPath("$.status").value(nextStatus));
         }
 
+        mvc.perform(get("/api/orders/" + orderId)
+                .header("Authorization", "Bearer " + customer.token()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.timeline.length()").value(5))
+            .andExpect(jsonPath("$.timeline[2].actor").value("ADMIN"))
+            .andExpect(jsonPath("$.timeline[2].newStatus").value("PROCESSING"))
+            .andExpect(jsonPath("$.timeline[4].actor").value("ADMIN"))
+            .andExpect(jsonPath("$.allowedNextStatuses.length()").value(0));
+
         mvc.perform(put("/api/admin/orders/" + orderId + "/status")
                 .header("Authorization", "Bearer " + admin)
                 .contentType(MediaType.APPLICATION_JSON)
