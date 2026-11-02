@@ -32,7 +32,7 @@ Baseline commit audited: `260ea492765a98f4226c5a661e66a7186cd3a3b9`
 | WP-15 | Operations | BLOCKED | `wp15-operations` | — | — | Provide/verify operational recovery and database backup procedures |
 | WP-16 | Test coverage, N5 | BLOCKED | `wp16-e2e-testing` | — | — | — |
 | WP-17 | CI security, N6 | BLOCKED | `wp17-ci-security` | — | — | Enable secret scanning/push protection, Dependabot alerts and main branch protection in GitHub settings |
-| WP-18 | TiDB verification | BLOCKED | `wp18-tidb-ci` | — | — | Run scripts/verify-tidb.sh on staging and verify flyway_schema_history; no staging DB access performed |
+| WP-18 | TiDB verification | PR OPEN — BLOCKED (OWNER STAGING CHECK) | `wp18-tidb-verification` | pending PR | Docs only; no TiDB connection or `scripts/verify-tidb.sh` execution. Script not present at baseline path. | Owner must verify staging connectivity/TLS, Flyway history, transactions and locking against TiDB in isolated DB; do not run against production |
 | WP-19 | Readability | BLOCKED | `wp19-readability` | — | — | — |
 | WP-20 | Documentation | BLOCKED | `wp20-docs-accuracy` | — | — | Confirm logout route documentation choice; default is document current public behavior |
 | WP-21 | Accessibility and SEO | BLOCKED | `wp21-accessibility` | — | — | — |
@@ -191,3 +191,11 @@ Each package must record:
 - Risks, rollback and pending owner actions.
 
 Never mark a package MERGED until the owner confirms GitHub merged it. Never mark checks passed without command or CI evidence.
+
+
+### WP-18 package evidence — 2026-11-02
+
+- Added docs/TIDB_VERIFICATION.md and linked it from docs/DEPLOYMENT.md. It specifies owner-side TLS/connectivity, Flyway history/checksum, schema validation, transaction/locking/concurrency and cleanup checks for an isolated staging database.
+- The repository baseline path scripts/verify-tidb.sh returns NOT_FOUND. Per instruction, the script was not run and no TiDB access was attempted.
+- This package remains BLOCKED pending owner-run staging verification. MySQL 8.4 CI passing does not prove TiDB behavior.
+- No Render/TiDB settings, database rows, schema, or Flyway migrations were changed. V1–V4 untouched; no migration added.
