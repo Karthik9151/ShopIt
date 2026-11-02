@@ -76,3 +76,15 @@ Interactive OpenAPI/Swagger endpoints (`/swagger-ui/index.html`, `/v3/api-docs`)
 - Customer-owned resources are scoped to the authenticated principal. Admin routes require ADMIN.
 - Payment is simulated only; no real money or card data is processed.
 - Unpaid orders expire after the configured TTL (default 30 minutes). There is no refund/returns workflow; paid-order cancellation is blocked.
+
+### Additional owner-console endpoints
+
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| GET | `/api/admin/categories` | ADMIN | All categories, including inactive, with product counts |
+| PATCH | `/api/admin/categories/{id}/status` | ADMIN | Set category active state; reactivating makes its active products public again |
+| PATCH | `/api/admin/products/{id}/stock` | ADMIN | Update exact stock; request body requires `stock` from 0 to 1,000,000 |
+| GET | `/api/admin/customers?q={search}&page=0&size=20` | ADMIN | Search customers by name, email, or phone; admin accounts are excluded |
+| GET | `/api/admin/customers/{id}` | ADMIN | Read one customer DTO; non-customer accounts return 404 |
+
+The customer search query is limited to 120 characters. Existing category create/update/deactivate routes remain unchanged.
