@@ -39,8 +39,9 @@ public class ProductService {
         return view(product);
     }
 
-    public List<AdminProductView> adminList() {
-        return products.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream().map(this::adminView).toList();
+    public Page<AdminProductView> adminList(String query, Boolean active, Pageable pageable) {
+        String term = query == null || query.isBlank() ? null : query.trim();
+        return products.searchAdmin(term, active, pageable).map(this::adminView);
     }
 
     @Transactional
