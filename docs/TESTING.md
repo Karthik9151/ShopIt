@@ -1,63 +1,68 @@
 # Testing
 
-## Required local commands
+## Frontend commands
 
-Install frontend dependencies once from `frontend` with `npm install` (there is currently no committed package-lock file). Then run:
-
-```sh
-cd frontend && npm test -- --run && npm run build
-```
-
-Run backend verification, including unit, context and integration tests:
+Run from the frontend directory:
 
 ```sh
-cd backend && mvn -B verify
+npm install
+npm run lint
+npm audit --audit-level=high
+npm test -- --run
+npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
 
-GitHub Actions also builds the backend Docker image. Verify the workflow run attached to the exact PR head commit before reporting success; a workflow file or an older commit's successful run is not evidence for the current head.
+The repository currently has no committed frontend package-lock.json, so use npm install; npm ci is not yet reproducible from a checked-in lockfile. Vitest excludes frontend/e2e so Playwright specs are not loaded by the unit-test runner. Playwright uses its own config and Chromium browser.
+
+## Backend commands
+
+Run from the backend directory:
+
+```sh
+mvn --batch-mode verify
+```
+
+The Maven verify lifecycle runs unit/context and integration tests. CI provisions MySQL 8.4, generates ephemeral test-only JWT/admin credentials, runs Maven verification, and builds the backend Docker image.
+
+## CI verification
+
+The ShopIt CI workflow runs frontend dependency installation, ESLint, npm audit, Vitest, production build, Chromium installation and Playwright smoke tests. Its backend job runs Maven verification against MySQL 8.4 and builds the backend container. Dependency review and CodeQL execute as separate pull-request checks.
+
+Always inspect the workflow runs attached to the latest PR head SHA. A successful backend run on one SHA does not validate frontend changes on another SHA, and a previous successful workflow run does not validate the current PR head.
 
 ## Automated coverage
 
-- Frontend Vitest: INR/date formatting, GET-only transient retry policy, unauthenticated admin-route redirect, and sign-in-to-registration navigation.
-- Backend unit tests: pricing boundaries/rounding, order-state transitions, payment simulation switch, rate-limit buckets, unpaid-order expiration and application context.
-- MySQL 8.4 integration tests in CI: authentication/admin reservation, customer ownership boundaries, stock disclosure, coupons/redemption, checkout totals, cancellation/status and admin pagination.
-- CI generates ephemeral JWT/admin test values per run. Backend integration tests read the admin identity from environment variables; never embed credentials in source or log them.
+Frontend Vitest includes route guard, navigation, shared UI component and formatting/API-client regressions. Playwright currently checks that a customer cannot enter nested admin routes and that an administrator can navigate the orders, products, categories and customer workspaces. It does not yet automate full storefront checkout, payment or account lifecycle journeys.
 
-## Manual staging smoke test
+Backend tests cover:
+- pricing boundaries, tax/shipping/discount calculation and rounding;
+- order status transitions, paid-order restrictions and unpaid-order expiration;
+- authentication, reserved administrator identity and customer ownership;
+- stock disclosure, stock updates and inactive-category visibility;
+- coupon validation/redemption and checkout totals;
+- dashboard reporting, customer order history, admin pagination, search and detail endpoints;
+- CSV output escaping/formula neutralization and export authorization;
+- CSRF request boundaries, request logging, rate limiting and API surface configuration.
 
-Use isolated staging data and test identities; never use production customer records, production orders or real payment credentials.
+## Manual isolated-staging smoke test
 
-1. Start the API; verify health/readiness.
-2. Register a customer and sign in; confirm the configured administrator email cannot be claimed through customer registration.
-3. As admin, create/edit/deactivate products and categories; verify private purchase cost and exact stock are admin-only.
-4. Verify admin product pagination, search/active filters, Page metadata, page navigation and maximum size 100.
-5. Verify admin order pagination, status filter and invalid page/size handling.
-6. Confirm dashboard valuation includes inactive stock and is independent of the current page.
-7. With two customers, verify cart, wishlist, profile, addresses, payments and orders cannot be accessed across accounts.
-8. Place an order with an idempotency request ID; verify server-calculated subtotal, discount, shipping, tax, total, stock decrement and cart clearing.
-9. Simulate payment only in the explicitly enabled staging environment; confirm it is labelled simulated and excluded from verified-sales totals.
-10. Cancel an unpaid order and verify stock restoration/timeline; confirm paid-order cancellation is rejected.
-11. Verify logout clears browser session state but does not revoke a copied token before expiry; password change also does not revoke existing tokens.
-12. Verify Swagger/OpenAPI routes are 404 by default and enabled only when explicitly turned on in trusted local/test use.
+Use disposable staging identities and test data only. Do not use production accounts, live customer data or real payment credentials.
+
+1. Verify health/readiness and confirm the API starts with valid staging-only environment settings.
+2. Register a customer, sign in, then verify customer requests to /api/admin/** are rejected.
+3. Sign in as the configured administrator and verify the dashboard analytics and each owner workspace load.
+4. Create a disposable category/product/coupon; verify create, edit, status, filtering and pagination behavior.
+5. Verify product exact stock and purchase cost are visible only to administrators.
+6. Verify customer detail and paginated order history show only the selected customer's records.
+7. Create an order with a request ID; verify the server calculates all totals and updates stock/cart state.
+8. Exercise simulated payment only when explicitly enabled in isolated staging; verify simulated results are not counted as verified sales.
+9. Verify unpaid cancellation/expiry restores stock and paid-order cancellation is rejected.
+10. Verify logout clears browser session state, while documenting that copied JWTs are not revoked before expiry.
+11. Verify API docs are disabled unless explicitly enabled for trusted local/test use.
+12. Verify mobile layout, keyboard navigation, focus visibility and responsive admin navigation.
 
 ## Evidence boundaries
 
-- CI evidence applies only to the exact commit SHA attached to the workflow run.
-- Passing MySQL 8.4 CI does not prove TiDB compatibility; see `docs/TIDB_VERIFICATION.md` for the isolated staging owner matrix.
-- No Render, TiDB or production database action is part of this guide.
-
-## Additional regression coverage on `shopit-improvements`
-
-- `InactiveCategoryVisibilityIntegrationTest`: verifies public catalogue and detail behavior for inactive categories and uncategorized products; verifies oversized product search queries return 400.
-- `AdminStockUpdateIntegrationTest`: verifies anonymous requests return 401, customer tokens return 403, administrators can update stock, and values outside 0–1,000,000 return 400.
-- `AdminCustomerSearchIntegrationTest`: verifies customer-only search, detail access, oversized search rejection, and that admin accounts/password hashes are not exposed.
-- `AdminCategoryManagementIntegrationTest`: verifies category listing, product counts, deactivation hiding products, and reactivation restoring public visibility.
-- `RequestLogFilterTest`: verifies request metadata logging excludes query strings, Authorization headers, and request bodies.
-- `RuntimeConfigurationLoggerTest`: verifies non-secret runtime switches are logged without credential/config secret fields.
-
-These tests are added but have not been executed locally in the authoring environment. Check CI on the exact pull-request head SHA before treating them as passing.
-
-- `AdminCsvExportIntegrationTest`: verifies 401/403/ADMIN access boundaries, UTF-8 export headers, stock-threshold filtering, and neutralization of a formula-shaped product name.
-- Frontend route guard/Vitest tests verify an authenticated customer sees “Admin access required”, customers are redirected away from requested admin paths after sign-in, and existing routes receive descriptive document titles.
-- `CsvExportSupportTest`: verifies CSV quoting, quote escaping, CRLF row termination, empty cells, and formula-prefix neutralization.
-- Admin order-list integration tests also exercise order ID, email, ISO date-range filters, and invalid date-range rejection.
+MySQL 8.4 CI does not establish TiDB compatibility. Follow docs/TIDB_VERIFICATION.md for the owner-operated isolated TiDB matrix. CI does not measure 512 MB target-instance memory behavior. No Render deployment or production database operation is part of these tests.
