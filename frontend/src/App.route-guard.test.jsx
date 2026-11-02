@@ -17,6 +17,18 @@ describe('protected route navigation',()=>{
   expect(screen.getByLabelText('Password')).toBeTruthy();
  });
 
+ it('shows a clear access-required page for an authenticated customer',()=>{
+  sessionStorage.setItem('shopit_access_token','test-only-token');
+  sessionStorage.setItem('shopit_user',JSON.stringify({
+   id:7,name:'Test Customer',email:'customer@example.test',role:'CUSTOMER'
+  }));
+
+  render(<App/>);
+
+  expect(screen.getByRole('heading',{name:'Admin access required'})).toBeTruthy();
+  expect(screen.getByRole('link',{name:'Back to shop'}).getAttribute('href')).toBe('/products');
+ });
+
  it('keeps account creation reachable from the sign-in route',()=>{
   render(<App/>);
   fireEvent.click(screen.getByRole('link',{name:'Create an account'}));
