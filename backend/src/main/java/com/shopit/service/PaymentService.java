@@ -38,7 +38,8 @@ public class PaymentService {
 
     public PaymentView simulate(String email, Long orderId) {
         AppUser user = user(email);
-        CustomerOrder order = orders.findByIdAndUser_Id(orderId, user.getId())
+        // Serialize payment confirmation against the expiry worker and cancellation paths.
+        CustomerOrder order = orders.findByIdAndUser_IdForUpdate(orderId, user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         if ("CANCELLED".equals(order.getStatus())) {
