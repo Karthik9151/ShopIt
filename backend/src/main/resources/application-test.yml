@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:shopit;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+app:
+  jwt:
+    secret-base64: U2hvcEl0LXRlc3Qtc2VjcmV0LXNob3VsZC1iZS1yYW5kb20tMzItYnl0ZXM=
+    expiration-ms: 900000
+  cors:
+    origins: http://localhost:5173
+  admin:
+    email:
+    password:

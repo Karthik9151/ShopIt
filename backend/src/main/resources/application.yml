@@ -1,0 +1,37 @@
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-binding-errors: never
+spring:
+  application:
+    name: shopit-api
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/shopit?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:shopit}
+    password: ${DB_PASSWORD:change-me}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+app:
+  jwt:
+    # Fail closed when no real random secret is configured; never ship a known fallback.
+    secret-base64: ${JWT_SECRET_BASE64:}
+    expiration-ms: ${JWT_EXPIRATION_MS:900000}
+  cors:
+    origins: ${APP_CORS_ORIGINS:http://localhost:5173}
+  admin:
+    email: ${APP_ADMIN_EMAIL:}
+    password: ${APP_ADMIN_PASSWORD:}

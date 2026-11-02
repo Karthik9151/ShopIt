@@ -1,0 +1,16 @@
+backend/target/
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+*.class
+*.log
+.env
+.env.*
+!.env.example
+application-local.yml
+*.pem
+*.key
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
